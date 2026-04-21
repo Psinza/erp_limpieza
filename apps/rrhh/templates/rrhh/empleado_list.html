@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Empleados{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3><i class="bi bi-people"></i> Empleados</h3>
+    <a href="{% url 'rrhh:empleado_create' %}" class="btn btn-primary">
+      <i class="bi bi-person-plus"></i> Nuevo Empleado
+    </a>
+  </div>
+
+  <!-- Filtros -->
+  <form method="get" class="row g-2 mb-3">
+    <div class="col-md-4">
+      <input type="text" name="q" value="{{ q }}"
+             class="form-control" placeholder="Buscar por nombre o cédula…">
+    </div>
+    <div class="col-md-3">
+      <select name="departamento" class="form-select">
+        <option value="">— Todos los departamentos —</option>
+        {% for d in departamentos %}
+        <option value="{{ d.id }}" {% if dep == d.id|stringformat:"s" %}selected{% endif %}>
+          {{ d.nombre }}
+        </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2">
+      <select name="estado" class="form-select">
+        <option value="">— Estado —</option>
+        <option value="activo"     {% if est == "activo"     %}selected{% endif %}>Activo</option>
+        <option value="inactivo"   {% if est == "inactivo"   %}selected{% endif %}>Inactivo</option>
+        <option value="vacaciones" {% if est == "vacaciones" %}selected{% endif %}>Vacaciones</option>
+        <option value="baja"       {% if est == "baja"       %}selected{% endif %}>Baja</option>
+      </select>
+    </div>
+    <div class="col-md-2">
+      <button type="submit" class="btn btn-outline-secondary w-100">
+        <i class="bi bi-search"></i> Filtrar
+      </button>
+    </div>
+    <div class="col-md-1">
+      <a href="{% url 'rrhh:empleado_list' %}" class="btn btn-outline-danger w-100">✕</a>
+    </div>
+  </form>
+
+  <!-- Tabla -->
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-dark">
+          <tr>
+            <th>Cédula</th><th>Nombre</th><th>Cargo</th>
+            <th>Departamento</th><th>Salario</th><th>Estado</th><th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for e in empleados %}
+          <tr>
+            <td><code>{{ e.cedula }}</code></td>
+            <td>
+              <a href="{% url 'rrhh:empleado_detail' e.pk %}" class="fw-semibold text-decoration-none">
+                {{ e.nombre_completo }}
+              </a>
+            </td>
+            <td>{{ e.cargo.nombre }}</td>
+            <td>{{ e.departamento }}</td>
+            <td>${{ e.salario|floatformat:2 }}</td>
+            <td>
+              <span class="badge
+                {% if e.estado == 'activo' %}bg-success
+                {% elif e.estado == 'inactivo' %}bg-secondary
+                {% elif e.estado == 'vacaciones' %}bg-info
+                {% elif e.estado == 'baja' %}bg-warning text-dark
+                {% else %}bg-danger{% endif %}">
+                {{ e.get_estado_display }}
+              </span>
+            </td>
+            <td>
+              <a href="{% url 'rrhh:empleado_edit' e.pk %}" class="btn btn-sm btn-outline-primary me-1">
+                <i class="bi bi-pencil"></i>
+              </a>
+              <a href="{% url 'rrhh:empleado_delete' e.pk %}" class="btn btn-sm btn-outline-danger">
+                <i class="bi bi-person-x"></i>
+              </a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="7" class="text-center text-muted py-4">No se encontraron empleados.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="card-footer text-muted small">
+      Total: {{ empleados.count }} empleado(s)
+    </div>
+  </div>
+</div>
+{% endblock %}

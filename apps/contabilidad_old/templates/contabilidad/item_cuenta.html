@@ -1,0 +1,25 @@
+<li class="list-group-item border-0 p-0 mb-1">
+    <div class="d-flex align-items-center p-2 rounded hover-bg-light" style="transition: background 0.2s;">
+        <code class="text-primary fw-bold me-3" style="min-width: 80px;">{{ node.codigo }}</code>
+        <span class="text-dark">{{ node.nombre }}</span>
+        
+        <div class="ms-auto d-flex align-items-center">
+            <span class="badge bg-light text-secondary border me-2 small">{{ node.tipo|upper }}</span>
+            <span class="text-muted small" title="Naturaleza">
+                {% if node.naturaleza == 'deudora' %}<i class="bi bi-plus-circle-fill text-success"></i>{% else %}<i class="bi bi-dash-circle-fill text-danger"></i>{% endif %}
+            </span>
+        </div>
+    </div>
+
+    {% with children=node.cuentacontable_set.all %}
+    {% if children %}
+        <ul class="list-group list-group-flush ms-4 border-start ps-3" style="border-color: #dee2e6 !important;">
+            {% for child in children %}
+                {% include "contabilidad/item_cuenta.html" with node=child %}
+            {% endfor %}
+        </ul>
+    {% endif %}
+    {% endwith %}
+</li>
+
+<style>.hover-bg-light:hover { background-color: #f8f9fa; cursor: default; }</style>

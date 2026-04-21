@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'produccion:orden_list' %}">Órdenes</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'produccion:orden_detail' orden.pk %}">OP-{{ orden.id }}</a>
+            </li>
+            <li class="breadcrumb-item active">{{ titulo }}</li>
+        </ol>
+    </nav>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-warning text-dark">
+            <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Confirmar Liberación de Lote</h5>
+        </div>
+        <div class="card-body">
+            <p>¿Estás seguro de que deseas liberar el lote <strong>{{ lote.numero_lote }}</strong> al almacén?</p>
+            <p>Esta acción actualizará el stock del producto terminado y no podrá deshacerse.</p>
+            <p><strong>Producto:</strong> {{ lote.orden.formula.producto.nombre }}</p>
+            <p><strong>Cantidad Final:</strong> {{ lote.cantidad_final }}</p>
+            <hr>
+            <form method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-warning"><i class="bi bi-box-arrow-in-right"></i> Confirmar
+                    Liberación</button>
+                <a href="{% url 'produccion:orden_detail' orden.pk %}" class="btn btn-secondary ms-2">Cancelar</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

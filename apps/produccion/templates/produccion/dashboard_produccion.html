@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid mt-4">
+  <div class="row mb-4">
+    <div class="col-12">
+      <h2 class="display-6"><i class="bi bi-speedometer2"></i> {{ titulo }}</h2>
+      <p class="text-muted">Resumen operativo de la planta de producción.</p>
+    </div>
+  </div>
+
+  <!-- Tarjetas de Métricas -->
+  <div class="row mb-4">
+    <div class="col-md-4">
+      <div class="card bg-primary text-white shadow-sm border-0">
+        <div class="card-body">
+          <h6 class="text-uppercase small">Órdenes en Curso</h6>
+          <h2 class="mb-0">{{ stats.ordenes_count }}</h2>
+          <i class="bi bi-gear-fill position-absolute top-50 end-0 translate-middle-y me-3 opacity-25 h1"></i>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div
+        class="card {% if stats.alertas_count > 0 %}bg-danger{% else %}bg-success{% endif %} text-white shadow-sm border-0">
+        <div class="card-body">
+          <h6 class="text-uppercase small">Alertas de Stock Bajo</h6>
+          <h2 class="mb-0">{{ stats.alertas_count }}</h2>
+          <i
+            class="bi bi-exclamation-triangle-fill position-absolute top-50 end-0 translate-middle-y me-3 opacity-25 h1"></i>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card bg-info text-dark shadow-sm border-0">
+        <div class="card-body">
+          <h6 class="text-uppercase small">Lotes Pendientes de QC</h6>
+          <h2 class="mb-0">{{ stats.lotes_count }}</h2>
+          <i class="bi bi-microscope position-absolute top-50 end-0 translate-middle-y me-3 opacity-25 h1"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- Órdenes en Curso -->
+    <div class="col-lg-8">
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-white">
+          <h5 class="mb-0"><i class="bi bi-play-circle text-primary"></i> Producción en Tiempo Real</h5>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Orden</th>
+                  <th>Producto</th>
+                  <th>Estado</th>
+                  <th>Inicio</th>
+                  <th>Acción</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for orden in ordenes_en_curso %}
+                <tr>
+                  <td><strong>OP-{{ orden.id }}</strong></td>
+                  <td>{{ orden.formula.producto.nombre }}</td>
+                  <td><span class="badge rounded-pill bg-primary">{{ orden.get_estado_display }}</span></td>
+                  <td>{{ orden.fecha_inicio|date:"d/m H:i" }}</td>
+                  <td><a href="{% url 'produccion:orden_detail' orden.pk %}"
+                      class="btn btn-sm btn-outline-dark">Gestionar</a></td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="5" class="text-center py-4">No hay procesos activos en este momento.</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Lotes en Espera de Calidad -->
+      <div class="card shadow-sm">
+        <div class="card-header bg-white">
+          <h5 class="mb-0"><i class="bi bi-clipboard2-pulse text-info"></i> Lotes Pendientes de Inspección</h5>
+        </div>
+        <div class="list-group list-group-flush">
+          {% for lote in lotes_pendientes_qc %}
+          <div class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+              <h6 class="mb-0">{{ lote.numero_lote }}</h6>
+              <small class="text-muted">{{ lote.orden.formula.producto.nombre }}</small>
+            </div>
+            <a href="{% url 'produccion:control_calidad_create' lote.pk %}"
+              class="btn btn-sm btn-primary">Inspeccionar</a>
+          </div>
+          {% empty %}
+          <div class="list-group-item text-center py-3">Todos los lotes han sido procesados.</div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Columna de Alertas de Stock -->
+    <div class="col-lg-4">
+      <div class="card border-danger shadow-sm">
+        <div class="card-header bg-danger text-white">
+          <h5 class="mb-0"><i class="bi bi-cart-x"></i> Reposición Necesaria</h5>
+        </div>
+        <div class="list-group list-group-flush">
+          {% for material in alertas_stock %}
+          <div class="list-group-item border-start border-4 border-danger">
+            <div class="d-flex justify-content-between">
+              <span class="fw-bold">{{ material.nombre }}</span>
+              <span class="badge bg-light text-danger">{{ material.stock_actual }} {{ material.unidad_medida }}</span>
+            </div>
+            <div class="progress mt-2" style="height: 5px;">
+              <div class="progress-bar bg-danger" role="progressbar" style="width: 20%"></div>
+            </div>
+            <small class="text-muted">Mínimo requerido: {{ material.stock_minimo }}</small>
+          </div>
+          {% empty %}
+          <div class="list-group-item text-center text-success py-4">
+            <i class="bi bi-check-circle-fill h3"></i><br>Stock en niveles óptimos
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

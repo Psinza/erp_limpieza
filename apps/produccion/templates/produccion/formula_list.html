@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Fórmulas{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3><i class="bi bi-journal-text"></i> Fórmulas de Producción</h3>
+    <a href="{% url 'produccion:formula_create' %}" class="btn btn-primary"><i class="bi bi-plus-circle"></i> Nueva Fórmula</a>
+  </div>
+  <form method="get" class="row g-2 mb-3">
+    <div class="col-md-5"><input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Buscar por nombre, código o producto…"></div>
+    <div class="col-md-3">
+      <select name="estado" class="form-select">
+        <option value="">— Estado —</option>
+        {% for val, label in estados %}<option value="{{ val }}" {% if estado == val %}selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2"><button type="submit" class="btn btn-outline-secondary w-100"><i class="bi bi-search"></i> Filtrar</button></div>
+    <div class="col-md-1"><a href="{% url 'produccion:formula_list' %}" class="btn btn-outline-danger w-100">✕</a></div>
+  </form>
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-dark">
+          <tr><th>Código</th><th>Nombre</th><th>Producto</th><th>Versión</th>
+              <th class="text-end">Rendimiento</th><th class="text-end">Costo Unit.</th>
+              <th>Estado</th><th>Acciones</th></tr>
+        </thead>
+        <tbody>
+          {% for f in formulas %}
+          <tr>
+            <td><code>{{ f.codigo }}</code></td>
+            <td class="fw-semibold"><a href="{% url 'produccion:formula_detail' f.pk %}">{{ f.nombre }}</a></td>
+            <td>{{ f.producto.nombre }}</td>
+            <td><span class="badge bg-light text-dark border">v{{ f.version }}</span></td>
+            <td class="text-end">{{ f.rendimiento }} {{ f.unidad_rendimiento }}</td>
+            <td class="text-end">${{ f.costo_unitario }}</td>
+            <td>
+              <span class="badge
+                {% if f.estado == 'activa' %}bg-success
+                {% elif f.estado == 'obsoleta' %}bg-secondary
+                {% else %}bg-warning text-dark{% endif %}">
+                {{ f.get_estado_display }}
+              </span>
+            </td>
+            <td>
+              <a href="{% url 'produccion:formula_detail' f.pk %}" class="btn btn-sm btn-outline-primary me-1"><i class="bi bi-eye"></i></a>
+              <a href="{% url 'produccion:formula_edit' f.pk %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="8" class="text-center text-muted py-4">No hay fórmulas registradas.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="card-footer text-muted small">Total: {{ formulas.count }} fórmula(s)</div>
+  </div>
+</div>
+{% endblock %}

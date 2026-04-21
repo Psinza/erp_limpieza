@@ -1,0 +1,275 @@
+{% extends "base.html" %}
+{% block title %}DSP-{{ d.numero }}{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h3 class="mb-0"><i class="bi bi-truck"></i> Despacho — DSP-{{ d.numero }}</h3>
+      <small class="text-muted">
+        Ruta: <strong>{{ d.ruta.codigo }} — {{ d.ruta.nombre }}</strong> |
+        Vehículo: <strong>{{ d.vehiculo.placa }}</strong> |
+        Conductor: <strong>{{ d.conductor.nombre_completo }}</strong>
+      </small>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge fs-6
+        {% if d.estado == 'completado' %}bg-success
+        {% elif d.estado == 'en_ruta' %}bg-primary
+        {% elif d.estado == 'con_novedad' %}bg-warning text-dark
+        {% elif d.estado == 'cancelado' %}bg-danger
+        {% else %}bg-secondary{% endif %}">
+        {{ d.get_estado_display }}
+      </span>
+      <a href="{% url 'transportes:despacho_list' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left"></i> Volver
+      </a>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm text-center">
+        <div class="card-body py-3">
+          <p class="text-muted small mb-0">Salida</p>
+          <h6 class="mb-0">{{ d.fecha_salida|date:"d/m/Y H:i" }}</h6>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm text-center">
+        <div class="card-body py-3">
+          <p class="text-muted small mb-0">Llegada Real</p>
+          <h6 class="mb-0">{{ d.fecha_llegada_real|date:"d/m/Y H:i"|default:"Pendiente" }}</h6>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm text-center">
+        <div class="card-body py-3">
+          <p class="text-muted small mb-0">km Recorridos</p>
+          <h5 class="mb-0 text-primary">{{ d.km_recorridos }} km</h5>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm text-center">
+        <div class="card-body py-3">
+          <p class="text-muted small mb-0">Costo Combustible</p>
+          <h5 class="mb-0 text-warning">${{ d.costo_combustible|floatformat:2 }}</h5>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Botones de flujo -->
+  <div class="mb-4 d-flex gap-2 flex-wrap">
+    {% if d.estado == "programado" %}
+    <a href="{% url 'transportes:despacho_iniciar' d.pk %}" class="btn btn-primary">
+      <i class="bi bi-play-circle"></i> Iniciar Despacho
+    </a>
+    {% elif d.estado in "en_ruta,con_novedad" %}
+    <button class="btn btn-success" data-bs-toggle="collapse" data-bs-target="#formFinalizar">
+      <i class="bi bi-flag-fill"></i> Finalizar Despacho
+    </button>
+    {% endif %}
+    {% if d.estado not in "completado,cancelado" %}
+    <form method="post" action="{% url 'transportes:despacho_cancelar' d.pk %}"
+          class="d-inline" onsubmit="return confirm('¿Cancelar este despacho?')">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-outline-danger">
+        <i class="bi bi-x-circle"></i> Cancelar
+      </button>
+    </form>
+    {% endif %}
+  </div>
+
+  <!-- Formulario Finalizar (colapsable) -->
+  {% if d.estado in "en_ruta,con_novedad" %}
+  <div class="collapse mb-4" id="formFinalizar">
+    <div class="card border-0 shadow-sm border-success border-2">
+      <div class="card-header bg-success text-white fw-semibold">
+        <i class="bi bi-flag-fill me-1"></i> Datos de Finalización
+      </div>
+      <div class="card-body">
+        <form method="post" action="{% url 'transportes:despacho_finalizar' d.pk %}">
+          {% csrf_token %}
+          <div class="row g-3">
+            <div class="col-md-3">
+              <label class="form-label small fw-semibold">Fecha/Hora Llegada Real *</label>
+              {{ fin_form.fecha_llegada_real }}
+            </div>
+            <div class="col-md-2">
+              <label class="form-label small fw-semibold">Odómetro Llegada *</label>
+              {{ fin_form.odometro_llegada }}
+            </div>
+            <div class="col-md-2">
+              <label class="form-label small fw-semibold">Combustible Usado</label>
+              {{ fin_form.combustible_usado }}
+            </div>
+            <div class="col-md-2">
+              <label class="form-label small fw-semibold">Costo Combustible</label>
+              {{ fin_form.costo_combustible }}
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small fw-semibold">Novedad (si existe)</label>
+              {{ fin_form.novedad }}
+            </div>
+          </div>
+          <button type="submit" class="btn btn-success mt-3">
+            <i class="bi bi-check-circle"></i> Confirmar Finalización
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Novedad -->
+  {% if d.novedad %}
+  <div class="alert alert-warning mb-4">
+    <strong><i class="bi bi-exclamation-triangle-fill me-1"></i> Novedad registrada:</strong>
+    <p class="mb-0 mt-1">{{ d.novedad }}</p>
+  </div>
+  {% endif %}
+
+  <div class="row g-4">
+    <!-- Puntos de entrega -->
+    <div class="col-md-8">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white fw-semibold">
+          <i class="bi bi-geo-alt text-warning me-1"></i>
+          Puntos de Entrega
+          <span class="badge bg-secondary ms-1">{{ entregas.count }}</span>
+          —
+          <span class="badge bg-success ms-1">{{ entregas|length }} total</span>
+        </div>
+        <div class="card-body p-0">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-dark">
+              <tr><th>#</th><th>Punto</th><th>Cliente</th><th>Hora Llegada</th>
+                  <th>Estado</th><th>Receptor</th><th>Acciones</th></tr>
+            </thead>
+            <tbody>
+              {% for e in entregas %}
+              <tr>
+                <td class="text-center">
+                  <span class="badge bg-warning text-dark">{{ e.punto_entrega.orden }}</span>
+                </td>
+                <td class="fw-semibold">{{ e.punto_entrega.nombre }}</td>
+                <td class="small text-muted">{{ e.punto_entrega.cliente_ref|default:"—" }}</td>
+                <td class="small">{{ e.hora_llegada|date:"H:i"|default:"Pendiente" }}</td>
+                <td>
+                  <span class="badge
+                    {% if e.estado == 'entregado' %}bg-success
+                    {% elif e.estado == 'no_entregado' %}bg-danger
+                    {% elif e.estado == 'parcial' %}bg-warning text-dark
+                    {% else %}bg-secondary{% endif %}">
+                    {{ e.get_estado_display }}
+                  </span>
+                </td>
+                <td class="small text-muted">{{ e.firma_receptor|default:"—" }}</td>
+                <td>
+                  {% if d.estado in "en_ruta,con_novedad" %}
+                  <button class="btn btn-sm btn-outline-primary"
+                          data-bs-toggle="modal"
+                          data-bs-target="#modalEntrega{{ e.pk }}">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <!-- Modal de actualización -->
+                  <div class="modal fade" id="modalEntrega{{ e.pk }}" tabindex="-1">
+                    <div class="modal-dialog">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h5 class="modal-title">Actualizar Entrega — {{ e.punto_entrega.nombre }}</h5>
+                          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <form method="post" action="{% url 'transportes:despacho_actualizar_entrega' d.pk e.pk %}">
+                          {% csrf_token %}
+                          <div class="modal-body">
+                            <div class="mb-3">
+                              <label class="form-label">Estado *</label>
+                              <select name="estado" class="form-select">
+                                {% for val, lbl in e.ESTADO_CHOICES %}
+                                <option value="{{ val }}" {% if e.estado == val %}selected{% endif %}>{{ lbl }}</option>
+                                {% endfor %}
+                              </select>
+                            </div>
+                            <div class="mb-3">
+                              <label class="form-label">Hora de Llegada</label>
+                              <input type="datetime-local" name="hora_llegada" class="form-control"
+                                     value="{{ e.hora_llegada|date:'Y-m-d\TH:i' }}">
+                            </div>
+                            <div class="mb-3">
+                              <label class="form-label">Firma / Nombre Receptor</label>
+                              <input type="text" name="firma_receptor" class="form-control"
+                                     value="{{ e.firma_receptor }}">
+                            </div>
+                            <div class="mb-3">
+                              <label class="form-label">Observación</label>
+                              <textarea name="observacion" class="form-control" rows="2">{{ e.observacion }}</textarea>
+                            </div>
+                          </div>
+                          <div class="modal-footer">
+                            <button type="submit" class="btn btn-primary">Guardar</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                          </div>
+                        </form>
+                      </div>
+                    </div>
+                  </div>
+                  {% endif %}
+                </td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="7" class="text-center text-muted py-3">Sin puntos de entrega.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Info del despacho -->
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-primary text-white fw-semibold">
+          <i class="bi bi-info-circle me-1"></i> Datos del Despacho
+        </div>
+        <div class="card-body">
+          <dl class="row mb-0 small">
+            <dt class="col-5">Ruta</dt><dd class="col-7">{{ d.ruta.codigo }}</dd>
+            <dt class="col-5">Origen</dt><dd class="col-7">{{ d.ruta.origen }}</dd>
+            <dt class="col-5">Destino</dt><dd class="col-7">{{ d.ruta.destino }}</dd>
+            <dt class="col-5">Vehículo</dt>
+            <dd class="col-7"><a href="{% url 'transportes:vehiculo_detail' d.vehiculo.pk %}">{{ d.vehiculo.placa }}</a></dd>
+            <dt class="col-5">Conductor</dt>
+            <dd class="col-7"><a href="{% url 'transportes:conductor_detail' d.conductor.pk %}">{{ d.conductor.apellidos }}</a></dd>
+            <dt class="col-5">Odóm. Salida</dt><dd class="col-7">{{ d.odometro_salida }} km</dd>
+            <dt class="col-5">Odóm. Llegada</dt><dd class="col-7">{{ d.odometro_llegada|default:"—" }} km</dd>
+            <dt class="col-5">km Recorridos</dt><dd class="col-7 fw-bold text-primary">{{ d.km_recorridos }} km</dd>
+            <dt class="col-5">Combustible</dt><dd class="col-7">{{ d.combustible_usado }} gal</dd>
+            <dt class="col-5">Costo Comb.</dt><dd class="col-7">${{ d.costo_combustible|floatformat:2 }}</dd>
+          </dl>
+        </div>
+      </div>
+      {% if d.notas %}
+      <div class="card border-0 shadow-sm mt-3">
+        <div class="card-body small">
+          <strong>Notas:</strong> {{ d.notas }}
+        </div>
+      </div>
+      {% endif %}
+      <!-- Auditoría -->
+      <div class="card border-0 shadow-sm mt-3">
+        <div class="card-body py-2 text-muted small">
+          <div>Creado por: <strong>{{ d.creado_por|default:"—" }}</strong></div>
+          <div>Fecha: {{ d.creado_en|date:"d/m/Y H:i" }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Alertas de Stock{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-exclamation-triangle text-danger"></i> Alertas de Stock Bajo</h2>
+    <a href="{% url 'produccion:dashboard' %}" class="btn btn-outline-secondary">Volver al Dashboard</a>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-md-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-danger text-white fw-bold">Materias Primas Bajo Mínimo</div>
+        <div class="card-body p-0">
+          <table class="table table-hover mb-0">
+            <thead class="table-light"><tr><th>Material</th><th>Stock Actual</th><th>Mínimo</th></tr></thead>
+            <tbody>
+              {% for m in mp_alertas %}
+              <tr>
+                <td>{{ m.nombre }}</td>
+                <td class="text-danger fw-bold">{{ m.stock_actual }} {{ m.unidad_medida }}</td>
+                <td class="text-muted">{{ m.stock_minimo }}</td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="3" class="text-center text-muted py-4">Sin alertas en materias primas.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-warning text-dark fw-bold">Productos Terminados Bajo Mínimo</div>
+        <div class="card-body p-0">
+          <table class="table table-hover mb-0">
+            <thead class="table-light"><tr><th>Producto</th><th>Stock Actual</th><th>Mínimo</th></tr></thead>
+            <tbody>
+              {% for p in pt_alertas %}
+              <tr>
+                <td>{{ p.nombre }}</td>
+                <td class="text-danger fw-bold">{{ p.stock_actual }} {{ p.unidad_medida }}</td>
+                <td class="text-muted">{{ p.stock_minimo }}</td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="3" class="text-center text-muted py-4">Sin alertas en productos terminados.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

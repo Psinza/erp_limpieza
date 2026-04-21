@@ -1,0 +1,144 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Dashboard — ERP Industrial{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block breadcrumb %}Inicio / Dashboard{% endblock %}
+
+{% block content %}
+<!-- Bienvenida -->
+<div style="margin-bottom:24px;">
+  <h2 style="font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:600;color:#1a2332;">
+    Bienvenido, {{ user.nombres }} 👋
+  </h2>
+  <p style="font-size:13px;color:#8899aa;margin-top:2px;">
+    {{ user.area }} &nbsp;·&nbsp; {{ user.rol|default:"Administrador" }} &nbsp;·&nbsp;
+    Último acceso: {{ user.ultimo_acceso|date:"d/m/Y H:i"|default:"Primera sesión" }}
+  </p>
+</div>
+
+<!-- Stats -->
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:28px;">
+  <div class="stat-card">
+    <div class="stat-icon" style="background:#e3f2fd;">
+      <i class="bi bi-people-fill" style="color:#0d47a1;"></i>
+    </div>
+    <div>
+      <div class="stat-value">{{ stats.usuarios_activos }}</div>
+      <div class="stat-label">Usuarios activos</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon" style="background:#e8f5e9;">
+      <i class="bi bi-shield-check" style="color:#2e7d32;"></i>
+    </div>
+    <div>
+      <div class="stat-value">{{ stats.roles_totales }}</div>
+      <div class="stat-label">Roles configurados</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon" style="background:#f3e5f5;">
+      <i class="bi bi-diagram-3" style="color:#6a1b9a;"></i>
+    </div>
+    <div>
+      <div class="stat-value">{{ stats.areas_totales }}</div>
+      <div class="stat-label">Áreas del sistema</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon" style="background:#fff8e1;">
+      <i class="bi bi-door-open" style="color:#e65100;"></i>
+    </div>
+    <div>
+      <div class="stat-value">{{ stats.accesos_hoy }}</div>
+      <div class="stat-label">Accesos hoy</div>
+    </div>
+  </div>
+</div>
+
+<!-- Módulos disponibles -->
+<div class="erp-card mb-4">
+  <div class="erp-card-header">
+    <span class="erp-card-title"><i class="bi bi-grid me-2"></i>Módulos disponibles</span>
+    <span style="font-size:12px;color:#8899aa;">Según su rol y área asignada</span>
+  </div>
+  <div class="erp-card-body">
+    {% if modulos %}
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;">
+      {% for m in modulos %}
+      <a href="{{ m.url }}" style="text-decoration:none;">
+        <div style="border:1.5px solid #e2e8f0;border-radius:12px;padding:16px 14px;
+                    text-align:center;transition:all .15s;cursor:pointer;background:#fff;"
+             onmouseover="this.style.borderColor='#0d47a1';this.style.background='#f0f4ff';"
+             onmouseout="this.style.borderColor='#e2e8f0';this.style.background='#fff';">
+          <i class="bi bi-{{ m.icono }}" style="font-size:24px;color:#0d47a1;display:block;margin-bottom:8px;"></i>
+          <div style="font-size:13px;font-weight:500;color:#1a2332;">{{ m.nombre }}</div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align:center;padding:32px;color:#8899aa;">
+      <i class="bi bi-lock" style="font-size:32px;display:block;margin-bottom:8px;"></i>
+      No tiene módulos asignados. Contacte al administrador.
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Accesos recientes -->
+<div class="erp-card">
+  <div class="erp-card-header">
+    <span class="erp-card-title"><i class="bi bi-clock-history me-2"></i>Accesos recientes al sistema</span>
+    {% if user.is_superuser %}
+    <a href="{% url 'core:usuario_lista' %}" class="btn-erp btn-erp-outline" style="font-size:12px;padding:5px 12px;">Ver todos</a>
+    {% endif %}
+  </div>
+  <div style="overflow-x:auto;">
+    <table class="erp-table">
+      <thead>
+        <tr>
+          <th>Usuario</th>
+          <th>Tipo</th>
+          <th>IP</th>
+          <th>Fecha / Hora</th>
+          <th>Detalle</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for log in accesos_recientes %}
+        <tr>
+          <td>
+            <div style="font-weight:500;color:#1a2332;">{{ log.username }}</div>
+          </td>
+          <td>
+            {% if log.tipo == 'LOGIN' %}
+              <span style="background:#e8f5e9;color:#2e7d32;font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px;">
+                <i class="bi bi-door-open me-1"></i>Entrada
+              </span>
+            {% elif log.tipo == 'LOGOUT' %}
+              <span style="background:#f5f5f5;color:#666;font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px;">
+                <i class="bi bi-door-closed me-1"></i>Salida
+              </span>
+            {% elif log.tipo == 'FALLIDO' %}
+              <span style="background:#fff8e1;color:#e65100;font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px;">
+                <i class="bi bi-exclamation-triangle me-1"></i>Fallido
+              </span>
+            {% elif log.tipo == 'BLOQUEO' %}
+              <span style="background:#ffebee;color:#c62828;font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px;">
+                <i class="bi bi-lock me-1"></i>Bloqueado
+              </span>
+            {% endif %}
+          </td>
+          <td style="color:#8899aa;font-size:13px;">{{ log.ip|default:"—" }}</td>
+          <td style="color:#556;font-size:13px;white-space:nowrap;">{{ log.timestamp|date:"d/m/Y H:i:s" }}</td>
+          <td style="color:#8899aa;font-size:12px;">{{ log.detalle|default:"—" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" style="text-align:center;color:#8899aa;padding:24px;">Sin registros</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

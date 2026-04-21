@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Plan de Cuentas{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3><i class="bi bi-diagram-2"></i> Plan de Cuentas</h3>
+    <a href="{% url 'contabilidad:cuenta_create' %}" class="btn btn-primary">
+      <i class="bi bi-plus-circle"></i> Nueva Cuenta
+    </a>
+  </div>
+
+  <form method="get" class="row g-2 mb-3">
+    <div class="col-md-4">
+      <input type="text" name="q" value="{{ q }}" class="form-control"
+             placeholder="Buscar por código o nombre…">
+    </div>
+    <div class="col-md-3">
+      <select name="tipo" class="form-select">
+        <option value="">— Todos los tipos —</option>
+        {% for val, label in tipos %}
+        <option value="{{ val }}" {% if tipo == val %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2">
+      <button type="submit" class="btn btn-outline-secondary w-100">
+        <i class="bi bi-search"></i> Filtrar
+      </button>
+    </div>
+    <div class="col-md-1">
+      <a href="{% url 'contabilidad:plan_cuentas' %}" class="btn btn-outline-danger w-100">✕</a>
+    </div>
+  </form>
+
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-dark">
+            <tr><th>Código</th><th>Nombre</th><th>Tipo</th><th>Naturaleza</th>
+                <th>Nivel</th><th class="text-end">Saldo Inicial</th>
+                <th class="text-end">Saldo Actual</th><th>Mov.</th><th>Acciones</th></tr>
+          </thead>
+          <tbody>
+            {% for c in cuentas %}
+            <tr style="{% if c.nivel == 1 %}background:#f8f9fa;font-weight:700{% elif c.nivel == 2 %}background:#fff;font-weight:600{% endif %}">
+              <td>
+                <code style="padding-left:{{ c.nivel|add:"-1" }}rem">{{ c.codigo }}</code>
+              </td>
+              <td>
+                {{ c.nombre }}
+                {% if not c.acepta_movimientos %}
+                <span class="badge bg-light text-dark border ms-1 small">Agrupación</span>
+                {% endif %}
+              </td>
+              <td>
+                <span class="badge
+                  {% if c.tipo == 'activo' %}bg-primary
+                  {% elif c.tipo == 'pasivo' %}bg-danger
+                  {% elif c.tipo == 'patrimonio' %}bg-warning text-dark
+                  {% elif c.tipo == 'ingreso' %}bg-success
+                  {% elif c.tipo == 'egreso' %}bg-secondary
+                  {% else %}bg-info text-dark{% endif %}">
+                  {{ c.get_tipo_display }}
+                </span>
+              </td>
+              <td>{{ c.get_naturaleza_display }}</td>
+              <td class="text-center">{{ c.nivel }}</td>
+              <td class="text-end text-muted">${{ c.saldo_inicial|floatformat:2 }}</td>
+              <td class="text-end fw-bold {% if c.saldo_actual < 0 %}text-danger{% else %}text-success{% endif %}">
+                ${{ c.saldo_actual|floatformat:2 }}
+              </td>
+              <td class="text-center">
+                {% if c.acepta_movimientos %}
+                <a href="{% url 'contabilidad:cuenta_mayor' c.pk %}"
+                   class="btn btn-sm btn-outline-info" title="Libro Mayor">
+                  <i class="bi bi-journal-text"></i>
+                </a>
+                {% endif %}
+              </td>
+              <td>
+                <a href="{% url 'contabilidad:cuenta_edit' c.pk %}"
+                   class="btn btn-sm btn-outline-primary">
+                  <i class="bi bi-pencil"></i>
+                </a>
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="9" class="text-center text-muted py-4">Sin cuentas registradas.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card-footer text-muted small">Total: {{ cuentas.count }} cuenta(s)</div>
+  </div>
+</div>
+{% endblock %}

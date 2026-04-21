@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Ruta {{ ruta.codigo }}{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h3 class="mb-0"><i class="bi bi-signpost-2"></i> {{ ruta.codigo }} — {{ ruta.nombre }}</h3>
+      <small class="text-muted">Zona: {{ ruta.zona }} | {{ ruta.origen }} → {{ ruta.destino }} | {{ ruta.distancia_km }} km | {{ ruta.tiempo_estimado }} min</small>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{% url 'transportes:ruta_edit' ruta.pk %}" class="btn btn-outline-warning btn-sm"><i class="bi bi-pencil"></i> Editar</a>
+      <a href="{% url 'transportes:despacho_create' %}" class="btn btn-primary btn-sm"><i class="bi bi-truck"></i> Crear Despacho</a>
+      <a href="{% url 'transportes:ruta_list' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Volver</a>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-md-7">
+      <!-- Puntos de entrega -->
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white fw-semibold border-bottom">
+          <i class="bi bi-geo-alt text-warning me-1"></i> Puntos de Entrega ({{ puntos.count }})
+        </div>
+        <!-- Agregar punto -->
+        <div class="card-body border-bottom">
+          <form method="post" action="{% url 'transportes:ruta_agregar_punto' ruta.pk %}">
+            {% csrf_token %}
+            <div class="row g-2 align-items-end">
+              <div class="col-md-1"><label class="form-label small mb-1">#</label>{{ punto_form.orden }}</div>
+              <div class="col-md-3"><label class="form-label small mb-1">Nombre *</label>{{ punto_form.nombre }}</div>
+              <div class="col-md-3"><label class="form-label small mb-1">Cliente Ref.</label>{{ punto_form.cliente_ref }}</div>
+              <div class="col-md-2"><label class="form-label small mb-1">Min desde inicio</label>{{ punto_form.tiempo_estimado }}</div>
+              <div class="col-md-2"><label class="form-label small mb-1">Dirección</label>{{ punto_form.direccion }}</div>
+              <div class="col-md-1"><button type="submit" class="btn btn-warning text-dark w-100"><i class="bi bi-plus-lg"></i></button></div>
+            </div>
+          </form>
+        </div>
+        <div class="card-body p-0">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light"><tr><th>#</th><th>Nombre</th><th>Cliente</th><th>Tiempo</th><th>Dirección</th><th></th></tr></thead>
+            <tbody>
+              {% for p in puntos %}
+              <tr>
+                <td class="text-center"><span class="badge bg-warning text-dark">{{ p.orden }}</span></td>
+                <td class="fw-semibold">{{ p.nombre }}</td>
+                <td class="small text-muted">{{ p.cliente_ref|default:"—" }}</td>
+                <td class="small">{{ p.tiempo_estimado }} min</td>
+                <td class="small text-muted">{{ p.direccion|truncatechars:30|default:"—" }}</td>
+                <td>
+                  <form method="post" action="{% url 'transportes:ruta_eliminar_punto' ruta.pk p.pk %}" onsubmit="return confirm('¿Eliminar punto?')">
+                    {% csrf_token %}
+                    <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                  </form>
+                </td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="6" class="text-center text-muted py-3">Sin puntos de entrega. Agrega usando el formulario de arriba.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-5">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-primary text-white fw-semibold"><i class="bi bi-info-circle me-1"></i> Datos de la Ruta</div>
+        <div class="card-body">
+          <dl class="row mb-0 small">
+            <dt class="col-5">Código</dt><dd class="col-7"><code>{{ ruta.codigo }}</code></dd>
+            <dt class="col-5">Zona</dt><dd class="col-7">{{ ruta.zona }}</dd>
+            <dt class="col-5">Origen</dt><dd class="col-7">{{ ruta.origen }}</dd>
+            <dt class="col-5">Destino</dt><dd class="col-7">{{ ruta.destino }}</dd>
+            <dt class="col-5">Distancia</dt><dd class="col-7">{{ ruta.distancia_km }} km</dd>
+            <dt class="col-5">Tiempo Est.</dt><dd class="col-7">{{ ruta.tiempo_estimado }} min</dd>
+            <dt class="col-5">Estado</dt><dd class="col-7"><span class="badge {% if ruta.estado == 'activa' %}bg-success{% else %}bg-secondary{% endif %}">{{ ruta.get_estado_display }}</span></dd>
+          </dl>
+          {% if ruta.descripcion %}<hr><p class="small text-muted mb-0">{{ ruta.descripcion }}</p>{% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

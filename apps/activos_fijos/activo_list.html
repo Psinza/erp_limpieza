@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}Lista de Activos Fijos{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-boxes me-2"></i>Control de Activos Fijos</h2>
+        <div class="d-flex">
+            <a href="{% url 'activos_fijos:reporte_depreciacion' %}" class="btn btn-info me-2">
+                <i class="fas fa-chart-line me-1"></i> Reporte Depreciación
+            </a>
+            <a href="{% url 'activos_fijos:exportar_excel' %}" class="btn btn-success me-2">
+                <i class="fas fa-file-excel me-1"></i> Exportar a Excel
+            </a>
+            <a href="{% url 'activos_fijos:activo_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i> Registrar Nuevo Activo
+            </a>
+        </div>
+    </div>
+
+    <!-- Mensajes de Éxito / Toasts -->
+    {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
+        <i class="fas fa-check-circle me-2"></i> {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    <form method="GET" class="mb-4">
+        <div class="input-group">
+            <input type="text" name="q" class="form-control" placeholder="Buscar por código o nombre..."
+                value="{{ q }}">
+            <button class="btn btn-outline-secondary" type="submit"><i class="fas fa-search"></i> Buscar</button>
+            {% if q %}<a href="{% url 'activos_fijos:activo_list' %}" class="btn btn-outline-danger"><i
+                    class="fas fa-times"></i> Limpiar</a>{% endif %}
+        </div>
+    </form>
+
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Inventario de Activos</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Código</th>
+                            <th>Descripción</th>
+                            <th>Fecha Adquisición</th>
+                            <th class="text-end">Valor Compra</th>
+                            <th class="text-center">Vida Útil (Meses)</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for activo in activos %}
+                        <tr>
+                            <td><strong>{{ activo.codigo }}</strong></td>
+                            <td>{{ activo.nombre }}</td>
+                            <td>{{ activo.fecha_adquisicion|date:"d/m/Y" }}</td>
+                            <td class="text-end">${{ activo.valor_compra|floatformat:2 }}</td>
+                            <td class="text-center">{{ activo.vida_util_meses }}</td>
+                            <td class="text-center">
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'activos_fijos:activo_update' activo.pk %}"
+                                        class="btn btn-outline-warning" title="Editar"><i class="fas fa-edit"></i></a>
+                                    <a href="{% url 'activos_fijos:activo_delete' activo.pk %}"
+                                        class="btn btn-outline-danger" title="Eliminar"><i class="fas fa-trash"></i></a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">No hay activos fijos registrados
+                                actualmente.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Paginación -->
+            {% if is_paginated %}
+            <nav aria-label="Navegación de páginas" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item"><a class="page-link" href="?page=1{% if q %}&q={{ q }}{% endif %}">&laquo;
+                            Primero</a></li>
+                    <li class="page-item"><a class="page-link"
+                            href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}">Anterior</a>
+                    </li>
+                    {% endif %}
+
+                    <li class="page-item active"><span class="page-link">Página {{ page_obj.number }} de {{
+                            paginator.num_pages }}</span></li>
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item"><a class="page-link"
+                            href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}">Siguiente</a>
+                    </li>
+                    <li class="page-item"><a class="page-link"
+                            href="?page={{ paginator.num_pages }}{% if q %}&q={{ q }}{% endif %}">Último &raquo;</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

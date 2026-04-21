@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Cuentas Bancarias{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3><i class="bi bi-credit-card-2-front"></i> Cuentas Bancarias</h3>
+    <a href="{% url 'tesoreria:cuenta_create' %}" class="btn btn-primary"><i class="bi bi-plus-circle"></i> Nueva Cuenta</a>
+  </div>
+  <div class="row g-3 mb-4">
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm bg-primary text-white text-center">
+        <div class="card-body py-3">
+          <p class="small mb-0 opacity-75">Saldo Total Bancos</p>
+          <h3 class="mb-0 fw-bold">${{ total|floatformat:2 }}</h3>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-dark">
+          <tr><th>Alias</th><th>Banco</th><th>Tipo</th><th>N° Cuenta</th><th>Moneda</th><th>Titular</th><th class="text-end">Saldo</th><th>Acciones</th></tr>
+        </thead>
+        <tbody>
+          {% for c in cuentas %}
+          <tr>
+            <td><a href="{% url 'tesoreria:cuenta_detail' c.pk %}" class="fw-semibold">{{ c.alias }}</a></td>
+            <td>{{ c.banco }}</td>
+            <td>{{ c.get_tipo_display }}</td>
+            <td><code>{{ c.numero }}</code></td>
+            <td>{{ c.moneda }}</td>
+            <td class="small text-muted">{{ c.titular|default:"—" }}</td>
+            <td class="text-end fw-bold {% if c.saldo_actual < 0 %}text-danger{% else %}text-success{% endif %}">
+              ${{ c.saldo_actual|floatformat:2 }}
+            </td>
+            <td>
+              <a href="{% url 'tesoreria:cuenta_detail' c.pk %}" class="btn btn-sm btn-outline-primary me-1"><i class="bi bi-eye"></i></a>
+              <a href="{% url 'tesoreria:cuenta_edit' c.pk %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="8" class="text-center text-muted py-4">Sin cuentas bancarias.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

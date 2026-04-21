@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalle Vehículo {{ vehiculo.placa }} - ERP Limpieza{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Encabezado -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1"><i class="bi bi-truck me-2"></i>{{ vehiculo.marca }} {{ vehiculo.modelo }} ({{ vehiculo.año }})</h2>
+            <span class="badge fs-6 
+                {% if vehiculo.estado == 'disponible' %}bg-success
+                {% elif vehiculo.estado == 'en_ruta' %}bg-primary
+                {% elif vehiculo.estado == 'mantenimiento' %}bg-warning text-dark
+                {% else %}bg-secondary{% endif %}">
+                {{ vehiculo.get_estado_display }}
+            </span>
+            <span class="ms-2 text-muted fw-bold">Placa: {{ vehiculo.placa }}</span>
+        </div>
+        <div class="btn-group">
+            <a href="{% url 'transportes:vehiculo_lista' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Volver</a>
+            <button class="btn btn-primary"><i class="bi bi-pencil"></i> Editar</button>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Ficha Técnica -->
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 mb-4">
+                {% if vehiculo.foto %}
+                    <img src="{{ vehiculo.foto.url }}" class="card-img-top" alt="Foto Vehículo">
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title fw-bold border-bottom pb-2">Ficha Técnica</h5>
+                    <div class="row mb-2">
+                        <div class="col-6 text-muted">Tipo:</div>
+                        <div class="col-6 fw-semibold">{{ vehiculo.tipo.nombre }}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-6 text-muted">Combustible:</div>
+                        <div class="col-6 text-capitalize">{{ vehiculo.get_combustible_display }}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-6 text-muted">Odómetro:</div>
+                        <div class="col-6 fw-bold text-primary">{{ vehiculo.odometro|floatformat:0 }} km</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-6 text-muted">Carga Máx:</div>
+                        <div class="col-6">{{ vehiculo.capacidad_carga }} Ton.</div>
+                    </div>
+                    
+                    <h6 class="mt-4 fw-bold border-bottom pb-2 text-danger"><i class="bi bi-file-earmark-text me-2"></i>Vencimientos</h6>
+                    <ul class="list-unstyled small">
+                        <li class="mb-1">SOAT: <span class="float-end fw-semibold">{{ vehiculo.soat_vencimiento|default:"N/A" }}</span></li>
+                        <li class="mb-1">Revisión: <span class="float-end fw-semibold">{{ vehiculo.revision_vencimiento|default:"N/A" }}</span></li>
+                        <li>Seguro: <span class="float-end fw-semibold">{{ vehiculo.seguro_vencimiento|default:"N/A" }}</span></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Historiales (Tabs) -->
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white">
+                    <ul class="nav nav-tabs card-header-tabs" id="vehicleTabs" role="tablist">
+                        <li class="nav-item">
+                            <button class="nav-link active" id="despachos-tab" data-bs-toggle="tab" data-bs-target="#despachos" type="button">Historial Despachos</button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link" id="mantenimiento-tab" data-bs-toggle="tab" data-bs-target="#mantenimiento" type="button">Mantenimientos</button>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body">
+                    <div class="tab-content" id="vehicleTabsContent">
+                        <!-- Tab Despachos -->
+                        <div class="tab-pane fade show active" id="despachos" role="tabpanel">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle small">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>No.</th>
+                                            <th>Ruta</th>
+                                            <th>Fecha Salida</th>
+                                            <th>Conductor</th>
+                                            <th>Estado</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for d in despachos %}
+                                        <tr>
+                                            <td class="fw-bold">DSP-{{ d.numero }}</td>
+                                            <td>{{ d.ruta.codigo }}</td>
+                                            <td>{{ d.fecha_salida|date:"d/m/Y H:i" }}</td>
+                                            <td>{{ d.conductor.nombre_completo }}</td>
+                                            <td>
+                                                <span class="badge {% if d.estado == 'completado' %}bg-success{% else %}bg-info text-dark{% endif %}">
+                                                    {{ d.get_estado_display }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="5" class="text-center py-4 text-muted">No se registran despachos para este vehículo.</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Tab Mantenimientos -->
+                        <div class="tab-pane fade" id="mantenimiento" role="tabpanel">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle small">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Fecha</th>
+                                            <th>Tipo</th>
+                                            <th>Descripción</th>
+                                            <th>Costo</th>
+                                            <th>Estado</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for m in mantenimientos %}
+                                        <tr>
+                                            <td>{{ m.fecha_programada|date:"d/m/Y" }}</td>
+                                            <td class="text-capitalize">{{ m.tipo }}</td>
+                                            <td>{{ m.descripcion }}</td>
+                                            <td class="fw-bold text-success">${{ m.costo|floatformat:2 }}</td>
+                                            <td>{{ m.get_estado_display }}</td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="5" class="text-center py-4 text-muted">No hay registros de mantenimiento.</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

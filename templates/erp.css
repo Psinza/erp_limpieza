@@ -1,0 +1,38 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+}
+
+.wrapper {
+    display: flex;
+    align-items: stretch;
+}
+
+#sidebar {
+    min-width: 250px;
+    max-width: 250px;
+    min-height: 100vh;
+    transition: all 0.3s;
+}
+
+#sidebar.active {
+    margin-left: -250px;
+}
+
+#sidebar .components a {
+    padding: 10px;
+    display: block;
+    border-radius: 5px;
+    transition: 0.2s;
+}
+
+#sidebar .components a:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.card {
+    border-radius: 10px;
+}
+
+.bg-success-soft { background-color: #e8f5e9; }
+.bg-danger-soft { background-color: #ffebee; }

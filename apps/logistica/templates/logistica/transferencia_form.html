@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block title %}Registrar Transferencia{% endblock %}
+
+{% block content %}
+<div class="container-fluid fade-in">
+    <div class="row justify-content-center">
+        <div class="col-xl-8 col-lg-10">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-primary text-white py-3">
+                    <h5 class="mb-0 d-flex align-items-center">
+                        <i class="bi bi-arrow-left-right me-2"></i>
+                        Registro de Transferencia entre Almacenes
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post" class="needs-validation">
+                        {% csrf_token %}
+
+                        <div class="row g-4 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-secondary">Almacén Origen</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="bi bi-box-arrow-right"></i></span>
+                                    {{ form.almacen_origen }}
+                                </div>
+                                <div class="text-danger small mt-1">{{ form.almacen_origen.errors }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-secondary">Almacén Destino</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i
+                                            class="bi bi-box-arrow-in-left"></i></span>
+                                    {{ form.almacen_destino }}
+                                </div>
+                                <div class="text-danger small mt-1">{{ form.almacen_destino.errors }}</div>
+                            </div>
+                        </div>
+
+                        <div class="border-top pt-4 mb-4">
+                            <h6 class="text-primary mb-3"><i class="bi bi-info-circle"></i> Detalle del Ítem</h6>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold small">Materia Prima</label>
+                                    {{ form.materia_prima }}
+                                    <div class="text-danger small">{{ form.materia_prima.errors }}</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold small">Producto Terminado</label>
+                                    {{ form.producto_pt }}
+                                    <div class="text-danger small">{{ form.producto_pt.errors }}</div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold small">Cantidad</label>
+                                    {{ form.cantidad }}
+                                    <div class="text-danger small">{{ form.cantidad.errors }}</div>
+                                </div>
+                                <div class="col-md-8">
+                                    <label class="form-label fw-bold small">Documento de Referencia</label>
+                                    {{ form.documento_referencia }}
+                                    <div class="text-danger small">{{ form.documento_referencia.errors }}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold small">Motivo / Observaciones</label>
+                            {{ form.motivo }}
+                        </div>
+
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger shadow-sm">
+                            {% for error in form.non_field_errors %}
+                            <i class="bi bi-exclamation-triangle me-2"></i> {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <div class="d-flex justify-content-between mt-5">
+                            <a href="{% url 'logistica:reporte_kardex' %}"
+                                class="btn btn-outline-secondary px-4">Cancelar</a>
+                            <button type="submit" class="btn btn-primary btn-lg px-5 shadow-sm">Registrar
+                                Movimiento</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.querySelectorAll('input, select, textarea').forEach(el => {
+        el.classList.add('form-control');
+        if (el.tagName === 'SELECT') el.classList.replace('form-control', 'form-select');
+    });
+</script>
+{% endblock %}

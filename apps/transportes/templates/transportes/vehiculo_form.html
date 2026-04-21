@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}{{ titulo }}{% endblock %}
+{% block content %}
+<div class="container py-4" style="max-width:860px">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h3><i class="bi bi-truck"></i> {{ titulo }}</h3>
+    <a href="{% url 'transportes:vehiculo_list' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Volver</a>
+  </div>
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-4">
+      <form method="post" enctype="multipart/form-data">{% csrf_token %}
+        <h6 class="text-muted text-uppercase fw-bold mb-3 border-bottom pb-2">Identificación</h6>
+        <div class="row g-3 mb-4">
+          <div class="col-md-3"><label class="form-label">Placa *</label>{{ form.placa }}{% if form.placa.errors %}<div class="text-danger small">{{ form.placa.errors }}</div>{% endif %}</div>
+          <div class="col-md-3"><label class="form-label">Tipo *</label>{{ form.tipo }}</div>
+          <div class="col-md-3"><label class="form-label">Marca *</label>{{ form.marca }}</div>
+          <div class="col-md-3"><label class="form-label">Modelo *</label>{{ form.modelo }}</div>
+          <div class="col-md-2"><label class="form-label">Año *</label>{{ form.año }}</div>
+          <div class="col-md-2"><label class="form-label">Color</label>{{ form.color }}</div>
+          <div class="col-md-3"><label class="form-label">Combustible</label>{{ form.combustible }}</div>
+          <div class="col-md-3"><label class="form-label">Estado</label>{{ form.estado }}</div>
+        </div>
+        <h6 class="text-muted text-uppercase fw-bold mb-3 border-bottom pb-2">Capacidad y Operación</h6>
+        <div class="row g-3 mb-4">
+          <div class="col-md-3"><label class="form-label">Capacidad Carga (ton)</label>{{ form.capacidad_carga }}</div>
+          <div class="col-md-3"><label class="form-label">Capacidad Volumen (m³)</label>{{ form.capacidad_volumen }}</div>
+          <div class="col-md-3"><label class="form-label">Odómetro (km)</label>{{ form.odometro }}</div>
+        </div>
+        <h6 class="text-muted text-uppercase fw-bold mb-3 border-bottom pb-2">Vencimientos de Documentos</h6>
+        <div class="row g-3 mb-4">
+          <div class="col-md-4"><label class="form-label">SOAT — Vencimiento</label>{{ form.soat_vencimiento }}</div>
+          <div class="col-md-4"><label class="form-label">Revisión Técnica — Vencimiento</label>{{ form.revision_vencimiento }}</div>
+          <div class="col-md-4"><label class="form-label">Seguro — Vencimiento</label>{{ form.seguro_vencimiento }}</div>
+        </div>
+        <div class="row g-3">
+          <div class="col-md-4"><label class="form-label">Foto</label>{{ form.foto }}</div>
+          <div class="col-md-8"><label class="form-label">Observaciones</label>{{ form.observaciones }}</div>
+        </div>
+        {% if form.errors %}<div class="alert alert-danger mt-3">{% for field in form %}{% for error in field.errors %}<div><strong>{{ field.label }}:</strong> {{ error }}</div>{% endfor %}{% endfor %}</div>{% endif %}
+        <div class="d-flex gap-2 mt-4">
+          <button type="submit" class="btn btn-success"><i class="bi bi-save"></i> Guardar</button>
+          <a href="{% url 'transportes:vehiculo_list' %}" class="btn btn-outline-secondary">Cancelar</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

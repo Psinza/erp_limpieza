@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Categorías de Proveedor{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3><i class="bi bi-tags"></i> Categorías de Proveedor</h3>
+    <a href="{% url 'compras:categoria_proveedor_create' %}" class="btn btn-primary">
+      <i class="bi bi-plus-circle"></i> Nueva Categoría
+    </a>
+  </div>
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+      <table class="table table-hover mb-0">
+        <thead class="table-dark"><tr><th>Nombre</th><th>Descripción</th><th>Proveedores</th><th>Acciones</th></tr></thead>
+        <tbody>
+          {% for c in categorias %}
+          <tr>
+            <td class="fw-semibold">{{ c.nombre }}</td>
+            <td class="text-muted small">{{ c.descripcion|truncatechars:60|default:"—" }}</td>
+            <td><span class="badge bg-info text-dark">{{ c.num }}</span></td>
+            <td>
+              <a href="{% url 'compras:categoria_proveedor_edit' c.pk %}" class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-pencil"></i>
+              </a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="4" class="text-center text-muted py-4">Sin categorías.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

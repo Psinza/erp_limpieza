@@ -1,0 +1,189 @@
+{% extends "core/base.html" %}
+
+{% block page_title %}Comercialización{% endblock %}
+{% block breadcrumb %}Inicio / Comercialización{% endblock %}
+
+{% block content %}
+<!-- Encabezado -->
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <div>
+    <h1 class="mb-1" style="font-family:var(--font-head);font-size:22px;font-weight:700;color:#1a2332;">
+      Panel de Comercialización
+    </h1>
+    <p class="text-muted small mb-0">Catálogo, listas de precios y promociones comerciales</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{% url 'comercializacion:catalogo_create' %}" class="btn-erp btn-erp-primary">
+      <i class="bi bi-plus-lg"></i> Nuevo ítem catálogo
+    </a>
+    <a href="{% url 'comercializacion:promocion_create' %}" class="btn-erp btn-erp-outline">
+      <i class="bi bi-tag"></i> Crear promoción
+    </a>
+    <a href="{% url 'comercializacion:lista_precio_create' %}" class="btn-erp btn-erp-outline">
+      <i class="bi bi-list-ul"></i> Nueva lista precios
+    </a>
+  </div>
+</div>
+
+<!-- KPIs -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#e8f0fe;color:#1a73e8;">
+        <i class="bi bi-grid-3x3-gap"></i>
+      </div>
+      <div>
+        <div class="stat-value">{{ total_productos_catalogo }}</div>
+        <div class="stat-label">Productos en catálogo</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#e6f4ea;color:#1e8e3e;">
+        <i class="bi bi-list-check"></i>
+      </div>
+      <div>
+        <div class="stat-value">{{ listas_activas }}</div>
+        <div class="stat-label">Listas de precio activas</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#fce8e6;color:#d93025;">
+        <i class="bi bi-percent"></i>
+      </div>
+      <div>
+        <div class="stat-value">{{ productos_en_oferta }}</div>
+        <div class="stat-label">En oferta</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#fef7e0;color:#f9a825;">
+        <i class="bi bi-star"></i>
+      </div>
+      <div>
+        <div class="stat-value">{{ productos_destacados }}</div>
+        <div class="stat-label">Destacados</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- Últimos productos del catálogo -->
+  <div class="col-md-7">
+    <div class="erp-card">
+      <div class="erp-card-header">
+        <span class="erp-card-title"><i class="bi bi-box me-2"></i>Catálogo reciente</span>
+        <a href="{% url 'comercializacion:catalogo_list' %}" class="btn-erp btn-erp-outline" style="font-size:12px;">
+          Ver todo <i class="bi bi-arrow-right"></i>
+        </a>
+      </div>
+      <div class="erp-card-body p-0">
+        {% if ultimos_productos %}
+        <table class="erp-table">
+          <thead>
+            <tr>
+              <th>Producto comercial</th>
+              <th>Categoría</th>
+              <th>Estado</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in ultimos_productos %}
+            <tr>
+              <td>
+                <div style="font-weight:600;font-size:13px;">{{ p.nombre_comercial }}</div>
+                <div class="text-muted" style="font-size:11px;">{{ p.producto.nombre }}</div>
+              </td>
+              <td><span class="badge-area">{{ p.categoria|default:"Sin categoría" }}</span></td>
+              <td>
+                {% if p.en_oferta %}<span class="badge bg-danger text-white" style="font-size:10px;">Oferta</span>{% endif %}
+                {% if p.destacado %}<span class="badge bg-warning text-dark" style="font-size:10px;">⭐ Destacado</span>{% endif %}
+                {% if not p.en_oferta and not p.destacado %}<span class="text-muted small">—</span>{% endif %}
+              </td>
+              <td>
+                <a href="{% url 'comercializacion:catalogo_edit' p.pk %}" class="btn-erp btn-erp-outline" style="font-size:11px;padding:4px 10px;">
+                  <i class="bi bi-pencil"></i>
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <div class="text-center py-5 text-muted">
+          <i class="bi bi-inbox" style="font-size:2rem;"></i>
+          <p class="mt-2 small">No hay productos en el catálogo aún.</p>
+          <a href="{% url 'comercializacion:catalogo_create' %}" class="btn-erp btn-erp-primary mt-2">
+            <i class="bi bi-plus"></i> Añadir primer producto
+          </a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Listas de precios -->
+  <div class="col-md-5">
+    <div class="erp-card">
+      <div class="erp-card-header">
+        <span class="erp-card-title"><i class="bi bi-currency-dollar me-2"></i>Listas de Precios</span>
+        <a href="{% url 'comercializacion:lista_precio_create' %}" class="btn-erp btn-erp-primary" style="font-size:12px;">
+          <i class="bi bi-plus"></i> Nueva
+        </a>
+      </div>
+      <div class="erp-card-body p-0">
+        {% if listas %}
+        <table class="erp-table">
+          <thead>
+            <tr><th>Lista</th><th>Moneda</th><th></th></tr>
+          </thead>
+          <tbody>
+            {% for lista in listas %}
+            <tr>
+              <td style="font-weight:600;font-size:13px;">{{ lista.nombre }}</td>
+              <td><span class="badge-area">{{ lista.moneda }}</span></td>
+              <td class="d-flex gap-1">
+                <a href="{% url 'comercializacion:lista_precio_detail' lista.pk %}" class="btn-erp btn-erp-outline" style="font-size:11px;padding:4px 10px;" title="Ver detalle">
+                  <i class="bi bi-eye"></i>
+                </a>
+                <a href="{% url 'comercializacion:lista_imprimir' lista.pk %}" target="_blank" class="btn-erp btn-erp-outline" style="font-size:11px;padding:4px 10px;" title="Imprimir">
+                  <i class="bi bi-printer"></i>
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <div class="text-center py-5 text-muted">
+          <i class="bi bi-list-ul" style="font-size:2rem;"></i>
+          <p class="mt-2 small">No hay listas de precios activas.</p>
+          <a href="{% url 'comercializacion:lista_precio_create' %}" class="btn-erp btn-erp-primary mt-2">
+            <i class="bi bi-plus"></i> Crear lista
+          </a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Acceso rápido a promociones -->
+    <div class="erp-card mt-3">
+      <div class="erp-card-body text-center py-4">
+        <i class="bi bi-tag-fill" style="font-size:2rem;color:#d93025;"></i>
+        <h6 class="mt-2 mb-1" style="font-family:var(--font-head);font-weight:700;">Gestión de Promociones</h6>
+        <p class="text-muted small mb-3">Aplica descuentos a múltiples productos del catálogo de forma masiva.</p>
+        <a href="{% url 'comercializacion:promocion_create' %}" class="btn-erp btn-erp-primary">
+          <i class="bi bi-lightning"></i> Crear promoción ahora
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            border: 1px solid #eee;
+        }
+
+        .header {
+            background-color: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            border-bottom: 3px solid #0d6efd;
+        }
+
+        .logo {
+            max-height: 80px;
+            margin-bottom: 10px;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .invoice-box {
+            background-color: #f1f8ff;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            border: 1px solid #cce5ff;
+        }
+
+        .footer {
+            background-color: #343a40;
+            color: #ffffff;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+        }
+
+        .button {
+            background-color: #0d6efd;
+            color: white;
+            padding: 12px 25px;
+            text-decoration: none;
+            border-radius: 5px;
+            display: inline-block;
+            margin-top: 10px;
+        }
+
+        .details {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .details td {
+            padding: 5px 0;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .font-bold {
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            {% if logo_url %}
+            <img src="{{ logo_url }}" alt="{{ config.EMPRESA_NOMBRE }}" class="logo">
+            {% endif %}
+            <h2 style="margin:0; color: #0d6efd;">{{ config.EMPRESA_NOMBRE }}</h2>
+        </div>
+        <div class="content">
+            <p>Estimado/a <strong>{{ factura.cliente }}</strong>,</p>
+            <p>Es un gusto saludarle. Adjunto a este mensaje encontrará su factura electrónica en formato PDF.</p>
+
+            <div class="invoice-box">
+                <table class="details">
+                    <tr>
+                        <td><strong>Factura Nro:</strong></td>
+                        <td class="text-right">{{ factura.nro_factura }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Fecha de Emisión:</strong></td>
+                        <td class="text-right">{{ factura.fecha|date:"d/m/Y" }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Fecha de Vencimiento:</strong></td>
+                        <td class="text-right">{{ factura.fecha_vencimiento|date:"d/m/Y" }}</td>
+                    </tr>
+                    <tr style="border-top: 1px solid #999;">
+                        <td class="font-bold" style="padding-top: 10px; font-size: 18px;">Total a Pagar:</td>
+                        <td class="text-right font-bold" style="padding-top: 10px; font-size: 18px; color: #0d6efd;">${{
+                            factura.total|floatformat:2 }}</td>
+                    </tr>
+                </table>
+            </div>
+
+            <p>Si tiene alguna duda respecto a este documento, por favor no dude en contactarnos respondiendo a este
+                correo.</p>
+
+            <p>Atentamente,<br>
+                <strong>Departamento de Facturación</strong><br>
+                {{ config.EMPRESA_NOMBRE }}
+            </p>
+        </div>
+        <div class="footer">
+            {{ config.EMPRESA_NOMBRE }} | RUC: {{ config.EMPRESA_RUC }}<br>
+            {{ config.EMPRESA_CIUDAD }} | Telf: {{ config.EMPRESA_TELEFONO }}<br>
+            © {% now "Y" %} Todos los derechos reservados.
+        </div>
+    </div>
+</body>
+
+</html>

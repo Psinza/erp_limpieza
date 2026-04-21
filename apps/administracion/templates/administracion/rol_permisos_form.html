@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block title %}Permisos del Rol: {{ grupo.name }}{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'administracion:rol_list' %}">Roles</a></li>
+            <li class="breadcrumb-item active">Editar Permisos</li>
+        </ol>
+    </nav>
+    <h3><i class="bi bi-shield-lock"></i> Permisos para el Rol: <strong>{{ grupo.name }}</strong></h3>
+</div>
+
+<form method="POST">
+    {% csrf_token %}
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row row-cols-1 row-cols-md-3 g-3">
+                {% regroup permisos by content_type.app_label as app_list %}
+                {% for app in app_list %}
+                    <div class="col">
+                        <div class="border rounded p-3 h-100 bg-light">
+                            <h6 class="text-uppercase text-primary border-bottom pb-2">{{ app.grouper }}</h6>
+                            {% for perm in app.list %}
+                                <div class="form-check small">
+                                    <input class="form-check-input" type="checkbox" name="permisos" value="{{ perm.id }}" id="perm_{{ perm.id }}" {% if perm.id in permisos_actuales %}checked{% endif %}>
+                                    <label class="form-check-label" for="perm_{{ perm.id }}">{{ perm.name }}</label>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="card-footer bg-white py-3">
+            <button type="submit" class="btn btn-dark px-4">Guardar Cambios</button>
+            <a href="{% url 'administracion:rol_list' %}" class="btn btn-link">Cancelar</a>
+        </div>
+    </div>
+</form>
+{% endblock %}

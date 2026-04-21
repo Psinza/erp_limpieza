@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}{{ c.nombre_completo }}{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h3 class="mb-0"><i class="bi bi-person-badge"></i> {{ c.nombre_completo }}</h3>
+      <small class="text-muted">Cédula: {{ c.cedula }} | Licencia: {{ c.categoria_licencia|default:"—" }}</small>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{% url 'transportes:conductor_edit' c.pk %}" class="btn btn-outline-info btn-sm"><i class="bi bi-pencil"></i> Editar</a>
+      <a href="{% url 'transportes:conductor_list' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Volver</a>
+    </div>
+  </div>
+  {% if c.licencia_vencida %}<div class="alert alert-danger mb-3"><i class="bi bi-exclamation-triangle-fill me-1"></i> Licencia de conducir <strong>VENCIDA</strong> ({{ c.licencia_vencimiento|date:"d/m/Y" }})</div>{% endif %}
+  <div class="row g-4">
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-info text-dark fw-semibold"><i class="bi bi-info-circle me-1"></i> Datos</div>
+        <div class="card-body">
+          {% if c.foto %}<div class="text-center mb-3"><img src="{{ c.foto.url }}" class="rounded-circle" width="80" height="80" style="object-fit:cover" alt="Foto"></div>{% endif %}
+          <dl class="row mb-0 small">
+            <dt class="col-5">Estado</dt><dd class="col-7"><span class="badge {% if c.estado == 'activo' %}bg-success{% else %}bg-secondary{% endif %}">{{ c.get_estado_display }}</span></dd>
+            <dt class="col-5">Teléfono</dt><dd class="col-7">{{ c.telefono|default:"—" }}</dd>
+            <dt class="col-5">Email</dt><dd class="col-7">{{ c.email|default:"—" }}</dd>
+            <dt class="col-5">Licencia</dt><dd class="col-7 {% if c.licencia_vencida %}text-danger fw-bold{% endif %}">{{ c.licencia_vencimiento|date:"d/m/Y"|default:"—" }}</dd>
+            <dt class="col-5">Vehículo</dt><dd class="col-7">{% if c.vehiculo_asignado %}<a href="{% url 'transportes:vehiculo_detail' c.vehiculo_asignado.pk %}">{{ c.vehiculo_asignado.placa }}</a>{% else %}—{% endif %}</dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-8">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white fw-semibold"><i class="bi bi-clock-history text-primary me-1"></i> Historial de Despachos</div>
+        <div class="card-body p-0">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light"><tr><th>N°</th><th>Ruta</th><th>Vehículo</th><th>Fecha</th><th>km</th><th>Estado</th></tr></thead>
+            <tbody>
+              {% for d in despachos %}
+              <tr>
+                <td><a href="{% url 'transportes:despacho_detail' d.pk %}">DSP-{{ d.numero }}</a></td>
+                <td class="small">{{ d.ruta.nombre }}</td>
+                <td class="small fw-bold">{{ d.vehiculo.placa }}</td>
+                <td class="small">{{ d.fecha_salida|date:"d/m/Y" }}</td>
+                <td class="small">{{ d.km_recorridos }} km</td>
+                <td><span class="badge {% if d.estado == 'completado' %}bg-success{% elif d.estado == 'en_ruta' %}bg-primary{% elif d.estado == 'cancelado' %}bg-danger{% else %}bg-secondary{% endif %}" style="font-size:.7rem">{{ d.get_estado_display }}</span></td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="6" class="text-center text-muted py-3">Sin despachos.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

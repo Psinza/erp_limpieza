@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+
+{% block title %}Gestionar Precios: {{ lista.nombre }}{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+        <h4 class="mb-0 fw-bold text-primary">
+            <i class="bi bi-currency-dollar me-2"></i>Edición Masiva: {{ lista.nombre }}
+        </h4>
+        <span class="badge bg-light text-dark border">Canal: {{ lista.canal.nombre }}</span>
+    </div>
+    <div class="card-body">
+        <form method="POST">
+            {% csrf_token %}
+            {{ formset.management_form }}
+            
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 30%;">Producto</th>
+                            <th style="width: 15%;">Costo Prod. ($)</th>
+                            <th style="width: 20%;">Precio Venta ($)</th>
+                            <th style="width: 15%; text-align: center;">Margen (%)</th>
+                            <th style="width: 15%; text-align: center;">IVA Incl.</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for form in formset %}
+                        <tr>
+                            <td>
+                                {{ form.id }}
+                                <div class="fw-bold">{{ form.instance.producto.nombre }}</div>
+                                <small class="text-muted">SKU: {{ form.instance.producto.codigo }}</small>
+                                <div class="d-none">{{ form.producto }}</div>
+                            </td>
+                            <td>
+                                {{ form.costo_produccion }}
+                            </td>
+                            <td>
+                                {{ form.valor }}
+                                {% if form.valor.errors %}<div class="text-danger small">{{ form.valor.errors }}</div>{% endif %}
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-success-soft text-success margen-display fw-bold">0.00%</span>
+                            </td>
+                            <td class="text-center">
+                                <div class="form-check d-inline-block">
+                                    {{ form.impuesto_incluido }}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="mt-4 d-flex justify-content-end gap-2">
+                <a href="{% url 'comercializacion:catalog' %}" class="btn btn-light px-4">Cancelar</a>
+                <button type="submit" class="btn btn-primary px-5">
+                    <i class="bi bi-save me-2"></i>Guardar Cambios
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const rows = document.querySelectorAll('tbody tr');
+
+    function calcularMargen(row) {
+        const costo = parseFloat(row.querySelector('.costo-field').value) || 0;
+        const precio = parseFloat(row.querySelector('.precio-input').value) || 0;
+        const display = row.querySelector('.margen-display');
+
+        if (precio > 0) {
+            const margen = ((precio - costo) / precio) * 100;
+            display.textContent = margen.toFixed(2) + '%';
+            
+            // Feedback visual según el margen
+            display.className = 'badge margen-display fw-bold ' + 
+                               (margen > 20 ? 'bg-success-soft text-success' : 
+                                margen > 5 ? 'bg-warning-soft text-warning' : 'bg-danger-soft text-danger');
+        } else {
+            display.textContent = '0.00%';
+            display.className = 'badge bg-light text-muted margen-display fw-bold';
+        }
+    }
+
+    rows.forEach(row => {
+        const input = row.querySelector('.precio-input');
+        input.addEventListener('input', () => calcularMargen(row));
+        calcularMargen(row); // Cálculo inicial
+    });
+});
+</script>
+{% endblock %}

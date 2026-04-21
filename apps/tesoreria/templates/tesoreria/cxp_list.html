@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}Cuentas por Pagar{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3><i class="bi bi-arrow-up-circle"></i> Cuentas por Pagar</h3>
+    <a href="{% url 'tesoreria:cxp_create' %}" class="btn btn-warning text-dark">
+      <i class="bi bi-plus-circle"></i> Nueva CXP
+    </a>
+  </div>
+
+  <!-- Resumen -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm text-center">
+        <div class="card-body py-3">
+          <p class="text-muted small mb-0">Total Emitido</p>
+          <h5 class="mb-0 text-warning">${{ resumen.total|floatformat:2|default:"0.00" }}</h5>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm text-center">
+        <div class="card-body py-3">
+          <p class="text-muted small mb-0">Total Pagado</p>
+          <h5 class="mb-0 text-success">${{ resumen.pagado|floatformat:2|default:"0.00" }}</h5>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <form method="get" class="row g-2 mb-3">
+    <div class="col-md-4">
+      <input type="text" name="q" value="{{ q }}" class="form-control"
+             placeholder="Proveedor, N° CXP o referencia…">
+    </div>
+    <div class="col-md-3">
+      <select name="estado" class="form-select">
+        <option value="">— Todos los estados —</option>
+        {% for val, label in estados %}
+        <option value="{{ val }}" {% if estado == val %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2">
+      <button type="submit" class="btn btn-outline-secondary w-100">
+        <i class="bi bi-search"></i> Filtrar
+      </button>
+    </div>
+    <div class="col-md-1">
+      <a href="{% url 'tesoreria:cxp_list' %}" class="btn btn-outline-danger w-100">✕</a>
+    </div>
+  </form>
+
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-dark">
+            <tr>
+              <th>N° CXP</th><th>Proveedor</th><th>Concepto</th><th>Referencia</th>
+              <th>Emisión</th><th>Vencimiento</th>
+              <th class="text-end">Total</th><th class="text-end">Pagado</th>
+              <th class="text-end">Saldo</th><th>Estado</th><th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for c in cxp_list %}
+            <tr class="{% if c.esta_vencida %}table-warning{% endif %}">
+              <td class="fw-bold">
+                <a href="{% url 'tesoreria:cxp_detail' c.pk %}">CXP-{{ c.numero }}</a>
+              </td>
+              <td>{{ c.proveedor_nombre }}</td>
+              <td class="small text-muted">{{ c.concepto|truncatechars:30 }}</td>
+              <td class="small">{{ c.referencia|default:"—" }}</td>
+              <td>{{ c.fecha_emision|date:"d/m/Y" }}</td>
+              <td class="{% if c.esta_vencida %}text-danger fw-bold{% endif %}">
+                {{ c.fecha_vencimiento|date:"d/m/Y" }}
+              </td>
+              <td class="text-end">${{ c.monto_total|floatformat:2 }}</td>
+              <td class="text-end text-success">${{ c.monto_pagado|floatformat:2 }}</td>
+              <td class="text-end fw-bold">${{ c.saldo_pendiente|floatformat:2 }}</td>
+              <td>
+                <span class="badge
+                  {% if c.estado == 'pagado' %}bg-success
+                  {% elif c.estado == 'parcial' %}bg-info text-dark
+                  {% elif c.estado == 'vencido' %}bg-danger
+                  {% elif c.estado == 'anulado' %}bg-secondary
+                  {% else %}bg-warning text-dark{% endif %}">
+                  {{ c.get_estado_display }}
+                </span>
+              </td>
+              <td>
+                <a href="{% url 'tesoreria:cxp_detail' c.pk %}"
+                   class="btn btn-sm btn-outline-primary">
+                  <i class="bi bi-eye"></i>
+                </a>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="11" class="text-center text-muted py-4">No hay cuentas por pagar.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card-footer text-muted small">Total: {{ cxp_list.count }} registro(s)</div>
+  </div>
+</div>
+{% endblock %}

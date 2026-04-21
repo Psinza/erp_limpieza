@@ -1,0 +1,45 @@
+{% extends 'core/base.html' %}
+{% block title %}Ordenación de Pagos{% endblock %}
+{% block page_title %}Autorizaciones de Pago{% endblock %}
+{% block breadcrumb %}Finanzas / Ordenación de Pagos{% endblock %}
+
+{% block content %}
+<div class="erp-card">
+    <div class="erp-card-header">
+        <h3 class="erp-card-title">Lista de Autorizaciones</h3>
+    </div>
+    <div class="erp-card-body">
+        <table class="erp-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Proveedor</th>
+                    <th>Fecha de Solicitud</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for aut in autorizaciones %}
+                <tr>
+                    <td>{{ aut.id }}</td>
+                    <td>{{ aut.cuenta_por_pagar.proveedor }}</td>
+                    <td>{{ aut.fecha_solicitud|date:"d/m/Y H:i" }}</td>
+                    <td>
+                        <span class="badge-area 
+                            {% if aut.estado == 'autorizado' %}badge-activo
+                            {% elif aut.estado == 'rechazado' %}badge-bloqueado
+                            {% endif %}">
+                            {{ aut.get_estado_display }}
+                        </span>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center text-muted">No hay autorizaciones registradas.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

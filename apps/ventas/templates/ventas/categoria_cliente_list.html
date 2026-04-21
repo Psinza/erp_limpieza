@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Categorías de Cliente{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3><i class="bi bi-tags"></i> Categorías de Cliente</h3>
+    <a href="{% url 'ventas:categoria_cliente_create' %}" class="btn btn-primary"><i class="bi bi-plus-circle"></i> Nueva</a>
+  </div>
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+      <table class="table table-hover mb-0">
+        <thead class="table-dark"><tr><th>Nombre</th><th>Descuento %</th><th>Clientes</th><th>Acciones</th></tr></thead>
+        <tbody>
+          {% for c in categorias %}
+          <tr>
+            <td class="fw-semibold">{{ c.nombre }}</td>
+            <td>{{ c.descuento_pct }}%</td>
+            <td><span class="badge bg-info text-dark">{{ c.num }}</span></td>
+            <td><a href="{% url 'ventas:categoria_cliente_edit' c.pk %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a></td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="4" class="text-center text-muted py-4">Sin categorías.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

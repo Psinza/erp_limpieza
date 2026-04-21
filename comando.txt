@@ -1,0 +1,2 @@
+net use */delete /y
+cmdkey /delete:172.16.0.4

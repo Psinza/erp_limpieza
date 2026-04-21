@@ -1,0 +1,78 @@
+{% extends "core/base.html" %}
+
+{% block page_title %}{{ titulo }}{% endblock %}
+{% block breadcrumb %}Comercialización / Catálogo / {{ titulo }}{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center mb-4 gap-3">
+  <a href="{% url 'comercializacion:catalogo_list' %}" class="btn-erp btn-erp-outline">
+    <i class="bi bi-arrow-left"></i>
+  </a>
+  <h1 style="font-family:var(--font-head);font-size:20px;font-weight:700;margin:0;">{{ titulo }}</h1>
+</div>
+
+<div class="row justify-content-center">
+  <div class="col-md-8">
+    <div class="erp-card">
+      <div class="erp-card-header">
+        <span class="erp-card-title"><i class="bi bi-box me-2"></i>Información del Producto Comercial</span>
+      </div>
+      <div class="erp-card-body">
+        <form method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+
+          <div class="form-section">Datos básicos</div>
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label">Producto de fábrica *</label>
+              {{ form.producto }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Categoría comercial</label>
+              {{ form.categoria }}
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Nombre comercial *</label>
+            {{ form.nombre_comercial }}
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Descripción para catálogo</label>
+            {{ form.descripcion_larga }}
+          </div>
+
+          <div class="form-section">Archivo y etiquetas</div>
+          <div class="mb-3">
+            <label class="form-label">Ficha técnica (PDF / imagen)</label>
+            {{ form.ficha_tecnica }}
+          </div>
+          <div class="d-flex gap-4 mb-4">
+            <div class="form-check">
+              {{ form.en_oferta }}
+              <label class="form-check-label">Marcar en oferta</label>
+            </div>
+            <div class="form-check">
+              {{ form.destacado }}
+              <label class="form-check-label">Producto destacado</label>
+            </div>
+          </div>
+
+          {% if form.errors %}
+          <div class="alert alert-danger mb-3">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            Por favor corrija los errores indicados.
+          </div>
+          {% endif %}
+
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn-erp btn-erp-primary">
+              <i class="bi bi-check2"></i> {{ accion }}
+            </button>
+            <a href="{% url 'comercializacion:catalogo_list' %}" class="btn-erp btn-erp-outline">Cancelar</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

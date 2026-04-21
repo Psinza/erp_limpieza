@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'contabilidad:dashboard' %}">Contabilidad</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'contabilidad:asiento_list' %}">Asientos</a></li>
+                    <li class="breadcrumb-item active">{{ titulo }}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <form method="post" id="asiento-form">
+        {% csrf_token %}
+
+        <!-- Encabezado del Asiento -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0"><i class="bi bi-journal-plus me-2"></i>Información del Asiento</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Número de Comprobante</label>
+                        {{ form.numero }}
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Fecha</label>
+                        {{ form.fecha }}
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Ejercicio</label>
+                        {{ form.ejercicio }}
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Estado</label>
+                        {{ form.estado }}
+                    </div>
+                    <div class="col-md-12">
+                        <label class="form-label">Glosa / Concepto</label>
+                        {{ form.glosa }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detalle de Líneas (Formset) -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Detalle Contable (Partida Doble)</h5>
+                <button type="button" class="btn btn-sm btn-light" id="add-line">
+                    <i class="bi bi-plus-circle me-1"></i> Agregar Línea
+                </button>
+            </div>
+            <div class="card-body p-0">
+                {{ formset.management_form }}
+                <table class="table table-hover align-middle mb-0" id="lines-table">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 40%;">Cuenta Contable</th>
+                            <th style="width: 20%;">Debe</th>
+                            <th style="width: 20%;">Haber</th>
+                            <th style="width: 15%;">Referencia</th>
+                            <th style="width: 5%;" class="text-center">Eliminar</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lines-body">
+                        {% for line_form in formset %}
+                        <tr class="line-row">
+                            <td>
+                                {{ line_form.id }}
+                                {{ line_form.cuenta }}
+                                {% if line_form.cuenta.errors %}<div class="text-danger small">{{
+                                    line_form.cuenta.errors }}</div>{% endif %}
+                            </td>
+                            <td>{{ line_form.debe }}</td>
+                            <td>{{ line_form.haber }}</td>
+                            <td>{{ line_form.referencia }}</td>
+                            <td class="text-center">
+                                {% if formset.can_delete %}
+                                {{ line_form.DELETE }}
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer bg-light">
+                <div class="d-flex justify-content-end">
+                    <a href="{% url 'contabilidad:asiento_list' %}" class="btn btn-outline-secondary me-2">Cancelar</a>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-save me-1"></i> Guardar Asiento
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Script para manejo dinámico del formset -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const addButton = document.getElementById('add-line');
+        const totalForms = document.getElementById('id_lineas-TOTAL_FORMS'); // Prefijo por defecto 'lineas'
+        const tbody = document.getElementById('lines-body');
+
+        addButton.addEventListener('click', function () {
+            const formCount = parseInt(totalForms.value);
+            const firstRow = document.querySelector('.line-row');
+            const newRow = firstRow.cloneNode(true);
+
+            // Limpiar inputs y actualizar índices
+            newRow.querySelectorAll('input, select, textarea').forEach(input => {
+                const name = input.getAttribute('name').replace('-0-', `-${formCount}-`);
+                const id = input.getAttribute('id').replace('-0-', `-${formCount}-`);
+                input.setAttribute('name', name);
+                input.setAttribute('id', id);
+
+                if (input.type !== 'hidden' && input.type !== 'checkbox') {
+                    input.value = '';
+                } else if (input.type === 'checkbox') {
+                    input.checked = false;
+                }
+            });
+
+            tbody.appendChild(newRow);
+            totalForms.value = formCount + 1;
+        });
+    });
+</script>
+{% endblock %}

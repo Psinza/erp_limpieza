@@ -1,0 +1,194 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ERP{% endblock %} | {{ nombre_erp }}</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --sidebar-width: 260px;
+            --topbar-height: 60px;
+            --primary-color: #4f46e5;
+            --sidebar-bg: #1e293b;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+
+        /* Layout Wrapper */
+        .wrapper {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Styling */
+        #sidebar {
+            min-width: var(--sidebar-width);
+            max-width: var(--sidebar-width);
+            background: var(--sidebar-bg);
+            color: #fff;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        #sidebar .sidebar-header {
+            padding: 20px;
+            background: rgba(0,0,0,0.1);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar-logo {
+            max-height: 40px;
+            margin-right: 10px;
+        }
+
+        #sidebar ul.nav-links {
+            padding: 20px 0;
+        }
+
+        #sidebar ul li a {
+            padding: 12px 25px;
+            font-size: 0.95rem;
+            display: block;
+            color: #cbd5e1;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        #sidebar ul li a:hover {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+        }
+
+        #sidebar ul li a i {
+            margin-right: 10px;
+            font-size: 1.1rem;
+        }
+
+        #sidebar ul li.active > a {
+            background: var(--primary-color);
+            color: #fff;
+        }
+
+        /* Main Content Styling */
+        #content {
+            width: 100%;
+            min-height: 100vh;
+        }
+
+        .topbar {
+            height: var(--topbar-height);
+            background: #fff;
+            display: flex;
+            align-items: center;
+            padding: 0 30px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .content-area {
+            padding: 30px;
+        }
+
+        .user-profile-img {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .alert-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1050;
+            min-width: 300px;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="wrapper">
+        <!-- Sidebar -->
+        <nav id="sidebar">
+            <div class="sidebar-header d-flex align-items-center">
+                {% if empresa_global.logo %}
+                <img src="{{ empresa_global.logo.url }}" class="sidebar-logo" alt="Logo">
+                {% endif %}
+                <span class="fw-bold text-truncate">{{ nombre_erp }}</span>
+            </div>
+
+            <ul class="list-unstyled nav-links">
+                <li class="{% if request.path == '/' %}active{% endif %}">
+                    <a href="{% url 'core:dashboard' %}"><i class="bi bi-speedometer2"></i> Dashboard</a>
+                </li>
+                {% if user.is_authenticated %}
+                <li class="{% if 'produccion' in request.path %}active{% endif %}"><a href="{% url 'produccion:dashboard' %}"><i class="bi bi-gear"></i> Producción</a></li>
+                <li class="{% if 'logistica' in request.path %}active{% endif %}"><a href="{% url 'logistica:reporte_kardex' %}"><i class="bi bi-box-seam"></i> Logística</a></li>
+                <li class="{% if 'facturacion' in request.path %}active{% endif %}"><a href="{% url 'facturacion:dashboard' %}"><i class="bi bi-receipt"></i> Facturación</a></li>
+                <li class="mt-4 px-3 small text-uppercase opacity-50">Administración</li>
+                <li><a href="/administracion/mantenimiento/"><i class="bi bi-tools"></i> Mantenimiento</a></li>
+                <li><a href="{% url 'logout' %}"><i class="bi bi-box-arrow-left"></i> Cerrar Sesión</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+
+        <!-- Page Content -->
+        <div id="content">
+            <nav class="topbar d-flex justify-content-between">
+                <div class="topbar-title fw-medium text-muted">
+                    {% block section_title %}{% endblock %}
+                </div>
+                <div class="topbar-actions d-flex align-items-center">
+                    <span class="badge bg-light text-dark border me-3">{{ empresa_global.ciudad|default:"Sede Central" }}</span>
+                    {% if user.is_authenticated %}
+                    <div class="dropdown">
+                        <a class="text-decoration-none text-dark dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle fs-5 me-1"></i> {{ request.user.username }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+                            <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i>Mi Perfil</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="{% url 'logout' %}"><i class="bi bi-box-arrow-left me-2"></i>Salir</a></li>
+                        </ul>
+                    </div>
+                    {% else %}
+                    <a href="{% url 'login' %}" class="btn btn-primary btn-sm">Ingresar</a>
+                    {% endif %}
+                </div>
+            </nav>
+
+            <main class="content-area">
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    <!-- Toast Alertas -->
+    <div class="alert-container">
+        {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}{{ titulo }}{% endblock %}
+{% block content %}
+<div class="container py-4" style="max-width:700px">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h3><i class="bi bi-droplet-half"></i> {{ titulo }}</h3>
+    <a href="{% url 'produccion:materia_prima_list' %}" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left"></i> Volver
+    </a>
+  </div>
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-4">
+      <form method="post">{% csrf_token %}
+        <div class="row g-3">
+          <div class="col-md-3"><label class="form-label">Código *</label>{{ form.codigo }}{% if form.codigo.errors %}<div class="text-danger small">{{ form.codigo.errors }}</div>{% endif %}</div>
+          <div class="col-md-9"><label class="form-label">Nombre *</label>{{ form.nombre }}</div>
+          <div class="col-12"><label class="form-label">Descripción</label>{{ form.descripcion }}</div>
+          <div class="col-md-4"><label class="form-label">Categoría</label>{{ form.categoria }}</div>
+          <div class="col-md-4"><label class="form-label">Unidad de Medida</label>{{ form.unidad_medida }}</div>
+          <div class="col-md-4"><label class="form-label">Costo Unitario</label>{{ form.costo_unitario }}</div>
+          <div class="col-md-4"><label class="form-label">Stock Mínimo</label>{{ form.stock_minimo }}</div>
+          <div class="col-md-8"><label class="form-label">Proveedor de Referencia</label>{{ form.proveedor_ref }}</div>
+          <div class="col-md-4 d-flex align-items-end">
+            <div class="form-check">{{ form.activo }}<label class="form-check-label ms-2">Activo</label></div>
+          </div>
+        </div>
+        {% if form.errors %}<div class="alert alert-danger mt-3">{% for field in form %}{% for error in field.errors %}<div><strong>{{ field.label }}:</strong> {{ error }}</div>{% endfor %}{% endfor %}</div>{% endif %}
+        <div class="d-flex gap-2 mt-4">
+          <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Guardar</button>
+          <a href="{% url 'produccion:materia_prima_list' %}" class="btn btn-outline-secondary">Cancelar</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

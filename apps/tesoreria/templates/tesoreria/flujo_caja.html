@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+{% block title %}Flujo de Caja{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+  <h2 class="mb-4"><i class="bi bi-graph-up"></i> Flujo de Caja</h2>
+
+  <!-- Filtro de fechas -->
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+      <form method="get" class="row g-2 align-items-end">
+        <div class="col-md-3">
+          <label class="form-label small fw-semibold">Desde</label>
+          <input type="date" name="inicio" value="{{ inicio }}" class="form-control">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label small fw-semibold">Hasta</label>
+          <input type="date" name="fin" value="{{ fin }}" class="form-control">
+        </div>
+        <div class="col-md-2">
+          <button type="submit" class="btn btn-primary w-100">
+            <i class="bi bi-funnel"></i> Aplicar
+          </button>
+        </div>
+        <div class="col-md-2">
+          <a href="{% url 'tesoreria:flujo_caja' %}" class="btn btn-outline-secondary w-100">
+            Limpiar
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Resumen KPIs -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm bg-success text-white text-center">
+        <div class="card-body py-3">
+          <p class="small mb-0 opacity-75">Total Ingresos</p>
+          <h4 class="mb-0 fw-bold">${{ total_ingresos|floatformat:2 }}</h4>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm bg-danger text-white text-center">
+        <div class="card-body py-3">
+          <p class="small mb-0 opacity-75">Total Egresos</p>
+          <h4 class="mb-0 fw-bold">${{ total_egresos|floatformat:2 }}</h4>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm {% if flujo_neto >= 0 %}bg-primary{% else %}bg-warning{% endif %} text-white text-center">
+        <div class="card-body py-3">
+          <p class="small mb-0 opacity-75">Flujo Neto</p>
+          <h4 class="mb-0 fw-bold {% if flujo_neto < 0 %}text-dark{% endif %}">
+            {% if flujo_neto >= 0 %}+{% endif %}${{ flujo_neto|floatformat:2 }}
+          </h4>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm text-center">
+        <div class="card-body py-3">
+          <p class="text-muted small mb-0">Movimientos</p>
+          <h4 class="mb-0">{{ mov_banco.count|add:mov_caja.count }}</h4>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Desglose Banco vs Caja -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-6">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-primary text-white fw-semibold">
+          <i class="bi bi-bank2 me-1"></i> Movimientos Bancarios
+        </div>
+        <div class="card-body">
+          <div class="row text-center">
+            <div class="col-4">
+              <p class="text-muted small mb-1">Ingresos</p>
+              <h5 class="text-success">${{ ingresos_banco|floatformat:2 }}</h5>
+            </div>
+            <div class="col-4">
+              <p class="text-muted small mb-1">Egresos</p>
+              <h5 class="text-danger">${{ egresos_banco|floatformat:2 }}</h5>
+            </div>
+            <div class="col-4">
+              <p class="text-muted small mb-1">Neto</p>
+              <h5 class="{% if ingresos_banco >= egresos_banco %}text-success{% else %}text-danger{% endif %}">
+                ${{ ingresos_banco|floatformat:2 }}
+              </h5>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-success text-white fw-semibold">
+          <i class="bi bi-cash-coin me-1"></i> Movimientos de Caja
+        </div>
+        <div class="card-body">
+          <div class="row text-center">
+            <div class="col-4">
+              <p class="text-muted small mb-1">Ingresos</p>
+              <h5 class="text-success">${{ ingresos_caja|floatformat:2 }}</h5>
+            </div>
+            <div class="col-4">
+              <p class="text-muted small mb-1">Egresos</p>
+              <h5 class="text-danger">${{ egresos_caja|floatformat:2 }}</h5>
+            </div>
+            <div class="col-4">
+              <p class="text-muted small mb-1">Neto</p>
+              <h5 class="{% if ingresos_caja >= egresos_caja %}text-success{% else %}text-danger{% endif %}">
+                ${{ ingresos_caja|floatformat:2 }}
+              </h5>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detalle movimientos bancarios -->
+  {% if mov_banco %}
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white fw-semibold">
+      <i class="bi bi-bank2 text-primary me-1"></i>
+      Detalle Movimientos Bancarios ({{ mov_banco.count }})
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-sm table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr><th>Fecha</th><th>Cuenta</th><th>Concepto</th><th>Descripción</th>
+                <th class="text-end">Ingreso</th><th class="text-end">Egreso</th><th class="text-end">Saldo</th></tr>
+          </thead>
+          <tbody>
+            {% for m in mov_banco %}
+            <tr>
+              <td>{{ m.fecha|date:"d/m/Y" }}</td>
+              <td class="small">{{ m.cuenta.alias }}</td>
+              <td class="small text-muted">{{ m.get_concepto_display }}</td>
+              <td class="small">{{ m.descripcion|truncatechars:40 }}</td>
+              <td class="text-end text-success">
+                {% if m.tipo == 'credito' %}${{ m.monto|floatformat:2 }}{% endif %}
+              </td>
+              <td class="text-end text-danger">
+                {% if m.tipo == 'debito' %}${{ m.monto|floatformat:2 }}{% endif %}
+              </td>
+              <td class="text-end">${{ m.saldo_posterior|floatformat:2 }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot class="table-light fw-bold">
+            <tr>
+              <td colspan="4" class="text-end">Totales:</td>
+              <td class="text-end text-success">${{ ingresos_banco|floatformat:2 }}</td>
+              <td class="text-end text-danger">${{ egresos_banco|floatformat:2 }}</td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Detalle movimientos de caja -->
+  {% if mov_caja %}
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white fw-semibold">
+      <i class="bi bi-cash-coin text-success me-1"></i>
+      Detalle Movimientos de Caja ({{ mov_caja.count }})
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-sm table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr><th>Fecha</th><th>Caja</th><th>Descripción</th><th>Comprobante</th>
+                <th class="text-end">Ingreso</th><th class="text-end">Egreso</th><th class="text-end">Saldo</th></tr>
+          </thead>
+          <tbody>
+            {% for m in mov_caja %}
+            <tr>
+              <td>{{ m.fecha|date:"d/m/Y" }}</td>
+              <td class="small">{{ m.caja.nombre }}</td>
+              <td class="small">{{ m.descripcion|truncatechars:40 }}</td>
+              <td class="small text-muted">{{ m.comprobante|default:"—" }}</td>
+              <td class="text-end text-success">
+                {% if m.tipo == 'ingreso' %}${{ m.monto|floatformat:2 }}{% endif %}
+              </td>
+              <td class="text-end text-danger">
+                {% if m.tipo == 'egreso' %}${{ m.monto|floatformat:2 }}{% endif %}
+              </td>
+              <td class="text-end">${{ m.saldo_posterior|floatformat:2 }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot class="table-light fw-bold">
+            <tr>
+              <td colspan="4" class="text-end">Totales:</td>
+              <td class="text-end text-success">${{ ingresos_caja|floatformat:2 }}</td>
+              <td class="text-end text-danger">${{ egresos_caja|floatformat:2 }}</td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if not mov_banco and not mov_caja %}
+  <div class="alert alert-info text-center">
+    <i class="bi bi-info-circle me-1"></i>
+    No hay movimientos en el período seleccionado ({{ inicio }} — {{ fin }}).
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

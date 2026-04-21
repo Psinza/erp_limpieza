@@ -1,0 +1,73 @@
+{% extends 'core/base.html' %}
+
+{% block title %}{{ accion }} Rol — ERP Industrial{% endblock %}
+{% block page_title %}{{ accion }} Rol{% endblock %}
+{% block breadcrumb %}Administración / Roles / {{ accion }}{% endblock %}
+
+{% block content %}
+<div style="max-width:700px;">
+<form method="post">
+  {% csrf_token %}
+  <div class="erp-card mb-4">
+    <div class="erp-card-header">
+      <span class="erp-card-title"><i class="bi bi-shield-plus me-2"></i>{{ accion }} rol</span>
+    </div>
+    <div class="erp-card-body">
+
+      <div style="display:grid;gap:16px;">
+        <div>
+          <label class="form-label">Nombre del rol *</label>
+          {{ form.nombre }}
+          {% if form.nombre.errors %}<div style="color:#c62828;font-size:12px;margin-top:4px;">{{ form.nombre.errors.0 }}</div>{% endif %}
+        </div>
+        <div>
+          <label class="form-label">Descripción</label>
+          {{ form.descripcion }}
+        </div>
+        <div>
+          <label class="form-label">Nivel de acceso *</label>
+          {{ form.nivel }}
+        </div>
+      </div>
+
+      <div class="form-section">Áreas con acceso</div>
+      <p style="font-size:12.5px;color:#8899aa;margin-bottom:12px;">
+        Seleccione las áreas del sistema que este rol podrá acceder.
+      </p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;">
+        {% for checkbox in form.areas %}
+        <label style="display:flex;align-items:center;gap:8px;padding:8px 12px;
+                      border:1.5px solid #e2e8f0;border-radius:8px;cursor:pointer;
+                      font-size:13px;transition:all .15s;"
+               onmouseover="this.style.borderColor='#0d47a1';this.style.background='#f0f4ff';"
+               onmouseout="if(!this.querySelector('input').checked){this.style.borderColor='#e2e8f0';this.style.background='#fff';}">
+          {{ checkbox.tag }}
+          <span>{{ checkbox.choice_label }}</span>
+        </label>
+        {% endfor %}
+      </div>
+
+      <div class="form-section">Estado</div>
+      <label style="display:flex;align-items:center;gap:10px;font-size:13px;">
+        {{ form.activo }} Rol activo
+      </label>
+
+    </div>
+  </div>
+
+  <div style="display:flex;gap:12px;">
+    <button type="submit" class="btn-erp btn-erp-primary">
+      <i class="bi bi-check-lg"></i> Guardar rol
+    </button>
+    <a href="{% url 'core:rol_lista' %}" class="btn-erp btn-erp-outline">
+      <i class="bi bi-x-lg"></i> Cancelar
+    </a>
+  </div>
+</form>
+</div>
+
+<style>
+input[type=checkbox]:checked + span { color: #0d47a1; font-weight: 500; }
+label:has(input:checked) { border-color: #0d47a1 !important; background: #f0f4ff !important; }
+</style>
+{% endblock %}

@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}Gestión de Vendedores{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold mb-0"><i class="bi bi-people text-primary"></i> Fuerza de Ventas</h2>
+    <div class="d-flex gap-2">
+      <a href="/admin/vendedores/vendedor/add/" class="btn btn-primary"><i class="bi bi-person-plus"></i> Nuevo Vendedor</a>
+    </div>
+  </div>
+
+  <div class="row g-4 mb-4">
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm bg-primary text-white">
+        <div class="card-body">
+          <p class="small uppercase fw-bold mb-1 opacity-75">Comisiones por Pagar</p>
+          <h2 class="fw-bold mb-0">${{ total_comisiones_pendientes|floatformat:2 }}</h2>
+          <p class="small mt-2 mb-0">Total acumulado mes actual</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm bg-white p-3">
+        <div class="card-body d-flex align-items-center">
+          <div class="rounded-circle bg-success-subtle p-3 me-3">
+            <i class="bi bi-graph-up-arrow text-success fs-3"></i>
+          </div>
+          <div>
+            <p class="text-muted small mb-0 font-bold">Ventas Totales</p>
+            <h3 class="mb-0 fw-bold">$0.00</h3>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm bg-white p-3">
+        <div class="card-body d-flex align-items-center">
+          <div class="rounded-circle bg-info-subtle p-3 me-3">
+            <i class="bi bi-calendar-event text-info fs-3"></i>
+          </div>
+          <div>
+            <p class="text-muted small mb-0 font-bold">Periodo</p>
+            <h3 class="mb-0 fw-bold small">{{ mes_actual }}</h3>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card border-0 shadow-sm">
+    <div class="card-header bg-white py-3 fw-bold">Rendimiento por Vendedor</div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th class="ps-4">Vendedor</th>
+              <th>Código</th>
+              <th>Meta Mensual</th>
+              <th>Comisión %</th>
+              <th>Estado</th>
+              <th class="text-end pe-4">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for v in vendedores %}
+            <tr>
+              <td class="ps-4">
+                <div class="fw-bold text-dark">{{ v.usuario.get_full_name|default:v.usuario.username }}</div>
+              </td>
+              <td><code>{{ v.codigo_empleado }}</code></td>
+              <td class="fw-bold text-primary">${{ v.meta_mensual|floatformat:2 }}</td>
+              <td>{{ v.comision_porcentaje }}%</td>
+              <td>
+                {% if v.activo %}
+                <span class="badge bg-success-subtle text-success">Activo</span>
+                {% else %}
+                <span class="badge bg-danger-subtle text-danger">Inactivo</span>
+                {% endif %}
+              </td>
+              <td class="text-end pe-4">
+                <a href="/admin/vendedores/vendedor/{{ v.id }}/change/" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-pencil"></i>
+                </a>
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" class="text-center py-4 text-muted">No hay vendedores registrados.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

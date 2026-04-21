@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Mi Rendimiento{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="row g-4">
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm text-center p-4">
+        <div class="avatar-lg bg-primary text-white rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center display-5 fw-bold">
+            {{ user.username|slice:":1"|upper }}
+        </div>
+        <h4 class="fw-bold mb-1">{{ user.get_full_name|default:user.username }}</h4>
+        <p class="text-muted small">Vendedor ID: {{ vendedor.codigo_empleado }}</p>
+        <hr>
+        <div class="row text-start small">
+            <div class="col-6 text-muted font-bold uppercase">Meta del Mes:</div>
+            <div class="col-6 text-end fw-bold">${{ vendedor.meta_mensual|floatformat:2 }}</div>
+        </div>
+      </div>
+
+      <div class="card border-0 shadow-sm mt-4 p-4 bg-dark text-white">
+        <h5 class="fw-bold mb-3">Progreso de Meta</h5>
+        <div class="progress mb-2" style="height: 10px;">
+            <div class="progress-bar bg-primary" role="progressbar" style="width: {{ progreso }}%;"></div>
+        </div>
+        <div class="d-flex justify-content-between small opacity-75">
+            <span>{{ progreso }}% completado</span>
+            <span>Meta: ${{ vendedor.meta_mensual|floatformat:2 }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-8">
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4 d-flex justify-content-between align-items-center">
+            <div>
+                <p class="text-muted small uppercase fw-bold mb-0">Comisiones Acumuladas</p>
+                <h2 class="display-5 fw-bold mb-0 text-success">${{ total_ganado|floatformat:2 }}</h2>
+            </div>
+            <div class="text-end">
+                <i class="bi bi-wallet2 text-success opacity-25" style="font-size: 4rem;"></i>
+            </div>
+        </div>
+      </div>
+
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white py-3 fw-bold">Historial de Comisiones (Mes Actual)</div>
+        <div class="card-body p-0">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th class="ps-4">Fecha</th>
+                    <th>Pedido</th>
+                    <th class="text-end pe-4">Monto Comisión</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in comisiones %}
+                <tr>
+                    <td class="ps-4 small text-muted">{{ c.fecha_calculo|date:"d/m/Y H:i" }}</td>
+                    <td>Pedido #{{ c.pedido_venta.id }}</td>
+                    <td class="text-end pe-4 fw-bold text-primary">${{ c.monto_comision|floatformat:2 }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="3" class="text-center py-5 text-muted">No has generado comisiones en este periodo todavía.</td></tr>
+                {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+    .avatar-lg { width: 80px; height: 80px; }
+</style>
+{% endblock %}

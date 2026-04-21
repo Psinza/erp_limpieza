@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Mantenimiento y Logs{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Encabezado -->
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <h1 class="h3 mb-0 text-gray-800">
+                <i class="bi bi-shield-lock-fill text-primary"></i> Panel de Mantenimiento
+            </h1>
+            <a href="{% url 'administracion:ejecutar_backup' %}" class="btn btn-primary shadow-sm">
+                <i class="bi bi-database-fill-add"></i> Generar Respaldo Ahora
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Historial de Respaldos -->
+        <div class="col-xl-7 col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between bg-light">
+                    <h6 class="m-0 font-weight-bold text-primary">Historial de Respaldos (PostgreSQL)</h6>
+                    <div>
+                        <span class="badge bg-secondary text-white me-2"><i class="bi bi-hdd-fill"></i> Total: {{
+                            espacio_total|floatformat:2 }} MB</span>
+                        <span class="badge bg-info text-dark">Últimos 10 registros</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="small fw-bold text-uppercase text-muted">Uso de Almacenamiento (Límite
+                                5GB)</span>
+                            <span
+                                class="small fw-bold {% if porcentaje_uso > 90 %}text-danger{% elif porcentaje_uso > 70 %}text-warning{% else %}text-success{% endif %}">{{
+                                porcentaje_uso|floatformat:1 }}%</span>
+                        </div>
+                        <div class="progress" style="height: 10px;">
+                            <div class="progress-bar {% if porcentaje_uso > 90 %}bg-danger{% elif porcentaje_uso > 70 %}bg-warning{% else %}bg-success{% endif %}"
+                                role="progressbar" style="width: {{ porcentaje_uso }}%"
+                                aria-valuenow="{{ porcentaje_uso }}" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Archivo</th>
+                                    <th>Tamaño</th>
+                                    <th>Estado</th>
+                                    <th class="text-center">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for respaldo in respaldos %}
+                                <tr>
+                                    <td><small class="fw-bold">{{ respaldo.fecha|date:"d/m/Y H:i" }}</small></td>
+                                    <td class="text-truncate" style="max-width: 150px;">{{ respaldo.nombre_original }}
+                                    </td>
+                                    <td>{{ respaldo.tamano_mb }} MB</td>
+                                    <td>
+                                        {% if respaldo.exitoso %}
+                                        <span class="badge bg-success-subtle text-success border border-success"><i
+                                                class="bi bi-check-circle"></i> OK</span>
+                                        {% else %}
+                                        <span class="badge bg-danger-subtle text-danger border border-danger"><i
+                                                class="bi bi-exclamation-triangle"></i> Error</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        {% if respaldo.exitoso and respaldo.archivo %}
+                                        <a href="{{ respaldo.archivo.url }}" class="btn btn-sm btn-outline-primary"
+                                            title="Descargar copia">
+                                            <i class="bi bi-cloud-arrow-down-fill"></i>
+                                        </a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted py-4">No se han generado respaldos
+                                        aún.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Visor de Logs -->
+        <div class="col-xl-5 col-lg-6">
+            <div class="card shadow mb-4 border-left-warning">
+                <div class="card-header py-3 bg-dark">
+                    <h6 class="m-0 font-weight-bold text-warning"><i class="bi bi-terminal"></i> Logs del Sistema
+                        (erp.log)
+                        <a href="{% url 'administracion:download_logs' %}"
+                            class="btn btn-sm btn-outline-warning float-end" title="Descargar Logs">
+                            <i class="bi bi-download"></i>
+                        </a>
+                    </h6>
+                </div>
+                <div class="card-body bg-black">
+                    <div id="log-container" class="text-success"
+                        style="height: 450px; overflow-y: auto; font-family: 'Consolas', 'Monaco', monospace; font-size: 0.8rem; line-height: 1.2;">
+                        {% if logs %}
+                        {% for line in logs %}
+                        <div class="mb-1 border-bottom border-dark pb-1">{{ line }}</div>
+                        {% endfor %}
+                        {% else %}
+                        <div class="text-muted text-center pt-5">Sin actividad registrada en los logs.</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Desplazar automáticamente el log hacia abajo al cargar
+    document.addEventListener("DOMContentLoaded", function () {
+        const logDiv = document.getElementById('log-container');
+        logDiv.scrollTop = logDiv.scrollHeight;
+
+        // Configuración de WebSocket para logs en tiempo real
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const logSocket = new WebSocket(
+            protocol + '//' + window.location.host + '/ws/logs/'
+        );
+
+        logSocket.onmessage = function (e) {
+            const line = e.data;
+            const newEntry = document.createElement('div');
+            newEntry.className = 'mb-1 border-bottom border-dark pb-1 text-info';
+            newEntry.textContent = line;
+            logDiv.appendChild(newEntry);
+
+            // Mantener el scroll al final si el usuario no ha subido manualmente
+            const isScrolledToBottom = logDiv.scrollHeight - logDiv.clientHeight <= logDiv.scrollTop + 100;
+            if (isScrolledToBottom) {
+                logDiv.scrollTop = logDiv.scrollHeight;
+            }
+
+            // Limitar memoria del navegador a las últimas 100 líneas en tiempo real
+            if (logDiv.childNodes.length > 200) {
+                logDiv.removeChild(logDiv.firstChild);
+            }
+        };
+
+        logSocket.onclose = function (e) {
+            console.warn('La conexión de logs se ha cerrado. Recargue la página para reconectar.');
+        };
+    });
+</script>
+{% endblock %}

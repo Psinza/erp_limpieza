@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Despachos{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3><i class="bi bi-truck"></i> Despachos</h3>
+    <a href="{% url 'transportes:despacho_create' %}" class="btn btn-primary"><i class="bi bi-plus-circle"></i> Nuevo Despacho</a>
+  </div>
+  <form method="get" class="row g-2 mb-3">
+    <div class="col-md-4"><input type="text" name="q" value="{{ q }}" class="form-control" placeholder="N° despacho, placa o conductor…"></div>
+    <div class="col-md-3">
+      <select name="estado" class="form-select">
+        <option value="">— Estado —</option>
+        {% for val, label in estados %}<option value="{{ val }}" {% if estado == val %}selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2"><button type="submit" class="btn btn-outline-secondary w-100"><i class="bi bi-search"></i> Filtrar</button></div>
+    <div class="col-md-1"><a href="{% url 'transportes:despacho_list' %}" class="btn btn-outline-danger w-100">✕</a></div>
+  </form>
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-dark">
+          <tr><th>N° Despacho</th><th>Ruta</th><th>Vehículo</th><th>Conductor</th>
+              <th>Salida</th><th>km</th><th>Estado</th><th>Acciones</th></tr>
+        </thead>
+        <tbody>
+          {% for d in despachos %}
+          <tr>
+            <td><a href="{% url 'transportes:despacho_detail' d.pk %}" class="fw-bold">DSP-{{ d.numero }}</a></td>
+            <td class="small">{{ d.ruta.codigo }} — {{ d.ruta.nombre }}</td>
+            <td class="fw-bold">{{ d.vehiculo.placa }}</td>
+            <td class="small">{{ d.conductor.nombre_completo }}</td>
+            <td class="small">{{ d.fecha_salida|date:"d/m/Y H:i" }}</td>
+            <td class="small">{{ d.km_recorridos|default:"—" }} km</td>
+            <td>
+              <span class="badge
+                {% if d.estado == 'completado' %}bg-success
+                {% elif d.estado == 'en_ruta' %}bg-primary
+                {% elif d.estado == 'con_novedad' %}bg-warning text-dark
+                {% elif d.estado == 'cancelado' %}bg-danger
+                {% else %}bg-secondary{% endif %}">
+                {{ d.get_estado_display }}
+              </span>
+            </td>
+            <td>
+              <a href="{% url 'transportes:despacho_detail' d.pk %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="8" class="text-center text-muted py-4">No hay despachos.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="card-footer text-muted small">Total: {{ despachos.count }} despacho(s)</div>
+  </div>
+</div>
+{% endblock %}

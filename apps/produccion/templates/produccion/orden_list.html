@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-gear-wide-connected"></i> {{ titulo }}</h2>
+    <a href="{% url 'produccion:orden_create' %}" class="btn btn-primary">
+      <i class="bi bi-plus-lg"></i> Nueva Orden
+    </a>
+  </div>
+
+  <div class="card shadow-sm">
+    <div class="card-body p-0">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>ID</th>
+            <th>Producto / Fórmula</th>
+            <th>Cant. Planificada</th>
+            <th>Estado</th>
+            <th>Inicio</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for orden in ordenes %}
+          <tr>
+            <td><strong>OP-{{ orden.id }}</strong></td>
+            <td>
+              {{ orden.formula.producto.nombre }}<br>
+              <small class="text-muted">{{ orden.formula.nombre }}</small>
+            </td>
+            <td>{{ orden.cantidad_a_producir }} batch(es)</td>
+            <td>
+              <span
+                class="badge {% if orden.estado == 'planificada' %}bg-secondary{% elif orden.estado == 'en_proceso' %}bg-primary{% elif orden.estado == 'completada' %}bg-success{% else %}bg-danger{% endif %}">
+                {{ orden.get_estado_display }}
+              </span>
+            </td>
+            <td>{{ orden.fecha_inicio|date:"d/m/Y H:i"|default:"--" }}</td>
+            <td>
+              <a href="{% url 'produccion:orden_detail' orden.pk %}" class="btn btn-sm btn-outline-info">
+                <i class="bi bi-eye"></i> Detalle
+              </a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6" class="text-center py-4 text-muted">No hay órdenes registradas.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

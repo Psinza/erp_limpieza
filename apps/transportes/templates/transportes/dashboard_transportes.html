@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Transportes — Dashboard{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+  <h2 class="mb-4"><i class="bi bi-truck-flatbed"></i> Módulo de Transportes</h2>
+
+  <!-- KPIs -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm bg-primary text-white">
+        <div class="card-body d-flex justify-content-between align-items-center">
+          <div><p class="mb-0 small">Total Vehículos</p><h3 class="mb-0 fw-bold">{{ stats.total_vehiculos|default:0 }}</h3></div>
+          <i class="bi bi-truck fs-1 opacity-50"></i>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm bg-success text-white">
+        <div class="card-body d-flex justify-content-between align-items-center">
+          <div><p class="mb-0 small">En Ruta</p><h3 class="mb-0 fw-bold">{{ stats.en_ruta|default:0 }}</h3></div>
+          <i class="bi bi-geo-alt-fill fs-1 opacity-50"></i>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm bg-warning text-dark">
+        <div class="card-body d-flex justify-content-between align-items-center">
+          <div><p class="mb-0 small">Conductores Activos</p><h3 class="mb-0 fw-bold">{{ stats.conductores_activos|default:0 }}</h3></div>
+          <i class="bi bi-person-badge fs-1 opacity-50"></i>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm bg-info text-dark">
+        <div class="card-body d-flex justify-content-between align-items-center">
+          <div><p class="mb-0 small">Despachos Hoy</p><h3 class="mb-0 fw-bold">{{ stats.despachos_hoy|default:0 }}</h3></div>
+          <i class="bi bi-box-seam fs-1 opacity-50"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Accesos rápidos -->
+  <div class="row g-2 mb-4">
+    <div class="col-6 col-md-3">
+      <a href="{% url 'transportes:despacho_create' %}" class="btn btn-primary w-100 py-2">
+        <i class="bi bi-plus-circle me-1"></i> Nuevo Despacho
+      </a>
+    </div>
+    <div class="col-6 col-md-3">
+      <a href="{% url 'transportes:vehiculo_list' %}" class="btn btn-outline-success w-100 py-2">
+        <i class="bi bi-truck me-1"></i> Ver Vehículos
+      </a>
+    </div>
+    <div class="col-6 col-md-3">
+      <a href="{% url 'transportes:conductor_list' %}" class="btn btn-outline-warning w-100 py-2">
+        <i class="bi bi-person-badge me-1"></i> Conductores
+      </a>
+    </div>
+    <div class="col-6 col-md-3">
+      <a href="{% url 'transportes:despacho_list' %}" class="btn btn-outline-info w-100 py-2">
+        <i class="bi bi-list-check me-1"></i> Historial Despachos
+      </a>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Próximos Despachos o Alertas -->
+    <div class="col-md-12">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white fw-semibold">
+          <i class="bi bi-info-circle text-primary me-1"></i> Estado de la Flota
+        </div>
+        <div class="card-body py-4 text-center">
+          <p class="text-muted mb-0 small">Selecciona una opción de acceso rápido para gestionar los transportes.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

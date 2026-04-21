@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Tesorería — Dashboard{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+  <h2 class="mb-4"><i class="bi bi-safe2"></i> Módulo de Tesorería</h2>
+
+  <!-- KPIs -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-3">
+      <div class="card border-0 shadow-sm bg-primary text-white text-center">
+        <div class="card-body">
+          <p class="small mb-0 opacity-75">Saldo Total Bancos</p>
+          <h3 class="mb-0 fw-bold">${{ total_bancos|floatformat:2 }}</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-0 shadow-sm bg-success text-white text-center">
+        <div class="card-body">
+          <p class="small mb-0 opacity-75">Saldo Total Cajas</p>
+          <h3 class="mb-0 fw-bold">${{ total_cajas|floatformat:2 }}</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-0 shadow-sm bg-info text-white text-center">
+        <div class="card-body">
+          <p class="small mb-0 opacity-75">CxC Pendientes</p>
+          <h3 class="mb-0 fw-bold">${{ cxc_pendientes|floatformat:2 }}</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-0 shadow-sm bg-danger text-white text-center">
+        <div class="card-body">
+          <p class="small mb-0 opacity-75">CxP Pendientes</p>
+          <h3 class="mb-0 fw-bold">${{ cxp_pendientes|floatformat:2 }}</h3>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Accesos rápidos -->
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white fw-bold">Gestión de Tesorería</div>
+    <div class="card-body">
+      <div class="row g-2">
+        <div class="col-6 col-md-2">
+          <a href="{% url 'tesoreria:movimiento_banco_create' %}" class="btn btn-outline-primary w-100 py-3">
+            <i class="bi bi-bank d-block fs-3 mb-1"></i><small>Mov. Bancos</small>
+          </a>
+        </div>
+        <div class="col-6 col-md-2">
+          <a href="{% url 'tesoreria:caja_list' %}" class="btn btn-outline-success w-100 py-3">
+            <i class="bi bi-cash-stack d-block fs-3 mb-1"></i><small>Mov. Cajas</small>
+          </a>
+        </div>
+        <div class="col-6 col-md-2">
+          <a href="{% url 'tesoreria:cxc_create' %}" class="btn btn-outline-info w-100 py-3">
+            <i class="bi bi-file-earmark-plus d-block fs-3 mb-1"></i><small>Nuevas CxC</small>
+          </a>
+        </div>
+        <div class="col-6 col-md-2">
+          <a href="{% url 'tesoreria:cxp_create' %}" class="btn btn-outline-danger w-100 py-3">
+            <i class="bi bi-file-earmark-minus d-block fs-3 mb-1"></i><small>Nuevas CxP</small>
+          </a>
+        </div>
+        <div class="col-6 col-md-2">
+          <a href="{% url 'tesoreria:transferencia_create' %}" class="btn btn-outline-warning w-100 py-3 text-dark">
+            <i class="bi bi-arrow-left-right d-block fs-3 mb-1"></i><small>Transferencia</small>
+          </a>
+        </div>
+        <div class="col-6 col-md-2">
+          <a href="{% url 'tesoreria:flujo_caja' %}" class="btn btn-outline-secondary w-100 py-3">
+            <i class="bi bi-graph-up-arrow d-block fs-3 mb-1"></i><small>Flujo de Caja</small>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Otros enlaces -->
+  <div class="row g-3">
+    <div class="col-md-6">
+      <div class="list-group shadow-sm">
+        <a href="{% url 'tesoreria:cuenta_list' %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+          <span><i class="bi bi-credit-card-2-front me-2"></i> Ver Cuentas Bancarias</span>
+          <i class="bi bi-chevron-right"></i>
+        </a>
+        <a href="{% url 'tesoreria:banco_list' %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+          <span><i class="bi bi-building me-2"></i> Bancos Registrados</span>
+          <i class="bi bi-chevron-right"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

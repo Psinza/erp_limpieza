@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+{% block title %}Nómina {{ nom.periodo }}{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h3 class="mb-0"><i class="bi bi-receipt"></i> Nómina — {{ nom.periodo }}</h3>
+      {% if nom.descripcion %}
+      <small class="text-muted">{{ nom.descripcion }}</small>
+      {% endif %}
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge fs-6
+        {% if nom.estado == 'pagada' %}bg-success
+        {% elif nom.estado == 'aprobada' %}bg-primary
+        {% elif nom.estado == 'calculada' %}bg-info text-dark
+        {% else %}bg-secondary{% endif %}">
+        {{ nom.get_estado_display }}
+      </span>
+      <a href="{% url 'rrhh:nomina_list' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left"></i> Volver
+      </a>
+    </div>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-3">
+      <div class="card border-0 shadow-sm text-center">
+        <div class="card-body">
+          <p class="text-muted small mb-0">Empleados</p>
+          <h4 class="text-dark">{{ detalles.count }}</h4>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-0 shadow-sm text-center">
+        <div class="card-body">
+          <p class="text-muted small mb-0">Salario Bruto</p>
+          <h4 class="text-primary">${{ nom.total_bruto|floatformat:2 }}</h4>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-0 shadow-sm text-center">
+        <div class="card-body">
+          <p class="text-muted small mb-0">Total Deducciones</p>
+          <h4 class="text-danger">${{ nom.total_deducciones|floatformat:2 }}</h4>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-0 shadow-sm text-center bg-success text-white">
+        <div class="card-body">
+          <p class="small mb-0 opacity-75">Neto a Pagar</p>
+          <h4 class="fw-bold">${{ nom.total_neto|floatformat:2 }}</h4>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Acciones de flujo -->
+  <div class="mb-4 d-flex gap-2 flex-wrap">
+    {% if nom.estado == "borrador" %}
+    <a href="{% url 'rrhh:nomina_calcular' nom.pk %}" class="btn btn-info">
+      <i class="bi bi-calculator"></i> Calcular Totales
+    </a>
+    {% elif nom.estado == "calculada" %}
+    <a href="{% url 'rrhh:nomina_aprobar' nom.pk %}" class="btn btn-primary">
+      <i class="bi bi-check-circle"></i> Aprobar Nómina
+    </a>
+    {% elif nom.estado == "aprobada" %}
+    <a href="{% url 'rrhh:nomina_pagar' nom.pk %}" class="btn btn-success">
+      <i class="bi bi-cash-coin"></i> Marcar como Pagada
+    </a>
+    {% endif %}
+  </div>
+
+  <!-- Formulario agregar empleado (solo borrador) -->
+  {% if nom.estado == "borrador" %}
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white fw-semibold border-bottom">
+      <i class="bi bi-person-plus text-primary me-1"></i> Agregar Empleado a la Nómina
+    </div>
+    <div class="card-body">
+      <form method="post" action="{% url 'rrhh:nomina_agregar_empleado' nom.pk %}">
+        {% csrf_token %}
+        <div class="row g-2 align-items-end">
+          {% for field in det_form %}
+          <div class="col-md-2">
+            <label class="form-label small mb-1">{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}
+            <div class="text-danger small">{{ field.errors }}</div>
+            {% endif %}
+          </div>
+          {% endfor %}
+          <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100">
+              <i class="bi bi-plus-circle"></i> Agregar
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Tabla de detalles -->
+  <div class="card border-0 shadow-sm">
+    <div class="card-header bg-white fw-semibold">
+      <i class="bi bi-table text-success me-1"></i>
+      Detalle de Empleados
+      <span class="badge bg-secondary ms-1">{{ detalles.count }}</span>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-dark">
+            <tr>
+              <th>Empleado</th>
+              <th>Cargo</th>
+              <th class="text-end">Bruto</th>
+              <th class="text-end">H. Extra</th>
+              <th class="text-end">Bonif.</th>
+              <th class="text-end text-danger">Seg. Social</th>
+              <th class="text-end text-danger">Imp. Renta</th>
+              <th class="text-end text-danger">Otras Ded.</th>
+              <th class="text-end">Neto</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for d in detalles %}
+            <tr>
+              <td class="fw-semibold">{{ d.empleado.nombre_completo }}</td>
+              <td class="text-muted small">{{ d.empleado.cargo.nombre }}</td>
+              <td class="text-end">${{ d.salario_bruto|floatformat:2 }}</td>
+              <td class="text-end">${{ d.horas_extra|floatformat:2 }}</td>
+              <td class="text-end">${{ d.bonificaciones|floatformat:2 }}</td>
+              <td class="text-end text-danger">${{ d.seguro_social|floatformat:2 }}</td>
+              <td class="text-end text-danger">${{ d.impuesto_renta|floatformat:2 }}</td>
+              <td class="text-end text-danger">${{ d.otras_deducciones|floatformat:2 }}</td>
+              <td class="text-end fw-bold text-success">${{ d.salario_neto|floatformat:2 }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="9" class="text-center text-muted py-4">
+                {% if nom.estado == "borrador" %}
+                Agregue empleados usando el formulario de arriba.
+                {% else %}
+                Sin empleados en esta nómina.
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+          {% if detalles.count > 0 %}
+          <tfoot class="table-light fw-bold">
+            <tr>
+              <td colspan="2">TOTALES</td>
+              <td class="text-end">${{ nom.total_bruto|floatformat:2 }}</td>
+              <td colspan="2"></td>
+              <td colspan="3" class="text-end text-danger">${{ nom.total_deducciones|floatformat:2 }}</td>
+              <td class="text-end text-success">${{ nom.total_neto|floatformat:2 }}</td>
+            </tr>
+          </tfoot>
+          {% endif %}
+        </table>
+      </div>
+    </div>
+
+    <!-- Info auditoría -->
+    <div class="card-footer text-muted small d-flex justify-content-between">
+      <span>Creado por: {{ nom.creado_por|default:"—" }} — {{ nom.creado_en|date:"d/m/Y H:i" }}</span>
+      {% if nom.aprobado_por %}
+      <span>Aprobado por: {{ nom.aprobado_por }}</span>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}

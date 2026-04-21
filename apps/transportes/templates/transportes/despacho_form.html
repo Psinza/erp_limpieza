@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}{{ titulo }}{% endblock %}
+{% block content %}
+<div class="container py-4" style="max-width:800px">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h3><i class="bi bi-truck"></i> {{ titulo }}</h3>
+    <a href="{% url 'transportes:dashboard' %}" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left"></i> Volver
+    </a>
+  </div>
+
+  <div class="alert alert-info small">
+    <i class="bi bi-info-circle me-1"></i>
+    Al crear el despacho, el vehículo se marcará como <strong>En Ruta</strong> y se crearán
+    automáticamente los registros de entrega para cada punto de la ruta seleccionada.
+  </div>
+
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-4">
+      <form method="post">
+        {% csrf_token %}
+        <h6 class="text-muted text-uppercase fw-bold mb-3 border-bottom pb-2">Asignación</h6>
+        <div class="row g-3 mb-4">
+          <div class="col-md-4">
+            <label class="form-label">Ruta *</label>
+            {{ form.ruta }}
+            {% if form.ruta.errors %}<div class="text-danger small">{{ form.ruta.errors }}</div>{% endif %}
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Vehículo (disponibles) *</label>
+            {{ form.vehiculo }}
+            {% if form.vehiculo.errors %}<div class="text-danger small">{{ form.vehiculo.errors }}</div>{% endif %}
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Conductor (activos) *</label>
+            {{ form.conductor }}
+            {% if form.conductor.errors %}<div class="text-danger small">{{ form.conductor.errors }}</div>{% endif %}
+          </div>
+        </div>
+
+        <h6 class="text-muted text-uppercase fw-bold mb-3 border-bottom pb-2">Tiempos y Odómetro</h6>
+        <div class="row g-3 mb-4">
+          <div class="col-md-4">
+            <label class="form-label">Fecha y Hora de Salida *</label>
+            {{ form.fecha_salida }}
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Llegada Estimada</label>
+            {{ form.fecha_llegada_estimada }}
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Odómetro Salida (km)</label>
+            {{ form.odometro_salida }}
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Notas</label>
+          {{ form.notas }}
+        </div>
+
+        {% if form.errors %}
+        <div class="alert alert-danger">
+          {% for field in form %}{% for error in field.errors %}
+          <div><strong>{{ field.label }}:</strong> {{ error }}</div>
+          {% endfor %}{% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="d-flex gap-2 mt-3">
+          <button type="submit" class="btn btn-primary fw-semibold">
+            <i class="bi bi-truck"></i> Crear Despacho
+          </button>
+          <a href="{% url 'transportes:despacho_list' %}" class="btn btn-outline-secondary">Cancelar</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

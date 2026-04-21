@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+{% block title %}{{ formula.nombre }}{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h3 class="mb-0"><i class="bi bi-journal-text"></i> {{ formula.nombre }}</h3>
+      <small class="text-muted">
+        <code>{{ formula.codigo }}</code> | Versión {{ formula.version }} |
+        Producto: <strong>{{ formula.producto.nombre }}</strong>
+      </small>
+    </div>
+    <div class="d-flex gap-2">
+      {% if formula.estado == "borrador" and formula.lineas.exists %}
+      <a href="{% url 'produccion:formula_activar' formula.pk %}" class="btn btn-success btn-sm">
+        <i class="bi bi-check-circle"></i> Activar
+      </a>
+      {% endif %}
+      <a href="{% url 'produccion:formula_calcular_costos' formula.pk %}" class="btn btn-outline-info btn-sm">
+        <i class="bi bi-calculator"></i> Recalcular Costos
+      </a>
+      <a href="{% url 'produccion:formula_edit' formula.pk %}" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-pencil"></i> Editar
+      </a>
+      <a href="{% url 'produccion:formula_list' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left"></i> Volver
+      </a>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Info general -->
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-primary text-white"><i class="bi bi-info-circle me-1"></i> Datos Generales</div>
+        <div class="card-body">
+          <dl class="row mb-0 small">
+            <dt class="col-5">Estado</dt>
+            <dd class="col-7">
+              <span class="badge {% if formula.estado == 'activa' %}bg-success{% elif formula.estado == 'obsoleta' %}bg-secondary{% else %}bg-warning text-dark{% endif %}">
+                {{ formula.get_estado_display }}
+              </span>
+            </dd>
+            <dt class="col-5">Rendimiento</dt><dd class="col-7">{{ formula.rendimiento }} {{ formula.unidad_rendimiento }}</dd>
+            <dt class="col-5">Tiempo prod.</dt><dd class="col-7">{{ formula.tiempo_produccion }} min</dd>
+            <dt class="col-5">Ingredientes</dt><dd class="col-7">{{ lineas.count }}</dd>
+          </dl>
+        </div>
+      </div>
+
+      <div class="card border-0 shadow-sm mt-3">
+        <div class="card-header bg-success text-white"><i class="bi bi-currency-dollar me-1"></i> Costos</div>
+        <div class="card-body">
+          <dl class="row mb-0 small">
+            <dt class="col-7">Costo MP total</dt><dd class="col-5 fw-bold">${{ formula.costo_materia_prima }}</dd>
+            <dt class="col-7">Costo por unidad</dt><dd class="col-5 fw-bold text-success">${{ formula.costo_unitario }}</dd>
+          </dl>
+        </div>
+      </div>
+
+      {% if formula.instrucciones %}
+      <div class="card border-0 shadow-sm mt-3">
+        <div class="card-header bg-info text-dark"><i class="bi bi-card-text me-1"></i> Instrucciones</div>
+        <div class="card-body small">{{ formula.instrucciones|linebreaks }}</div>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Ingredientes -->
+    <div class="col-md-8">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white fw-semibold d-flex justify-content-between">
+          <span><i class="bi bi-list-check text-info me-1"></i> Ingredientes ({{ lineas.count }})</span>
+          <span class="text-muted small">Para producir {{ formula.rendimiento }} {{ formula.unidad_rendimiento }}</span>
+        </div>
+
+        {% if formula.estado in "borrador,activa" %}
+        <div class="card-body border-bottom">
+          <form method="post" action="{% url 'produccion:formula_agregar_linea' formula.pk %}">
+            {% csrf_token %}
+            <div class="row g-2 align-items-end">
+              <div class="col-md-4"><label class="form-label small mb-1">Materia Prima *</label>{{ lin_form.materia_prima }}</div>
+              <div class="col-md-2"><label class="form-label small mb-1">Cantidad *</label>{{ lin_form.cantidad }}</div>
+              <div class="col-md-3"><label class="form-label small mb-1">Observación</label>{{ lin_form.observacion }}</div>
+              <div class="col-md-2 d-flex align-items-end gap-2">
+                <div class="form-check mb-1">{{ lin_form.es_critica }}<label class="form-check-label small ms-1">Crítico</label></div>
+              </div>
+              <div class="col-md-1">
+                <button type="submit" class="btn btn-info text-white w-100"><i class="bi bi-plus-lg"></i></button>
+              </div>
+            </div>
+          </form>
+        </div>
+        {% endif %}
+
+        <div class="card-body p-0">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-dark">
+              <tr>
+                <th>Materia Prima</th><th>Categoría</th>
+                <th class="text-end">Cantidad</th><th>Unidad</th>
+                <th class="text-end">Costo Unit.</th><th class="text-end">Costo Línea</th>
+                <th>Crítico</th>
+                {% if formula.estado in "borrador,activa" %}<th></th>{% endif %}
+              </tr>
+            </thead>
+            <tbody>
+              {% for l in lineas %}
+              <tr>
+                <td class="fw-semibold">{{ l.materia_prima.nombre }}</td>
+                <td class="text-muted small">{{ l.materia_prima.categoria|default:"—" }}</td>
+                <td class="text-end">{{ l.cantidad }}</td>
+                <td>{{ l.unidad }}</td>
+                <td class="text-end">${{ l.materia_prima.costo_unitario }}</td>
+                <td class="text-end fw-bold">${{ l.costo_linea|floatformat:4 }}</td>
+                <td>
+                  {% if l.es_critica %}
+                  <span class="badge bg-danger"><i class="bi bi-exclamation-circle"></i> Sí</span>
+                  {% else %}
+                  <span class="text-muted small">No</span>
+                  {% endif %}
+                </td>
+                {% if formula.estado in "borrador,activa" %}
+                <td>
+                  <form method="post" action="{% url 'produccion:formula_eliminar_linea' formula.pk l.pk %}"
+                        onsubmit="return confirm('¿Eliminar ingrediente?')">
+                    {% csrf_token %}
+                    <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                  </form>
+                </td>
+                {% endif %}
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="8" class="text-center text-muted py-4">
+                  Agregue ingredientes usando el formulario de arriba.
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+            {% if lineas %}
+            <tfoot class="table-light fw-bold">
+              <tr>
+                <td colspan="5" class="text-end">Costo Total MP:</td>
+                <td class="text-end text-success">${{ formula.costo_materia_prima }}</td>
+                <td colspan="{% if formula.estado in 'borrador,activa' %}2{% else %}1{% endif %}"></td>
+              </tr>
+              <tr>
+                <td colspan="5" class="text-end">Costo por unidad producida:</td>
+                <td class="text-end text-primary fw-bold">${{ formula.costo_unitario }}</td>
+                <td colspan="{% if formula.estado in 'borrador,activa' %}2{% else %}1{% endif %}"></td>
+              </tr>
+            </tfoot>
+            {% endif %}
+          </table>
+        </div>
+      </div>
+
+      <!-- Auditoría -->
+      <div class="card border-0 shadow-sm mt-3">
+        <div class="card-body py-2 px-3 text-muted small d-flex justify-content-between">
+          <span>Creado por: <strong>{{ formula.creado_por|default:"—" }}</strong> — {{ formula.creado_en|date:"d/m/Y H:i" }}</span>
+          <span>Última modificación: {{ formula.modificado_en|date:"d/m/Y H:i" }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

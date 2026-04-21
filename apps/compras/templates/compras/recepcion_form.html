@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Nueva Recepción — OC-{{ orden.numero }}{% endblock %}
+{% block content %}
+<div class="container py-4" style="max-width:600px">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h3><i class="bi bi-box-arrow-in-down"></i> Nueva Recepción</h3>
+    <a href="{% url 'compras:orden_detail' orden.pk %}" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left"></i> Volver
+    </a>
+  </div>
+
+  <div class="alert alert-info small mb-3">
+    <i class="bi bi-file-earmark-text me-1"></i>
+    Orden: <strong>OC-{{ orden.numero }}</strong> |
+    Proveedor: <strong>{{ orden.proveedor.nombre_display }}</strong>
+  </div>
+
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-4">
+      <form method="post">
+        {% csrf_token %}
+        {% for field in form %}
+        <div class="mb-3">
+          <label class="form-label">{{ field.label }}</label>
+          {{ field }}
+          {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+          {% if field.errors %}<div class="text-danger small">{{ field.errors }}</div>{% endif %}
+        </div>
+        {% endfor %}
+        <div class="d-flex gap-2 mt-3">
+          <button type="submit" class="btn btn-success">
+            <i class="bi bi-box-arrow-in-down"></i> Crear Recepción
+          </button>
+          <a href="{% url 'compras:orden_detail' orden.pk %}" class="btn btn-outline-secondary">Cancelar</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

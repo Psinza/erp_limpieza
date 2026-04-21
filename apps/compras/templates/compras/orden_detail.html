@@ -1,0 +1,282 @@
+{% extends "base.html" %}
+{% block title %}OC-{{ orden.numero }}{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h3 class="mb-0"><i class="bi bi-file-earmark-text"></i> Orden de Compra — OC-{{ orden.numero }}</h3>
+      <small class="text-muted">Proveedor: <strong>{{ orden.proveedor.nombre_display }}</strong>
+        | Emitida: {{ orden.fecha_emision|date:"d/m/Y" }}
+        {% if orden.fecha_entrega %}| Entrega esperada: {{ orden.fecha_entrega|date:"d/m/Y" }}{% endif %}
+      </small>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge fs-6
+        {% if orden.estado == 'completada' %}bg-success
+        {% elif orden.estado == 'confirmada' %}bg-primary
+        {% elif orden.estado == 'enviada' %}bg-info text-dark
+        {% elif orden.estado == 'recibida' %}bg-warning text-dark
+        {% elif orden.estado == 'anulada' %}bg-danger
+        {% else %}bg-secondary{% endif %}">
+        {{ orden.get_estado_display }}
+      </span>
+      <a href="{% url 'compras:orden_list' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left"></i> Volver
+      </a>
+    </div>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm text-center">
+        <div class="card-body py-3">
+          <p class="text-muted small mb-0">Subtotal</p>
+          <h5 class="mb-0">${{ orden.subtotal|floatformat:2 }}</h5>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm text-center">
+        <div class="card-body py-3">
+          <p class="text-muted small mb-0">Descuento</p>
+          <h5 class="mb-0 text-warning">${{ orden.descuento_total|floatformat:2 }}</h5>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm text-center">
+        <div class="card-body py-3">
+          <p class="text-muted small mb-0">IVA ({{ orden.impuesto_pct }}%)</p>
+          <h5 class="mb-0 text-secondary">${{ orden.impuesto_total|floatformat:2 }}</h5>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm text-center bg-primary text-white">
+        <div class="card-body py-3">
+          <p class="small mb-0 opacity-75">TOTAL</p>
+          <h4 class="mb-0 fw-bold">${{ orden.total|floatformat:2 }}</h4>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Botones de flujo -->
+  <div class="mb-4 d-flex gap-2 flex-wrap">
+    {% if orden.estado == "borrador" %}
+      <a href="{% url 'compras:orden_edit' orden.pk %}" class="btn btn-outline-secondary">
+        <i class="bi bi-pencil"></i> Editar Orden
+      </a>
+      <a href="{% url 'compras:orden_enviar' orden.pk %}" class="btn btn-info">
+        <i class="bi bi-send"></i> Enviar al Proveedor
+      </a>
+    {% elif orden.estado == "enviada" %}
+      <a href="{% url 'compras:orden_confirmar' orden.pk %}" class="btn btn-primary">
+        <i class="bi bi-check-circle"></i> Confirmar Orden
+      </a>
+    {% elif orden.estado in "confirmada recibida" %}
+      <a href="{% url 'compras:recepcion_create' orden.pk %}" class="btn btn-success">
+        <i class="bi bi-box-arrow-in-down"></i> Registrar Recepción
+      </a>
+    {% endif %}
+    {% if orden.estado not in "completada anulada" %}
+    <form method="post" action="{% url 'compras:orden_anular' orden.pk %}" class="d-inline"
+          onsubmit="return confirm('¿Anular esta orden?')">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-outline-danger">
+        <i class="bi bi-x-circle"></i> Anular
+      </button>
+    </form>
+    {% endif %}
+  </div>
+
+  <!-- Agregar ítem (solo borrador) -->
+  {% if orden.estado == "borrador" %}
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white fw-semibold border-bottom">
+      <i class="bi bi-plus-square text-primary me-1"></i> Agregar Ítem a la Orden
+    </div>
+    <div class="card-body">
+      <form method="post" action="{% url 'compras:orden_agregar_detalle' orden.pk %}">
+        {% csrf_token %}
+        <div class="row g-2 align-items-end">
+          <div class="col-md-3">
+            <label class="form-label small mb-1">Producto *</label>
+            {{ det_form.producto }}
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small mb-1">Descripción adicional</label>
+            {{ det_form.descripcion }}
+          </div>
+          <div class="col-md-2">
+            <label class="form-label small mb-1">Cantidad *</label>
+            {{ det_form.cantidad }}
+          </div>
+          <div class="col-md-2">
+            <label class="form-label small mb-1">Precio Unitario *</label>
+            {{ det_form.precio_unitario }}
+          </div>
+          <div class="col-md-1">
+            <label class="form-label small mb-1">Desc. %</label>
+            {{ det_form.descuento_pct }}
+          </div>
+          <div class="col-md-1">
+            <button type="submit" class="btn btn-primary w-100">
+              <i class="bi bi-plus-lg"></i>
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Tabla de ítems -->
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white fw-semibold">
+      <i class="bi bi-table text-success me-1"></i>
+      Ítems de la Orden
+      <span class="badge bg-secondary ms-1">{{ detalles.count }}</span>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-dark">
+            <tr>
+              <th>#</th>
+              <th>Producto</th>
+              <th>Descripción</th>
+              <th class="text-end">Cantidad</th>
+              <th class="text-end">Precio Unit.</th>
+              <th class="text-end">Desc. %</th>
+              <th class="text-end">Desc. $</th>
+              <th class="text-end">Subtotal</th>
+              <th class="text-end">Recibido</th>
+              {% if orden.estado == "borrador" %}<th></th>{% endif %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for d in detalles %}
+            <tr>
+              <td class="text-muted small">{{ forloop.counter }}</td>
+              <td>
+                <code class="small">{{ d.producto.codigo }}</code><br>
+                <span class="small">{{ d.producto.nombre }}</span>
+              </td>
+              <td class="text-muted small">{{ d.descripcion|default:"—" }}</td>
+              <td class="text-end">{{ d.cantidad }} {{ d.producto.get_unidad_medida_display }}</td>
+              <td class="text-end">${{ d.precio_unitario }}</td>
+              <td class="text-end">{{ d.descuento_pct }}%</td>
+              <td class="text-end text-warning">${{ d.descuento_monto|floatformat:2 }}</td>
+              <td class="text-end fw-semibold">${{ d.subtotal|floatformat:2 }}</td>
+              <td class="text-end">
+                <span class="badge {% if d.cantidad_recibida >= d.cantidad %}bg-success{% elif d.cantidad_recibida > 0 %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+                  {{ d.cantidad_recibida }}/{{ d.cantidad }}
+                </span>
+              </td>
+              {% if orden.estado == "borrador" %}
+              <td>
+                <form method="post" action="{% url 'compras:orden_eliminar_detalle' orden.pk d.pk %}"
+                      onsubmit="return confirm('¿Eliminar este ítem?')">
+                  {% csrf_token %}
+                  <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                </form>
+              </td>
+              {% endif %}
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="10" class="text-center text-muted py-4">
+                {% if orden.estado == "borrador" %}
+                Agregue ítems usando el formulario de arriba.
+                {% else %}
+                Sin ítems en esta orden.
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+          {% if detalles.count > 0 %}
+          <tfoot class="table-light">
+            <tr>
+              <td colspan="7" class="text-end fw-bold">Subtotal:</td>
+              <td class="text-end fw-bold">${{ orden.subtotal|floatformat:2 }}</td>
+              <td colspan="{% if orden.estado == 'borrador' %}2{% else %}1{% endif %}"></td>
+            </tr>
+            <tr>
+              <td colspan="7" class="text-end text-warning">Descuento total:</td>
+              <td class="text-end text-warning">-${{ orden.descuento_total|floatformat:2 }}</td>
+              <td colspan="{% if orden.estado == 'borrador' %}2{% else %}1{% endif %}"></td>
+            </tr>
+            <tr>
+              <td colspan="7" class="text-end text-muted">Base imponible:</td>
+              <td class="text-end text-muted">${{ orden.base_imponible|floatformat:2 }}</td>
+              <td colspan="{% if orden.estado == 'borrador' %}2{% else %}1{% endif %}"></td>
+            </tr>
+            <tr>
+              <td colspan="7" class="text-end text-secondary">IVA ({{ orden.impuesto_pct }}%):</td>
+              <td class="text-end text-secondary">${{ orden.impuesto_total|floatformat:2 }}</td>
+              <td colspan="{% if orden.estado == 'borrador' %}2{% else %}1{% endif %}"></td>
+            </tr>
+            <tr class="table-primary">
+              <td colspan="7" class="text-end fw-bold fs-6">TOTAL:</td>
+              <td class="text-end fw-bold fs-6">${{ orden.total|floatformat:2 }}</td>
+              <td colspan="{% if orden.estado == 'borrador' %}2{% else %}1{% endif %}"></td>
+            </tr>
+          </tfoot>
+          {% endif %}
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recepciones -->
+  {% if recepciones %}
+  <div class="card border-0 shadow-sm">
+    <div class="card-header bg-white fw-semibold">
+      <i class="bi bi-box-arrow-in-down text-success me-1"></i> Recepciones Registradas
+    </div>
+    <div class="card-body p-0">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr><th>N° Recepción</th><th>Fecha</th><th>Factura</th><th>Recibido por</th><th>Estado</th><th></th></tr>
+        </thead>
+        <tbody>
+          {% for r in recepciones %}
+          <tr>
+            <td><a href="{% url 'compras:recepcion_detail' r.pk %}">REC-{{ r.numero }}</a></td>
+            <td>{{ r.fecha_recepcion|date:"d/m/Y" }}</td>
+            <td>{{ r.nro_factura|default:"—" }}</td>
+            <td>{{ r.recibido_por|default:"—" }}</td>
+            <td>
+              <span class="badge {% if r.estado == 'aprobada' %}bg-success{% elif r.estado == 'rechazada' %}bg-danger{% else %}bg-warning text-dark{% endif %}">
+                {{ r.get_estado_display }}
+              </span>
+            </td>
+            <td>
+              <a href="{% url 'compras:recepcion_detail' r.pk %}" class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-eye"></i>
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Auditoría -->
+  <div class="card border-0 shadow-sm mt-4">
+    <div class="card-body py-2 px-3 text-muted small d-flex justify-content-between">
+      <span>Creado por: <strong>{{ orden.creado_por|default:"—" }}</strong> — {{ orden.creado_en|date:"d/m/Y H:i" }}</span>
+      <span>Última modificación: {{ orden.modificado_en|date:"d/m/Y H:i" }}</span>
+      {% if orden.aprobado_por %}<span>Aprobado por: <strong>{{ orden.aprobado_por }}</strong></span>{% endif %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}

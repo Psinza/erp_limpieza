@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+{% block title %}LOTE-{{ lote.numero_lote }}{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h3 class="mb-0"><i class="bi bi-boxes"></i> Lote — {{ lote.numero_lote }}</h3>
+      <small class="text-muted">
+        Orden: <a href="{% url 'produccion:orden_detail' lote.orden.pk %}">OP-{{ lote.orden.numero }}</a> |
+        Producto: <strong>{{ lote.orden.formula.producto.nombre }}</strong> |
+        Producido: {{ lote.fecha_produccion|date:"d/m/Y" }}
+        {% if lote.fecha_vencimiento %} | Vence: <strong>{{ lote.fecha_vencimiento|date:"d/m/Y" }}</strong>{% endif %}
+      </small>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge fs-6
+        {% if lote.estado == 'liberado' %}bg-success
+        {% elif lote.estado == 'aprobado' %}bg-primary
+        {% elif lote.estado == 'control' %}bg-warning text-dark
+        {% elif lote.estado == 'rechazado' %}bg-danger
+        {% else %}bg-secondary{% endif %}">
+        {{ lote.get_estado_display }}
+      </span>
+      <a href="{% url 'produccion:lote_list' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left"></i> Volver
+      </a>
+    </div>
+  </div>
+
+  <!-- KPIs del lote -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm text-center">
+        <div class="card-body py-3">
+          <p class="text-muted small mb-0">Cantidad Producida</p>
+          <h4 class="mb-0 text-primary fw-bold">{{ lote.cantidad_producida }}</h4>
+          <small class="text-muted">{{ lote.orden.formula.unidad_rendimiento }}</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm text-center">
+        <div class="card-body py-3">
+          <p class="text-muted small mb-0">Cantidad Aprobada</p>
+          <h4 class="mb-0 text-success fw-bold">{{ lote.cantidad_aprobada }}</h4>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm text-center">
+        <div class="card-body py-3">
+          <p class="text-muted small mb-0">Cantidad Rechazada</p>
+          <h4 class="mb-0 {% if lote.cantidad_rechazada > 0 %}text-danger{% else %}text-muted{% endif %} fw-bold">
+            {{ lote.cantidad_rechazada }}
+          </h4>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm text-center">
+        <div class="card-body py-3">
+          <p class="text-muted small mb-0">Costo Real</p>
+          <h4 class="mb-0 text-secondary fw-bold">${{ lote.costo_real|floatformat:2 }}</h4>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Botones de flujo -->
+  <div class="mb-4 d-flex gap-2 flex-wrap">
+    {% if lote.estado == "produccion" %}
+      <a href="{% url 'produccion:lote_enviar_control' lote.pk %}" class="btn btn-warning">
+        <i class="bi bi-shield-check"></i> Enviar a Control de Calidad
+      </a>
+    {% elif lote.estado == "control" and not has_qc %}
+      <a href="{% url 'produccion:control_calidad_create' lote.pk %}" class="btn btn-info text-white">
+        <i class="bi bi-clipboard2-pulse"></i> Registrar Control de Calidad
+      </a>
+    {% elif lote.estado == "aprobado" %}
+      <a href="{% url 'produccion:lote_liberar' lote.pk %}" class="btn btn-success">
+        <i class="bi bi-box-arrow-right"></i> Liberar al Almacén
+      </a>
+    {% endif %}
+  </div>
+
+  <div class="row g-4">
+    <!-- Info del lote -->
+    <div class="col-md-5">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-primary text-white">
+          <i class="bi bi-info-circle me-1"></i> Información del Lote
+        </div>
+        <div class="card-body">
+          <dl class="row mb-0 small">
+            <dt class="col-5">N° Lote</dt>
+            <dd class="col-7"><code>{{ lote.numero_lote }}</code></dd>
+            <dt class="col-5">Producto</dt>
+            <dd class="col-7">{{ lote.orden.formula.producto.nombre }}</dd>
+            <dt class="col-5">Fórmula</dt>
+            <dd class="col-7">{{ lote.orden.formula.nombre }} v{{ lote.orden.formula.version }}</dd>
+            <dt class="col-5">Fecha Prod.</dt>
+            <dd class="col-7">{{ lote.fecha_produccion|date:"d/m/Y" }}</dd>
+            <dt class="col-5">Vencimiento</dt>
+            <dd class="col-7">{{ lote.fecha_vencimiento|date:"d/m/Y"|default:"No definido" }}</dd>
+            <dt class="col-5">Creado por</dt>
+            <dd class="col-7">{{ lote.creado_por|default:"—" }}</dd>
+            <dt class="col-5">Registrado</dt>
+            <dd class="col-7">{{ lote.creado_en|date:"d/m/Y H:i" }}</dd>
+          </dl>
+          {% if lote.observaciones %}
+          <hr>
+          <p class="small text-muted mb-0"><strong>Observaciones:</strong> {{ lote.observaciones }}</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Control de calidad -->
+    <div class="col-md-7">
+      {% if has_qc %}
+      {% with qc=lote.control_calidad %}
+      <div class="card border-0 shadow-sm">
+        <div class="card-header
+          {% if qc.resultado == 'aprobado' or qc.resultado == 'condicional' %}bg-success text-white
+          {% else %}bg-danger text-white{% endif %}">
+          <i class="bi bi-clipboard2-pulse me-1"></i>
+          Control de Calidad — {{ qc.get_resultado_display }}
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <dl class="row mb-0 small">
+                <dt class="col-5">Fecha</dt><dd class="col-7">{{ qc.fecha_inspeccion|date:"d/m/Y" }}</dd>
+                <dt class="col-5">Inspector</dt><dd class="col-7">{{ qc.inspector|default:"—" }}</dd>
+                <dt class="col-5">pH</dt><dd class="col-7">{{ qc.ph|default:"—" }}</dd>
+                <dt class="col-5">Viscosidad</dt><dd class="col-7">{{ qc.viscosidad|default:"—" }} cP</dd>
+                <dt class="col-5">Densidad</dt><dd class="col-7">{{ qc.densidad|default:"—" }} g/mL</dd>
+              </dl>
+            </div>
+            <div class="col-md-6">
+              <dl class="row mb-0 small">
+                <dt class="col-5">Color</dt><dd class="col-7">{{ qc.color|default:"—" }}</dd>
+                <dt class="col-5">Olor</dt><dd class="col-7">{{ qc.olor|default:"—" }}</dd>
+                <dt class="col-5">Aspecto</dt><dd class="col-7">{{ qc.aspecto|default:"—" }}</dd>
+              </dl>
+            </div>
+          </div>
+          {% if qc.observaciones %}
+          <div class="mt-3 p-2 bg-light rounded small">
+            <strong>Observaciones:</strong> {{ qc.observaciones }}
+          </div>
+          {% endif %}
+          {% if qc.acciones_correctivas %}
+          <div class="mt-2 p-2 bg-warning bg-opacity-25 rounded small">
+            <strong>Acciones correctivas:</strong> {{ qc.acciones_correctivas }}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      {% endwith %}
+
+      {% elif lote.estado == "control" %}
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-warning text-dark fw-semibold">
+          <i class="bi bi-clipboard2-pulse me-1"></i> Registrar Control de Calidad
+        </div>
+        <div class="card-body">
+          <form method="post" action="{% url 'produccion:control_calidad_create' lote.pk %}">
+            {% csrf_token %}
+            <div class="row g-2">
+              <div class="col-md-6"><label class="form-label small mb-1">Fecha Inspección *</label>{{ qc_form.fecha_inspeccion }}</div>
+              <div class="col-md-6"><label class="form-label small mb-1">Inspector *</label>{{ qc_form.inspector }}</div>
+              <div class="col-md-4"><label class="form-label small mb-1">pH</label>{{ qc_form.ph }}</div>
+              <div class="col-md-4"><label class="form-label small mb-1">Viscosidad (cP)</label>{{ qc_form.viscosidad }}</div>
+              <div class="col-md-4"><label class="form-label small mb-1">Densidad (g/mL)</label>{{ qc_form.densidad }}</div>
+              <div class="col-md-4"><label class="form-label small mb-1">Color</label>{{ qc_form.color }}</div>
+              <div class="col-md-4"><label class="form-label small mb-1">Olor</label>{{ qc_form.olor }}</div>
+              <div class="col-md-4"><label class="form-label small mb-1">Aspecto</label>{{ qc_form.aspecto }}</div>
+              <div class="col-md-4"><label class="form-label small mb-1">Resultado *</label>{{ qc_form.resultado }}</div>
+              <div class="col-12"><label class="form-label small mb-1">Observaciones</label>{{ qc_form.observaciones }}</div>
+              <div class="col-12"><label class="form-label small mb-1">Acciones Correctivas</label>{{ qc_form.acciones_correctivas }}</div>
+            </div>
+            <button type="submit" class="btn btn-warning text-dark mt-3 w-100">
+              <i class="bi bi-shield-check"></i> Guardar Control de Calidad
+            </button>
+          </form>
+        </div>
+      </div>
+
+      {% else %}
+      <div class="card border-0 shadow-sm">
+        <div class="card-body text-center py-5 text-muted">
+          <i class="bi bi-shield-check fs-1 d-block mb-3"></i>
+          <p class="mb-0">El lote debe estar en estado
+            <strong>"En Control de Calidad"</strong><br>
+            para registrar la inspección.
+          </p>
+          {% if lote.estado == "produccion" %}
+          <a href="{% url 'produccion:lote_enviar_control' lote.pk %}"
+             class="btn btn-warning mt-3">
+            <i class="bi bi-shield-check"></i> Enviar a Control QC
+          </a>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}

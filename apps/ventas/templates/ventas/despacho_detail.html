@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}DESP-{{ desp.numero }}{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h3 class="mb-0"><i class="bi bi-truck"></i> Despacho — DESP-{{ desp.numero }}</h3>
+      <small class="text-muted">
+        Pedido: <a href="{% url 'ventas:pedido_detail' desp.pedido.pk %}">PED-{{ desp.pedido.numero }}</a> |
+        Cliente: <strong>{{ desp.pedido.cliente.nombre_display }}</strong> |
+        Fecha: {{ desp.fecha_despacho|date:"d/m/Y" }}
+        {% if desp.transportista %} | Transportista: <strong>{{ desp.transportista }}</strong>{% endif %}
+        {% if desp.numero_guia %} | Guía: <strong>{{ desp.numero_guia }}</strong>{% endif %}
+      </small>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge fs-6
+        {% if desp.estado == 'entregado' %}bg-success
+        {% elif desp.estado == 'despachado' %}bg-warning text-dark
+        {% else %}bg-info text-dark{% endif %}">
+        {{ desp.get_estado_display }}
+      </span>
+      {% if desp.estado != "entregado" %}
+      <a href="{% url 'ventas:despacho_entregar' desp.pk %}" class="btn btn-success btn-sm">
+        <i class="bi bi-check-circle"></i> Marcar Entregado
+      </a>
+      {% endif %}
+      <a href="{% url 'ventas:despacho_list' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left"></i> Volver
+      </a>
+    </div>
+  </div>
+
+  <!-- Formulario agregar ítem despachado -->
+  {% if desp.estado != "entregado" %}
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white fw-semibold border-bottom">
+      <i class="bi bi-plus-square text-warning me-1"></i> Registrar Ítem Despachado
+    </div>
+    <div class="card-body">
+      <form method="post" action="{% url 'ventas:despacho_agregar_item' desp.pk %}">
+        {% csrf_token %}
+        <div class="row g-2 align-items-end">
+          <div class="col-md-5">
+            <label class="form-label small mb-1">Ítem del Pedido *</label>
+            {{ det_form.detalle_pedido }}
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small mb-1">Cantidad Despachada *</label>
+            {{ det_form.cantidad_despachada }}
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small mb-1">Observación</label>
+            {{ det_form.observacion }}
+          </div>
+          <div class="col-md-1">
+            <button type="submit" class="btn btn-warning text-dark w-100">
+              <i class="bi bi-plus-lg"></i>
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Tabla de ítems despachados -->
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white fw-semibold">
+      <i class="bi bi-table text-warning me-1"></i>
+      Ítems Despachados
+      <span class="badge bg-secondary ms-1">{{ detalles.count }}</span>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-dark">
+            <tr>
+              <th>Producto</th>
+              <th class="text-end">Cantidad Pedida</th>
+              <th class="text-end">Cantidad Despachada</th>
+              <th>Observación</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for d in detalles %}
+            <tr>
+              <td>
+                <code class="small">{{ d.detalle_pedido.producto.codigo }}</code>
+                <span class="ms-1">{{ d.detalle_pedido.producto.nombre }}</span>
+              </td>
+              <td class="text-end">
+                {{ d.detalle_pedido.cantidad }}
+                {{ d.detalle_pedido.producto.get_unidad_medida_display }}
+              </td>
+              <td class="text-end fw-bold text-warning">
+                {{ d.cantidad_despachada }}
+              </td>
+              <td class="text-muted small">{{ d.observacion|default:"—" }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="4" class="text-center text-muted py-4">
+                {% if desp.estado != "entregado" %}
+                Registre los ítems despachados usando el formulario de arriba.
+                {% else %}
+                Sin ítems registrados.
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  {% if desp.observaciones %}
+  <div class="alert alert-light border shadow-sm mb-3">
+    <strong><i class="bi bi-chat-text me-1"></i> Observaciones:</strong>
+    <p class="mb-0 mt-1 small">{{ desp.observaciones }}</p>
+  </div>
+  {% endif %}
+
+  <!-- Auditoría -->
+  <div class="card border-0 shadow-sm">
+    <div class="card-body py-2 px-3 text-muted small d-flex justify-content-between">
+      <span>Despachado por: <strong>{{ desp.despachado_por|default:"—" }}</strong></span>
+      <span>Registrado: {{ desp.creado_en|date:"d/m/Y H:i" }}</span>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'produccion:orden_list' %}">Órdenes</a></li>
+      <li class="breadcrumb-item active">OP-{{ orden.id }}</li>
+    </ol>
+  </nav>
+
+  <div class="row">
+    <!-- Información General -->
+    <div class="col-md-4">
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-dark text-white">
+          <h5 class="mb-0">Información de Orden</h5>
+        </div>
+        <div class="card-body">
+          <p><strong>Producto:</strong> {{ orden.formula.producto.nombre }}</p>
+          <p><strong>Fórmula:</strong> {{ orden.formula.nombre }} (v{{ orden.formula.version }})</p>
+          <p><strong>Estado Actual:</strong>
+            <span class="badge {% if orden.estado == 'en_proceso' %}bg-primary{% else %}bg-secondary{% endif %}">
+              {{ orden.get_estado_display }}
+            </span>
+          </p>
+          <hr>
+          {% if orden.estado == 'planificada' %}
+          <form action="{% url 'produccion:orden_iniciar' orden.pk %}" method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success w-100">
+              <i class="bi bi-play-fill"></i> Iniciar Producción
+            </button>
+          </form>
+          {% elif orden.estado == 'en_proceso' %}
+          <form action="{% url 'produccion:orden_completar' orden.pk %}" method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger w-100">
+              <i class="bi bi-check-all"></i> Finalizar Orden
+            </button>
+          </form>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Consumos y Lotes -->
+    <div class="col-md-8">
+      <div class="card shadow-sm mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">Materias Primas Consumidas</h5>
+          {% if orden.estado == 'en_proceso' %}
+          <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalConsumo">
+            <i class="bi bi-plus"></i> Registrar Consumo
+          </button>
+          {% endif %}
+        </div>
+        <div class="card-body p-0">
+          <table class="table table-sm mb-0">
+            <thead>
+              <tr>
+                <th>Insumo</th>
+                <th class="text-end">Cantidad</th>
+                <th class="text-end">Costo Unit.</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for consumo in consumos %}
+              <tr>
+                <td>{{ consumo.materia_prima.nombre }}</td>
+                <td class="text-end">{{ consumo.cantidad_consumida }} {{ consumo.materia_prima.unidad_medida }}</td>
+                <td class="text-end">${{ consumo.costo_unitario_al_momento }}</td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="3" class="text-center text-muted py-3">No hay consumos registrados.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card shadow-sm">
+        <div class="card-header bg-light">
+          <h5 class="mb-0">Lotes Generados (Trazabilidad)</h5>
+        </div>
+        <div class="card-body">
+          <div class="list-group list-group-flush">
+            {% for lote in lotes %}
+            <div class="list-group-item d-flex justify-content-between align-items-center">
+              <div>
+                <i class="bi bi-box-seam me-2"></i>
+                <strong>{{ lote.numero_lote }}</strong>
+              </div>
+              <span class="badge rounded-pill bg-info text-dark">{{ lote.get_estado_display }}</span>
+            </div>
+            {% empty %}
+            <p class="text-muted mb-0 small text-center">El lote se generará automáticamente al iniciar la orden.</p>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

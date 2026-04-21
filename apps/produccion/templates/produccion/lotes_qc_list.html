@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Control de Calidad (QC){% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-shield-check text-warning"></i> Lotes en Control de Calidad</h2>
+    <a href="{% url 'produccion:dashboard' %}" class="btn btn-outline-secondary">Volver al Dashboard</a>
+  </div>
+
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr><th>Lote</th><th>Orden Origen</th><th>Producto</th><th>Fecha Prod.</th><th>Cantidad</th><th>Estado</th><th>Acciones</th></tr>
+        </thead>
+        <tbody>
+          {% for l in lotes %}
+          <tr>
+            <td class="fw-bold">{{ l.numero_lote }}</td>
+            <td>OP-{{ l.orden.numero }}</td>
+            <td>{{ l.orden.formula.producto.nombre }}</td>
+            <td>{{ l.fecha_produccion|date:"d/m/Y" }}</td>
+            <td>{{ l.cantidad_producida }}</td>
+            <td><span class="badge bg-warning text-dark">{{ l.get_estado_display }}</span></td>
+            <td>
+              <button class="btn btn-sm btn-success">Aprobar</button>
+              <button class="btn btn-sm btn-danger">Rechazar</button>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="7" class="text-center text-muted py-5">No hay lotes pendientes de inspección.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

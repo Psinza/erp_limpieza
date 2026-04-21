@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Eliminar Activo{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-danger shadow">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Confirmar Eliminación</h5>
+                </div>
+                <div class="card-body text-center">
+                    <p class="lead">¿Estás seguro de que deseas eliminar el activo: <br><strong>{{ object.codigo }} - {{
+                            object.nombre }}</strong>?</p>
+                    <form method="post" class="mt-4">
+                        {% csrf_token %}
+                        <a href="{% url 'activos_fijos:activo_list' %}" class="btn btn-secondary">Cancelar</a>
+                        <button type="submit" class="btn btn-danger">Sí, eliminar definitivamente</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

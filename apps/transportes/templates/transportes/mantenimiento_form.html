@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}{{ titulo }}{% endblock %}
+{% block content %}
+<div class="container py-4" style="max-width:700px">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h3><i class="bi bi-tools"></i> {{ titulo }}</h3>
+    <a href="{% url 'transportes:mantenimiento_list' %}" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left"></i> Volver
+    </a>
+  </div>
+
+  <div class="alert alert-warning small">
+    <i class="bi bi-exclamation-triangle me-1"></i>
+    Al programar el mantenimiento, el vehículo seleccionado cambiará a estado
+    <strong>"En Mantenimiento"</strong> y no podrá ser asignado a despachos.
+    Se liberará automáticamente al marcar el mantenimiento como <strong>Completado</strong>.
+  </div>
+
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-4">
+      <form method="post">
+        {% csrf_token %}
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Vehículo *</label>
+            {{ form.vehiculo }}
+            {% if form.vehiculo.errors %}
+            <div class="text-danger small">{{ form.vehiculo.errors }}</div>
+            {% endif %}
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Tipo *</label>
+            {{ form.tipo }}
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Fecha Programada *</label>
+            {{ form.fecha_programada }}
+          </div>
+          <div class="col-md-12">
+            <label class="form-label">Descripción del Trabajo *</label>
+            {{ form.descripcion }}
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Taller / Mecánico</label>
+            {{ form.taller }}
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Odómetro al Servicio (km)</label>
+            {{ form.km_en_servicio }}
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Costo Estimado ($)</label>
+            {{ form.costo }}
+          </div>
+          <div class="col-12">
+            <label class="form-label">Observaciones</label>
+            {{ form.observaciones }}
+          </div>
+        </div>
+
+        {% if form.errors %}
+        <div class="alert alert-danger mt-3">
+          {% for field in form %}{% for error in field.errors %}
+          <div><strong>{{ field.label }}:</strong> {{ error }}</div>
+          {% endfor %}{% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="d-flex gap-2 mt-4">
+          <button type="submit" class="btn btn-outline-secondary fw-semibold">
+            <i class="bi bi-tools"></i> Programar Mantenimiento
+          </button>
+          <a href="{% url 'transportes:mantenimiento_list' %}" class="btn btn-outline-danger">Cancelar</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

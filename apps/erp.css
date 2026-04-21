@@ -1,0 +1,30 @@
+/* Estilos Globales ERP Limpieza */
+body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8f9fa; }
+
+.wrapper { display: flex; width: 100%; align-items: stretch; }
+
+#sidebar { min-width: 260px; max-width: 260px; min-height: 100vh; transition: all 0.3s; background: #212529; color: #fff; }
+#sidebar.active { margin-left: -260px; }
+#sidebar .sidebar-header { background: #1a1d20; }
+#sidebar ul.components { padding: 20px 0; border-bottom: 1px solid #47748b; }
+#sidebar ul li a { padding: 12px 20px; font-size: 0.95em; display: block; color: rgba(255,255,255,0.8); text-decoration: none; transition: 0.2s; }
+#sidebar ul li a:hover { color: #fff; background: rgba(255,255,255,0.1); }
+#sidebar ul li a i { width: 25px; }
+
+#content { width: 100%; padding: 0; min-height: 100vh; transition: all 0.3s; }
+
+.navbar { padding: 15px 10px; background: #fff; border: none; border-radius: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+
+.card { border: none; border-radius: 8px; box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075); margin-bottom: 1.5rem; }
+.card-header { background-color: #fff; border-bottom: 1px solid #f1f1f1; font-weight: bold; }
+
+/* Badges de estados */
+.badge-pendiente { background-color: #ffc107; color: #212529; }
+.badge-aprobado { background-color: #198754; }
+.badge-anulado { background-color: #dc3545; }
+
+@media (max-width: 768px) {
+    #sidebar { margin-left: -260px; }
+    #sidebar.active { margin-left: 0; }
+    #sidebarCollapse span { display: none; }
+}

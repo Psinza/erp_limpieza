@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Ajuste de Stock — {{ mp.nombre }}{% endblock %}
+{% block content %}
+<div class="container py-4" style="max-width:500px">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h3><i class="bi bi-arrow-left-right"></i> Ajuste de Stock</h3>
+    <a href="{% url 'produccion:materia_prima_list' %}" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left"></i> Volver
+    </a>
+  </div>
+  <div class="alert alert-info small">
+    <strong>{{ mp.nombre }}</strong> (<code>{{ mp.codigo }}</code>)<br>
+    Stock actual: <strong>{{ mp.stock_actual }} {{ mp.get_unidad_medida_display }}</strong>
+  </div>
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-4">
+      <form method="post">{% csrf_token %}
+        {% for field in form %}
+        <div class="mb-3">
+          <label class="form-label">{{ field.label }}</label>{{ field }}
+          {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+          {% if field.errors %}<div class="text-danger small">{{ field.errors }}</div>{% endif %}
+        </div>
+        {% endfor %}
+        <div class="d-flex gap-2 mt-3">
+          <button type="submit" class="btn btn-warning text-dark fw-semibold">
+            <i class="bi bi-arrow-left-right"></i> Aplicar Ajuste
+          </button>
+          <a href="{% url 'produccion:materia_prima_list' %}" class="btn btn-outline-secondary">Cancelar</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

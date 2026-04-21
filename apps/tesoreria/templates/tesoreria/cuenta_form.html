@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}{{ titulo }}{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white py-3">
+          <h4 class="mb-0 fw-bold text-primary"><i class="bi bi-credit-card-2-front"></i> {{ titulo }}</h4>
+        </div>
+        <div class="card-body p-4">
+          <form method="post">
+            {% csrf_token %}
+            <div class="row g-3">
+              {% for field in form %}
+              <div class="col-md-6">
+                <label class="form-label fw-semibold small text-uppercase">{{ field.label }}</label>
+                {{ field }}
+                {% if field.errors %}<div class="text-danger small">{{ field.errors }}</div>{% endif %}
+              </div>
+              {% endfor %}
+            </div>
+            <hr class="my-4">
+            <div class="d-flex justify-content-between">
+              <a href="{% url 'tesoreria:cuenta_list' %}" class="btn btn-outline-secondary px-4">
+                <i class="bi bi-arrow-left"></i> Cancelar
+              </a>
+              <button type="submit" class="btn btn-primary px-5">
+                <i class="bi bi-check-circle"></i> Guardar Cuenta
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

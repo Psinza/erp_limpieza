@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}{% if usuario %}Editar Usuario{% else %}Crear Usuario{% endif %}{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white py-3">
+          <h4 class="mb-0 fw-bold">{% if usuario %}Editar Usuario{% else %}Crear Nuevo Usuario{% endif %}</h4>
+        </div>
+        <div class="card-body">
+          <form method="post">
+            {% csrf_token %}
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label for="{{ form.username.id_for_label }}" class="form-label">Nombre de Usuario</label>
+                {{ form.username }}
+                {% if form.username.errors %}
+                  <div class="text-danger small">{{ form.username.errors.0 }}</div>
+                {% endif %}
+              </div>
+              <div class="col-md-6">
+                <label for="{{ form.email.id_for_label }}" class="form-label">Correo Electrónico</label>
+                {{ form.email }}
+                {% if form.email.errors %}
+                  <div class="text-danger small">{{ form.email.errors.0 }}</div>
+                {% endif %}
+              </div>
+              <div class="col-md-6">
+                <label for="{{ form.first_name.id_for_label }}" class="form-label">Nombre</label>
+                {{ form.first_name }}
+              </div>
+              <div class="col-md-6">
+                <label for="{{ form.last_name.id_for_label }}" class="form-label">Apellido</label>
+                {{ form.last_name }}
+              </div>
+              <div class="col-md-6">
+                <label for="{{ form.password.id_for_label }}" class="form-label">Contraseña {% if usuario %}(dejar vacío para no cambiar){% endif %}</label>
+                {{ form.password }}
+                {% if form.password.errors %}
+                  <div class="text-danger small">{{ form.password.errors.0 }}</div>
+                {% endif %}
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Estado</label>
+                <div class="form-check">
+                  {{ form.is_active }}
+                  <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                    Usuario Activo
+                  </label>
+                </div>
+              </div>
+              <div class="col-12">
+                <h6 class="mb-3">Permisos</h6>
+                <div class="row">
+                  <div class="col-md-4">
+                    <div class="form-check">
+                      {{ form.is_staff }}
+                      <label class="form-check-label" for="{{ form.is_staff.id_for_label }}">
+                        Es Staff (acceso al admin)
+                      </label>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="form-check">
+                      {{ form.is_superuser }}
+                      <label class="form-check-label" for="{{ form.is_superuser.id_for_label }}">
+                        Es Superusuario
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="d-flex justify-content-end gap-2 mt-4">
+              <a href="{% url 'administracion:lista_usuarios' %}" class="btn btn-secondary">Cancelar</a>
+              <button type="submit" class="btn btn-primary">Guardar Usuario</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

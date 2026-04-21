@@ -1,0 +1,59 @@
+{% extends "core/base.html" %}
+
+{% block page_title %}Nueva Lista de Precios{% endblock %}
+{% block breadcrumb %}Comercialización / Listas de Precios / Nueva{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center mb-4 gap-3">
+  <a href="{% url 'comercializacion:listas_precio_list' %}" class="btn-erp btn-erp-outline">
+    <i class="bi bi-arrow-left"></i>
+  </a>
+  <h1 style="font-family:var(--font-head);font-size:20px;font-weight:700;margin:0;">{{ titulo }}</h1>
+</div>
+<div class="row justify-content-center">
+  <div class="col-md-7">
+    <div class="erp-card">
+      <div class="erp-card-header">
+        <span class="erp-card-title"><i class="bi bi-list-ul me-2"></i>Datos de la Lista</span>
+      </div>
+      <div class="erp-card-body">
+        <form method="post">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label">Nombre *</label>
+            {{ form.nombre }}
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Descripción</label>
+            {{ form.descripcion }}
+          </div>
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label">Moneda</label>
+              {{ form.moneda }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Factor de ajuste global</label>
+              {{ form.factor_ajuste }}
+              <div class="form-text">1.00 = sin ajuste, 1.10 = +10%</div>
+            </div>
+          </div>
+          <div class="form-check mb-4">
+            {{ form.activa }}
+            <label class="form-check-label">Lista activa</label>
+          </div>
+          {% if form.errors %}
+          <div class="alert alert-danger mb-3">Revise los campos con error.</div>
+          {% endif %}
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn-erp btn-erp-primary">
+              <i class="bi bi-check2"></i> Crear lista
+            </button>
+            <a href="{% url 'comercializacion:listas_precio_list' %}" class="btn-erp btn-erp-outline">Cancelar</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

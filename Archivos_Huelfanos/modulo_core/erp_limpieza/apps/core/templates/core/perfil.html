@@ -1,0 +1,101 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Mi Perfil — ERP Industrial{% endblock %}
+{% block page_title %}Mi Perfil{% endblock %}
+{% block breadcrumb %}Inicio / Perfil{% endblock %}
+
+{% block content %}
+<div style="display:grid;grid-template-columns:300px 1fr;gap:24px;align-items:start;">
+
+  <!-- Tarjeta de perfil -->
+  <div class="erp-card">
+    <div class="erp-card-body" style="text-align:center;padding:28px 20px;">
+      <div style="width:72px;height:72px;border-radius:50%;background:#0d47a1;
+                  display:flex;align-items:center;justify-content:center;
+                  font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:700;
+                  color:#fff;margin:0 auto 16px;">
+        {{ user.nombres.0 }}{{ user.apellidos.0 }}
+      </div>
+      <div style="font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:600;color:#1a2332;">
+        {{ user.nombre_completo }}
+      </div>
+      <div style="font-size:13px;color:#8899aa;margin-top:4px;">@{{ user.username }}</div>
+
+      <div style="margin:16px 0;padding:16px 0;border-top:1px solid #f0f4f8;border-bottom:1px solid #f0f4f8;">
+        {% if user.area %}
+        <div style="margin-bottom:8px;">
+          <span class="badge-area">{{ user.area.nombre }}</span>
+        </div>
+        {% endif %}
+        {% if user.rol %}
+        <div><span class="badge-rol">{{ user.rol.nombre }}</span></div>
+        {% endif %}
+        {% if user.cargo %}
+        <div style="font-size:12px;color:#8899aa;margin-top:8px;">{{ user.cargo }}</div>
+        {% endif %}
+      </div>
+
+      <div style="text-align:left;">
+        <div style="font-size:12px;color:#8899aa;margin-bottom:4px;">Correo</div>
+        <div style="font-size:13.5px;color:#334;">{{ user.email }}</div>
+        {% if user.cedula %}
+        <div style="font-size:12px;color:#8899aa;margin-top:10px;margin-bottom:4px;">Cédula</div>
+        <div style="font-size:13.5px;color:#334;">{{ user.cedula }}</div>
+        {% endif %}
+        {% if user.telefono %}
+        <div style="font-size:12px;color:#8899aa;margin-top:10px;margin-bottom:4px;">Teléfono</div>
+        <div style="font-size:13.5px;color:#334;">{{ user.telefono }}</div>
+        {% endif %}
+        <div style="font-size:12px;color:#8899aa;margin-top:10px;margin-bottom:4px;">Estado</div>
+        <span class="badge-area badge-{{ user.estado|lower }}">{{ user.get_estado_display }}</span>
+        <div style="font-size:12px;color:#8899aa;margin-top:10px;margin-bottom:4px;">Último acceso</div>
+        <div style="font-size:13px;color:#334;">{{ user.ultimo_acceso|date:"d/m/Y H:i"|default:"—" }}</div>
+      </div>
+
+      <a href="{% url 'core:cambiar_password' %}" class="btn-erp btn-erp-outline" style="width:100%;margin-top:20px;justify-content:center;">
+        <i class="bi bi-key"></i> Cambiar contraseña
+      </a>
+    </div>
+  </div>
+
+  <!-- Historial de accesos -->
+  <div class="erp-card">
+    <div class="erp-card-header">
+      <span class="erp-card-title"><i class="bi bi-clock-history me-2"></i>Mis últimos accesos</span>
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="erp-table">
+        <thead>
+          <tr>
+            <th>Tipo</th>
+            <th>Fecha / Hora</th>
+            <th>IP</th>
+            <th>Detalle</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for log in logs %}
+          <tr>
+            <td>
+              {% if log.tipo == 'LOGIN' %}
+                <span style="background:#e8f5e9;color:#2e7d32;font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px;">Entrada</span>
+              {% elif log.tipo == 'LOGOUT' %}
+                <span style="background:#f5f5f5;color:#666;font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px;">Salida</span>
+              {% elif log.tipo == 'FALLIDO' %}
+                <span style="background:#fff8e1;color:#e65100;font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px;">Fallido</span>
+              {% endif %}
+            </td>
+            <td style="font-size:13px;color:#556;white-space:nowrap;">{{ log.timestamp|date:"d/m/Y H:i:s" }}</td>
+            <td style="font-size:13px;color:#8899aa;">{{ log.ip|default:"—" }}</td>
+            <td style="font-size:12px;color:#8899aa;">{{ log.detalle|default:"—" }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="4" style="text-align:center;padding:24px;color:#8899aa;">Sin registros</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

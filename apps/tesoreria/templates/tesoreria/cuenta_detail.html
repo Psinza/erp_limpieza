@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}{{ cuenta.alias }}{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h3 class="mb-0"><i class="bi bi-credit-card-2-front"></i> {{ cuenta.alias }}</h3>
+      <small class="text-muted">{{ cuenta.banco }} | {{ cuenta.get_tipo_display }} | <code>{{ cuenta.numero }}</code> | {{ cuenta.moneda }}</small>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{% url 'tesoreria:cuenta_edit' cuenta.pk %}" class="btn btn-outline-primary btn-sm"><i class="bi bi-pencil"></i> Editar</a>
+      <a href="{% url 'tesoreria:cuenta_list' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Volver</a>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-md-3">
+      <div class="card border-0 shadow-sm bg-primary text-white text-center">
+        <div class="card-body py-3">
+          <p class="small mb-0 opacity-75">Saldo Actual</p>
+          <h3 class="mb-0 fw-bold">${{ cuenta.saldo_actual|floatformat:2 }}</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-0 shadow-sm text-center">
+        <div class="card-body py-3">
+          <p class="text-muted small mb-0">Saldo Inicial</p>
+          <h5 class="mb-0">${{ cuenta.saldo_inicial|floatformat:2 }}</h5>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-0 shadow-sm text-center">
+        <div class="card-body py-3">
+          <p class="text-muted small mb-0">Titular</p>
+          <h6 class="mb-0">{{ cuenta.titular|default:"—" }}</h6>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Formulario nuevo movimiento -->
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white fw-semibold border-bottom">
+      <i class="bi bi-plus-square text-primary me-1"></i> Registrar Movimiento
+    </div>
+    <div class="card-body">
+      <form method="post" action="{% url 'tesoreria:movimiento_bancario_create' %}">
+        {% csrf_token %}
+        <input type="hidden" name="cuenta" value="{{ cuenta.pk }}">
+        <div class="row g-2 align-items-end">
+          <div class="col-md-2"><label class="form-label small mb-1">Fecha *</label>{{ mov_form.fecha }}</div>
+          <div class="col-md-2"><label class="form-label small mb-1">Tipo *</label>{{ mov_form.tipo }}</div>
+          <div class="col-md-2"><label class="form-label small mb-1">Concepto</label>{{ mov_form.concepto }}</div>
+          <div class="col-md-3"><label class="form-label small mb-1">Descripción *</label>{{ mov_form.descripcion }}</div>
+          <div class="col-md-1"><label class="form-label small mb-1">Referencia</label>{{ mov_form.referencia }}</div>
+          <div class="col-md-1"><label class="form-label small mb-1">Monto *</label>{{ mov_form.monto }}</div>
+          <div class="col-md-1">
+            <button type="submit" class="btn btn-primary w-100"><i class="bi bi-plus-lg"></i></button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Extracto -->
+  <div class="card border-0 shadow-sm">
+    <div class="card-header bg-white fw-semibold">
+      <i class="bi bi-list-ul text-secondary me-1"></i> Últimos Movimientos
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-dark">
+            <tr><th>Fecha</th><th>Tipo</th><th>Concepto</th><th>Descripción</th><th>Referencia</th>
+                <th class="text-end">Monto</th><th class="text-end">Saldo</th><th>Conciliado</th></tr>
+          </thead>
+          <tbody>
+            {% for m in movimientos %}
+            <tr>
+              <td>{{ m.fecha|date:"d/m/Y" }}</td>
+              <td>
+                <span class="badge {% if m.tipo == 'credito' %}bg-success{% else %}bg-danger{% endif %}">
+                  {{ m.get_tipo_display }}
+                </span>
+              </td>
+              <td class="small text-muted">{{ m.get_concepto_display }}</td>
+              <td>{{ m.descripcion }}</td>
+              <td class="small text-muted">{{ m.referencia|default:"—" }}</td>
+              <td class="text-end fw-bold {% if m.tipo == 'credito' %}text-success{% else %}text-danger{% endif %}">
+                {% if m.tipo == 'credito' %}+{% else %}-{% endif %}${{ m.monto|floatformat:2 }}
+              </td>
+              <td class="text-end">${{ m.saldo_posterior|floatformat:2 }}</td>
+              <td class="text-center">
+                {% if m.conciliado %}<i class="bi bi-check-circle-fill text-success"></i>
+                {% else %}<i class="bi bi-circle text-muted"></i>{% endif %}
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="8" class="text-center text-muted py-4">Sin movimientos registrados.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

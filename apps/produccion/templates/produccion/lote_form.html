@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Registrar Lote — OP-{{ orden.numero }}{% endblock %}
+{% block content %}
+<div class="container py-4" style="max-width:600px">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h3><i class="bi bi-boxes"></i> Registrar Lote</h3>
+    <a href="{% url 'produccion:orden_detail' orden.pk %}" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left"></i> Volver
+    </a>
+  </div>
+
+  <div class="alert alert-info small mb-3">
+    <i class="bi bi-clipboard2-check me-1"></i>
+    Orden: <strong>OP-{{ orden.numero }}</strong> |
+    Producto: <strong>{{ orden.formula.producto.nombre }}</strong> |
+    Rendimiento por lote: <strong>{{ orden.formula.rendimiento }} {{ orden.formula.unidad_rendimiento }}</strong>
+  </div>
+
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-4">
+      <form method="post">
+        {% csrf_token %}
+        {% for field in form %}
+        <div class="mb-3">
+          <label class="form-label">{{ field.label }}</label>
+          {{ field }}
+          {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+          {% if field.errors %}<div class="text-danger small">{{ field.errors }}</div>{% endif %}
+        </div>
+        {% endfor %}
+        <div class="alert alert-warning small">
+          <i class="bi bi-info-circle me-1"></i>
+          Al guardar el lote, el stock del producto terminado
+          <strong>{{ orden.formula.producto.nombre }}</strong> se incrementará automáticamente.
+        </div>
+        <div class="d-flex gap-2 mt-3">
+          <button type="submit" class="btn btn-success">
+            <i class="bi bi-boxes"></i> Registrar Lote
+          </button>
+          <a href="{% url 'produccion:orden_detail' orden.pk %}" class="btn btn-outline-secondary">Cancelar</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

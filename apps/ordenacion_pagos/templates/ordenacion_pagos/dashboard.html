@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block title %}Aprobación de Pagos{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+  <h2 class="fw-bold mb-4"><i class="bi bi-check2-all text-primary"></i> Ordenación y Aprobación de Pagos</h2>
+
+  <div class="row g-4 mb-4">
+    <div class="col-md-6">
+      <div class="card border-0 shadow-sm bg-warning-subtle p-3">
+        <div class="card-body d-flex align-items-center">
+          <div class="rounded-circle bg-warning p-3 me-3 text-white">
+            <i class="bi bi-hourglass-split fs-3"></i>
+          </div>
+          <div>
+            <p class="text-warning-emphasis small mb-0 font-bold uppercase">Pendientes de Aprobación</p>
+            <h3 class="mb-0 fw-bold">{{ pendientes }}</h3>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card border-0 shadow-sm bg-success-subtle p-3">
+        <div class="card-body d-flex align-items-center">
+          <div class="rounded-circle bg-success p-3 me-3 text-white">
+            <i class="bi bi-check-circle fs-3"></i>
+          </div>
+          <div>
+            <p class="text-success-emphasis small mb-0 font-bold uppercase">Autorizados Hoy</p>
+            <h3 class="mb-0 fw-bold">{{ autorizados }}</h3>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card border-0 shadow-sm overflow-hidden">
+    <div class="card-header bg-white py-3 fw-bold">Solicitudes de Desembolso</div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th class="ps-4">Solicitud</th>
+              <th>Proveedor</th>
+              <th>Monto</th>
+              <th>Vencimiento</th>
+              <th>Estado</th>
+              <th class="text-end pe-4">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for a in autorizaciones %}
+            <tr>
+              <td class="ps-4">
+                <div class="fw-bold">ORD-{{ a.id }}</div>
+                <div class="small text-muted">{{ a.fecha_solicitud|date:"d/m/Y" }}</div>
+              </td>
+              <td>{{ a.cuenta_por_pagar.proveedor.nombre }}</td>
+              <td class="fw-bold text-dark">${{ a.cuenta_por_pagar.monto|floatformat:2 }}</td>
+              <td>
+                <span class="small text-muted">{{ a.cuenta_por_pagar.fecha_vencimiento|date:"d/m/Y" }}</span>
+              </td>
+              <td>
+                {% if a.estado == 'pendiente' %}
+                <span class="badge bg-warning text-dark px-3">Pendiente</span>
+                {% elif a.estado == 'autorizado' %}
+                <span class="badge bg-success px-3">Autorizado</span>
+                {% else %}
+                <span class="badge bg-danger px-3">Rechazado</span>
+                {% endif %}
+              </td>
+              <td class="text-end pe-4">
+                {% if a.estado == 'pendiente' %}
+                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#modal-{{ a.id }}">
+                    Revisar
+                </button>
+                
+                <!-- Modal de Aprobación -->
+                <div class="modal fade" id="modal-{{ a.id }}" tabindex="-1">
+                  <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content border-0 shadow">
+                      <form action="{% url 'ordenacion_pagos:autorizar_pago' a.id %}" method="post">
+                        {% csrf_token %}
+                        <div class="modal-header bg-light">
+                          <h5 class="modal-title fw-bold">Autorizar Pago ORD-{{ a.id }}</h5>
+                          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body text-start">
+                          <div class="alert alert-info border-0 small">
+                            <strong>Proveedor:</strong> {{ a.cuenta_por_pagar.proveedor.nombre }}<br>
+                            <strong>Monto:</strong> ${{ a.cuenta_por_pagar.monto|floatformat:2 }}
+                          </div>
+                          <div class="mb-3">
+                            <label class="form-label small fw-bold">Acción</label>
+                            <select name="estado" class="form-select">
+                                <option value="autorizado">Autorizar Pago</option>
+                                <option value="rechazado">Rechazar Solicitud</option>
+                            </select>
+                          </div>
+                          <div class="mb-0">
+                            <label class="form-label small fw-bold">Notas de Auditoría</label>
+                            <textarea name="notas" class="form-control" rows="3" placeholder="Opcional..."></textarea>
+                          </div>
+                        </div>
+                        <div class="modal-footer">
+                          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                          <button type="submit" class="btn btn-primary px-4">Procesar</button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+                {% else %}
+                <span class="text-muted small italic">Procesado por {{ a.autorizado_por.username }}</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" class="text-center py-5 text-muted">No hay solicitudes de pago pendientes.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

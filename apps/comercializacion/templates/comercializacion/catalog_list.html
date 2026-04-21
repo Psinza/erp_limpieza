@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block title %}Catálogo de Productos | ERP Limpieza{% endblock %}
+
+{% block content %}
+<div class="row mb-4 align-items-center">
+    <div class="col-md-6">
+        <h2 class="fw-bold"><i class="bi bi-shop me-2"></i>Catálogo Digital</h2>
+        <p class="text-muted small">Precios basados en: <span class="badge bg-info text-dark">{{ lista_nombre }}</span></p>
+    </div>
+    <div class="col-md-6">
+        <form method="GET" action="." class="d-flex">
+            <div class="input-group">
+                <input type="text" name="q" class="form-control" placeholder="Buscar producto..." value="{{ query }}">
+                <button class="btn btn-primary" type="submit">
+                    <i class="bi bi-search"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="row row-cols-1 row-cols-md-3 row-cols-lg-4 g-4">
+    {% for p in productos %}
+    <div class="col">
+        <div class="card h-100 shadow-sm border-0 overflow-hidden">
+            {% if p.imagen_principal %}
+                <img src="{{ p.imagen_principal.url }}" class="card-img-top" alt="{{ p.nombre_comercial }}" style="height: 200px; object-fit: cover;">
+            {% else %}
+                <div class="bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                    <i class="bi bi-image text-muted display-4"></i>
+                </div>
+            {% endif %}
+            
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <span class="badge bg-secondary-soft text-dark small">{{ p.producto.categoria.nombre }}</span>
+                    {% if p.destacado %}<span class="badge bg-warning text-dark"><i class="bi bi-star-fill"></i></span>{% endif %}
+                </div>
+                <h5 class="card-title fw-bold mb-1">{{ p.nombre_comercial }}</h5>
+                <p class="card-text text-muted small mb-3">{{ p.descripcion_corta|truncatechars:80 }}</p>
+                
+                <div class="d-flex justify-content-between align-items-center mt-auto">
+                    <div class="text-primary fw-bold h5 mb-0">
+                        {% if p.precio_actual %}${{ p.precio_actual }}{% else %}<span class="text-muted small">Consultar</span>{% endif %}
+                    </div>
+                    <a href="{% url 'comercializacion:product_detail' p.slug %}" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                        Ver más
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12 text-center py-5">
+        <p class="text-muted">No se encontraron productos que coincidan con la búsqueda.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

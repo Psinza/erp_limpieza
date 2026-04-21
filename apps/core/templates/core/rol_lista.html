@@ -1,0 +1,80 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Roles — ERP Industrial{% endblock %}
+{% block page_title %}Roles y Permisos{% endblock %}
+{% block breadcrumb %}Administración / Roles{% endblock %}
+
+{% block content %}
+<div class="erp-card">
+  <div class="erp-card-header">
+    <span class="erp-card-title"><i class="bi bi-shield-lock me-2"></i>Roles del sistema</span>
+    <a href="{% url 'core:rol_crear' %}" class="btn-erp btn-erp-primary">
+      <i class="bi bi-plus-lg"></i> Nuevo rol
+    </a>
+  </div>
+  <div style="overflow-x:auto;">
+    <table class="erp-table">
+      <thead>
+        <tr>
+          <th>Rol</th>
+          <th>Nivel</th>
+          <th>Áreas con acceso</th>
+          <th>Usuarios</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for rol in roles %}
+        <tr>
+          <td>
+            <div style="font-weight:600;color:#1a2332;">{{ rol.nombre }}</div>
+            {% if rol.descripcion %}
+            <div style="font-size:12px;color:#8899aa;margin-top:2px;">{{ rol.descripcion|truncatechars:60 }}</div>
+            {% endif %}
+          </td>
+          <td>
+            <span style="background:#e8eaf6;color:#283593;font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px;">
+              {{ rol.get_nivel_display }}
+            </span>
+          </td>
+          <td>
+            <div style="display:flex;flex-wrap:wrap;gap:4px;">
+              {% for area in rol.areas.all %}
+              <span style="background:#f0f4f8;color:#445;font-size:11px;padding:2px 7px;border-radius:5px;">
+                {{ area.nombre }}
+              </span>
+              {% empty %}
+              <span style="color:#8899aa;font-size:12px;">Sin áreas</span>
+              {% endfor %}
+            </div>
+          </td>
+          <td>
+            <span style="font-weight:600;color:#0d47a1;">{{ rol.num_usuarios }}</span>
+            <span style="color:#8899aa;font-size:12px;"> usuarios</span>
+          </td>
+          <td>
+            {% if rol.activo %}
+            <span style="background:#e8f5e9;color:#2e7d32;font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px;">Activo</span>
+            {% else %}
+            <span style="background:#fafafa;color:#999;font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px;">Inactivo</span>
+            {% endif %}
+          </td>
+          <td>
+            <a href="{% url 'core:rol_editar' rol.pk %}" class="topbar-btn" title="Editar">
+              <i class="bi bi-pencil"></i>
+            </a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" style="text-align:center;padding:40px;color:#8899aa;">
+            No hay roles configurados. <a href="{% url 'core:rol_crear' %}">Crear el primero</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

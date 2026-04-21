@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block title %}REC-{{ rec.numero }}{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h3 class="mb-0"><i class="bi bi-box-arrow-in-down"></i> Recepción — REC-{{ rec.numero }}</h3>
+      <small class="text-muted">
+        Orden: <a href="{% url 'compras:orden_detail' rec.orden.pk %}">OC-{{ rec.orden.numero }}</a> |
+        Proveedor: <strong>{{ rec.orden.proveedor.nombre_display }}</strong> |
+        Fecha: {{ rec.fecha_recepcion|date:"d/m/Y" }}
+        {% if rec.nro_factura %} | Factura: <strong>{{ rec.nro_factura }}</strong>{% endif %}
+      </small>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge fs-6
+        {% if rec.estado == 'aprobada' %}bg-success
+        {% elif rec.estado == 'rechazada' %}bg-danger
+        {% else %}bg-warning text-dark{% endif %}">
+        {{ rec.get_estado_display }}
+      </span>
+      {% if rec.estado == "pendiente" %}
+      <a href="{% url 'compras:recepcion_aprobar' rec.pk %}" class="btn btn-success btn-sm">
+        <i class="bi bi-check-circle"></i> Aprobar
+      </a>
+      {% endif %}
+      <a href="{% url 'compras:recepcion_list' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left"></i> Volver
+      </a>
+    </div>
+  </div>
+
+  <!-- Formulario agregar ítem recibido -->
+  {% if rec.estado == "pendiente" %}
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white fw-semibold border-bottom">
+      <i class="bi bi-plus-square text-success me-1"></i> Registrar Ítem Recibido
+    </div>
+    <div class="card-body">
+      <form method="post" action="{% url 'compras:recepcion_agregar_detalle' rec.pk %}">
+        {% csrf_token %}
+        <div class="row g-2 align-items-end">
+          <div class="col-md-4">
+            <label class="form-label small mb-1">Ítem de la Orden *</label>
+            {{ det_form.detalle_orden }}
+          </div>
+          <div class="col-md-2">
+            <label class="form-label small mb-1">Cant. Recibida *</label>
+            {{ det_form.cantidad_recibida }}
+          </div>
+          <div class="col-md-2">
+            <label class="form-label small mb-1">Cant. Aceptada</label>
+            {{ det_form.cantidad_aceptada }}
+          </div>
+          <div class="col-md-2">
+            <label class="form-label small mb-1">Cant. Rechazada</label>
+            {{ det_form.cantidad_rechazada }}
+          </div>
+          <div class="col-md-1">
+            <label class="form-label small mb-1">Obs.</label>
+            {{ det_form.observacion }}
+          </div>
+          <div class="col-md-1">
+            <button type="submit" class="btn btn-success w-100">
+              <i class="bi bi-plus-lg"></i>
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Tabla de ítems recibidos -->
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white fw-semibold">
+      <i class="bi bi-table text-primary me-1"></i>
+      Ítems Recibidos
+      <span class="badge bg-secondary ms-1">{{ detalles.count }}</span>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-dark">
+            <tr>
+              <th>Producto</th>
+              <th class="text-end">Cant. Ordenada</th>
+              <th class="text-end">Cant. Recibida</th>
+              <th class="text-end text-success">Aceptada</th>
+              <th class="text-end text-danger">Rechazada</th>
+              <th>Observación</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for d in detalles %}
+            <tr>
+              <td>
+                <code class="small">{{ d.detalle_orden.producto.codigo }}</code>
+                <span class="ms-1">{{ d.detalle_orden.producto.nombre }}</span>
+              </td>
+              <td class="text-end">{{ d.detalle_orden.cantidad }}</td>
+              <td class="text-end fw-semibold">{{ d.cantidad_recibida }}</td>
+              <td class="text-end text-success fw-bold">{{ d.cantidad_aceptada }}</td>
+              <td class="text-end text-danger">{{ d.cantidad_rechazada }}</td>
+              <td class="text-muted small">{{ d.observacion|default:"—" }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="6" class="text-center text-muted py-4">
+                {% if rec.estado == "pendiente" %}
+                Registre los ítems recibidos usando el formulario de arriba.
+                {% else %}
+                Sin ítems registrados.
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Info adicional -->
+  {% if rec.observaciones %}
+  <div class="alert alert-light border shadow-sm">
+    <strong><i class="bi bi-chat-text me-1"></i> Observaciones:</strong>
+    <p class="mb-0 mt-1">{{ rec.observaciones }}</p>
+  </div>
+  {% endif %}
+
+  <!-- Auditoría -->
+  <div class="card border-0 shadow-sm">
+    <div class="card-body py-2 px-3 text-muted small d-flex justify-content-between">
+      <span>Recibido por: <strong>{{ rec.recibido_por|default:"—" }}</strong></span>
+      <span>Registrado: {{ rec.creado_en|date:"d/m/Y H:i" }}</span>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

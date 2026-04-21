@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block title %}Compras — Dashboard{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+  <h2 class="mb-4"><i class="bi bi-cart4"></i> Módulo de Compras</h2>
+
+  <!-- KPIs -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm bg-primary text-white">
+        <div class="card-body d-flex justify-content-between align-items-center">
+          <div><p class="mb-0 small">Proveedores Activos</p><h3 class="mb-0 fw-bold">{{ total_proveedores }}</h3></div>
+          <i class="bi bi-building fs-1 opacity-50"></i>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm bg-warning text-dark">
+        <div class="card-body d-flex justify-content-between align-items-center">
+          <div><p class="mb-0 small">Órdenes Activas</p><h3 class="mb-0 fw-bold">{{ ordenes_pendientes }}</h3></div>
+          <i class="bi bi-file-earmark-text fs-1 opacity-50"></i>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm bg-success text-white">
+        <div class="card-body d-flex justify-content-between align-items-center">
+          <div><p class="mb-0 small">Compras del Mes</p><h3 class="mb-0 fw-bold">${{ total_mes|floatformat:2 }}</h3></div>
+          <i class="bi bi-cash-stack fs-1 opacity-50"></i>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm bg-info text-dark">
+        <div class="card-body d-flex justify-content-between align-items-center">
+          <div><p class="mb-0 small">Recepciones Pendientes</p><h3 class="mb-0 fw-bold">{{ recepciones_pend }}</h3></div>
+          <i class="bi bi-box-seam fs-1 opacity-50"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Accesos rápidos -->
+  <div class="row g-2 mb-4">
+    <div class="col-6 col-md-3">
+      <a href="{% url 'compras:orden_create' %}" class="btn btn-primary w-100 py-2">
+        <i class="bi bi-plus-circle me-1"></i> Nueva Orden
+      </a>
+    </div>
+    <div class="col-6 col-md-3">
+      <a href="{% url 'compras:proveedor_create' %}" class="btn btn-outline-primary w-100 py-2">
+        <i class="bi bi-building-add me-1"></i> Nuevo Proveedor
+      </a>
+    </div>
+    <div class="col-6 col-md-3">
+      <a href="{% url 'compras:orden_list' %}" class="btn btn-outline-warning w-100 py-2">
+        <i class="bi bi-list-ul me-1"></i> Ver Órdenes
+      </a>
+    </div>
+    <div class="col-6 col-md-3">
+      <a href="{% url 'compras:recepcion_list' %}" class="btn btn-outline-success w-100 py-2">
+        <i class="bi bi-box-seam me-1"></i> Recepciones
+      </a>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Últimas órdenes -->
+    <div class="col-md-8">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white fw-semibold">
+          <i class="bi bi-file-earmark-text text-primary me-1"></i> Últimas Órdenes de Compra
+        </div>
+        <div class="card-body p-0">
+          <table class="table table-hover mb-0 align-middle">
+            <thead class="table-light">
+              <tr><th>N° Orden</th><th>Proveedor</th><th>Fecha</th><th>Total</th><th>Estado</th></tr>
+            </thead>
+            <tbody>
+              {% for o in ultimas_ordenes %}
+              <tr>
+                <td><a href="{% url 'compras:orden_detail' o.pk %}" class="fw-semibold">{{ o.numero }}</a></td>
+                <td>{{ o.proveedor.nombre_display }}</td>
+                <td>{{ o.fecha_emision|date:"d/m/Y" }}</td>
+                <td class="fw-bold">${{ o.total|floatformat:2 }}</td>
+                <td>
+                  <span class="badge
+                    {% if o.estado == 'completada' %}bg-success
+                    {% elif o.estado == 'confirmada' %}bg-primary
+                    {% elif o.estado == 'enviada' %}bg-info text-dark
+                    {% elif o.estado == 'anulada' %}bg-danger
+                    {% elif o.estado == 'recibida' %}bg-warning text-dark
+                    {% else %}bg-secondary{% endif %}">
+                    {{ o.get_estado_display }}
+                  </span>
+                </td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="5" class="text-center text-muted py-3">Sin órdenes aún.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top proveedores -->
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white fw-semibold">
+          <i class="bi bi-trophy text-warning me-1"></i> Top Proveedores
+        </div>
+        <div class="card-body p-0">
+          <table class="table table-hover mb-0">
+            <thead class="table-light">
+              <tr><th>Proveedor</th><th class="text-center">Órdenes</th></tr>
+            </thead>
+            <tbody>
+              {% for p in top_proveedores %}
+              <tr>
+                <td><a href="{% url 'compras:proveedor_detail' p.pk %}">{{ p.nombre_display }}</a></td>
+                <td class="text-center"><span class="badge bg-primary">{{ p.num_ordenes }}</span></td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="2" class="text-muted text-center py-3">Sin datos.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

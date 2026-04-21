@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard Vendedor - ERP Limpieza{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Mi Panel de Ventas - {{ mes_nombre }}</h1>
+    </div>
+
+    <!-- Tarjetas de Resumen -->
+    <div class="row">
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Ventas del Mes</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{ ventas_totales|floatformat:2 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-cart-check fs-2 text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Comisiones Acumuladas</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{ comisiones_totales|floatformat:2 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-cash-stack fs-2 text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Progreso de Meta (${{ meta.monto_meta|default:"0" }})</div>
+                            <div class="row no-gutters align-items-center">
+                                <div class="col-auto">
+                                    <div class="h5 mb-0 mr-3 font-weight-bold text-gray-800">{{ progreso }}%</div>
+                                </div>
+                                <div class="col">
+                                    <div class="progress progress-sm mr-2">
+                                        <div class="progress-bar bg-info" role="progressbar" style="width: {{ progreso }}%" aria-valuenow="{{ progreso }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-award fs-2 text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de Comisiones Recientes -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Últimas Comisiones Generadas</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>ID Venta</th>
+                            <th>Monto Venta</th>
+                            <th>% Comisión</th>
+                            <th>Comisión</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for c in comisiones_recientes %}
+                        <tr>
+                            <td>{{ c.fecha_creacion|date:"d/m/Y H:i" }}</td>
+                            <td>#{{ c.venta_id }}</td>
+                            <td>${{ c.monto_venta }}</td>
+                            <td>{{ c.porcentaje_aplicado }}%</td>
+                            <td class="fw-bold text-success">${{ c.monto_comision }}</td>
+                            <td><span class="badge badge-{{ c.estado|lower }}">{{ c.get_estado_display }}</span></td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center">No se registran ventas este mes.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

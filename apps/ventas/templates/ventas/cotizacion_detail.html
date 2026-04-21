@@ -1,0 +1,248 @@
+{% extends "base.html" %}
+{% block title %}COT-{{ cot.numero }}{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h3 class="mb-0"><i class="bi bi-file-earmark-text"></i> Cotización — COT-{{ cot.numero }}</h3>
+      <small class="text-muted">
+        Cliente: <strong>{{ cot.cliente.nombre_display }}</strong> |
+        Emisión: {{ cot.fecha_emision|date:"d/m/Y" }} |
+        Vence: {{ cot.fecha_vencimiento|date:"d/m/Y" }}
+      </small>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge fs-6
+        {% if cot.estado == 'aceptada' or cot.estado == 'convertida' %}bg-success
+        {% elif cot.estado == 'enviada' %}bg-info text-dark
+        {% elif cot.estado == 'rechazada' or cot.estado == 'vencida' %}bg-danger
+        {% else %}bg-secondary{% endif %}">
+        {{ cot.get_estado_display }}
+      </span>
+      <a href="{% url 'ventas:cotizacion_list' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left"></i> Volver
+      </a>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm text-center">
+        <div class="card-body py-3">
+          <p class="text-muted small mb-0">Subtotal</p>
+          <h5 class="mb-0">${{ cot.subtotal|floatformat:2 }}</h5>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm text-center">
+        <div class="card-body py-3">
+          <p class="text-muted small mb-0">Descuento</p>
+          <h5 class="mb-0 text-warning">${{ cot.descuento_total|floatformat:2 }}</h5>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm text-center">
+        <div class="card-body py-3">
+          <p class="text-muted small mb-0">IVA ({{ cot.impuesto_pct }}%)</p>
+          <h5 class="mb-0 text-secondary">${{ cot.impuesto_total|floatformat:2 }}</h5>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm text-center bg-info text-dark">
+        <div class="card-body py-3">
+          <p class="small mb-0 opacity-75">TOTAL</p>
+          <h4 class="mb-0 fw-bold">${{ cot.total|floatformat:2 }}</h4>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Botones de flujo -->
+  <div class="mb-4 d-flex gap-2 flex-wrap">
+    {% if cot.estado == "borrador" %}
+      <a href="{% url 'ventas:cotizacion_edit' cot.pk %}" class="btn btn-outline-secondary">
+        <i class="bi bi-pencil"></i> Editar
+      </a>
+      <a href="{% url 'ventas:cotizacion_enviar' cot.pk %}" class="btn btn-info text-white">
+        <i class="bi bi-send"></i> Enviar al Cliente
+      </a>
+    {% elif cot.estado == "enviada" %}
+      <a href="{% url 'ventas:cotizacion_aceptar' cot.pk %}" class="btn btn-success">
+        <i class="bi bi-check-circle"></i> Marcar como Aceptada
+      </a>
+      <a href="{% url 'ventas:cotizacion_rechazar' cot.pk %}" class="btn btn-outline-danger">
+        <i class="bi bi-x-circle"></i> Rechazar
+      </a>
+    {% elif cot.estado == "aceptada" %}
+      <a href="{% url 'ventas:cotizacion_convertir_pedido' cot.pk %}" class="btn btn-primary">
+        <i class="bi bi-arrow-right-circle"></i> Convertir a Pedido
+      </a>
+    {% elif cot.estado == "convertida" %}
+      <a href="{% url 'ventas:pedido_detail' cot.pedido.pk %}" class="btn btn-success">
+        <i class="bi bi-bag-check"></i> Ver Pedido PED-{{ cot.pedido.numero }}
+      </a>
+    {% endif %}
+    {% if cot.estado in "borrador,enviada" %}
+      <a href="{% url 'ventas:cotizacion_rechazar' cot.pk %}" class="btn btn-outline-danger">
+        <i class="bi bi-x-circle"></i> Rechazar
+      </a>
+    {% endif %}
+  </div>
+
+  <!-- Agregar ítem (solo borrador) -->
+  {% if cot.estado == "borrador" %}
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white fw-semibold border-bottom">
+      <i class="bi bi-plus-square text-info me-1"></i> Agregar Ítem a la Cotización
+    </div>
+    <div class="card-body">
+      <form method="post" action="{% url 'ventas:cotizacion_agregar_item' cot.pk %}">
+        {% csrf_token %}
+        <div class="row g-2 align-items-end">
+          <div class="col-md-3">
+            <label class="form-label small mb-1">Producto *</label>
+            {{ det_form.producto }}
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small mb-1">Descripción adicional</label>
+            {{ det_form.descripcion }}
+          </div>
+          <div class="col-md-2">
+            <label class="form-label small mb-1">Cantidad *</label>
+            {{ det_form.cantidad }}
+          </div>
+          <div class="col-md-2">
+            <label class="form-label small mb-1">Precio Unit. *</label>
+            {{ det_form.precio_unitario }}
+          </div>
+          <div class="col-md-1">
+            <label class="form-label small mb-1">Desc. %</label>
+            {{ det_form.descuento_pct }}
+          </div>
+          <div class="col-md-1">
+            <button type="submit" class="btn btn-info text-white w-100">
+              <i class="bi bi-plus-lg"></i>
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Tabla de ítems -->
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white fw-semibold">
+      <i class="bi bi-table text-info me-1"></i>
+      Ítems de la Cotización
+      <span class="badge bg-secondary ms-1">{{ detalles.count }}</span>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-dark">
+            <tr>
+              <th>#</th><th>Producto</th><th>Descripción</th>
+              <th class="text-end">Cantidad</th><th class="text-end">Precio Unit.</th>
+              <th class="text-end">Desc. %</th><th class="text-end">Subtotal</th>
+              {% if cot.estado == "borrador" %}<th></th>{% endif %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for d in detalles %}
+            <tr>
+              <td class="text-muted small">{{ forloop.counter }}</td>
+              <td>
+                <code class="small">{{ d.producto.codigo }}</code>
+                <span class="ms-1 small">{{ d.producto.nombre }}</span>
+              </td>
+              <td class="text-muted small">{{ d.descripcion|default:"—" }}</td>
+              <td class="text-end">{{ d.cantidad }} {{ d.producto.get_unidad_medida_display }}</td>
+              <td class="text-end">${{ d.precio_unitario }}</td>
+              <td class="text-end">{{ d.descuento_pct }}%</td>
+              <td class="text-end fw-semibold">${{ d.subtotal|floatformat:2 }}</td>
+              {% if cot.estado == "borrador" %}
+              <td>
+                <form method="post" action="{% url 'ventas:cotizacion_eliminar_item' cot.pk d.pk %}"
+                      onsubmit="return confirm('¿Eliminar ítem?')">
+                  {% csrf_token %}
+                  <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                </form>
+              </td>
+              {% endif %}
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="8" class="text-center text-muted py-4">
+                {% if cot.estado == "borrador" %}Agregue ítems con el formulario de arriba.
+                {% else %}Sin ítems.{% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+          {% if detalles.count > 0 %}
+          <tfoot class="table-light">
+            <tr>
+              <td colspan="6" class="text-end fw-bold">Subtotal:</td>
+              <td class="text-end fw-bold">${{ cot.subtotal|floatformat:2 }}</td>
+              {% if cot.estado == "borrador" %}<td></td>{% endif %}
+            </tr>
+            <tr>
+              <td colspan="6" class="text-end text-warning">Descuento:</td>
+              <td class="text-end text-warning">-${{ cot.descuento_total|floatformat:2 }}</td>
+              {% if cot.estado == "borrador" %}<td></td>{% endif %}
+            </tr>
+            <tr>
+              <td colspan="6" class="text-end text-secondary">IVA ({{ cot.impuesto_pct }}%):</td>
+              <td class="text-end text-secondary">${{ cot.impuesto_total|floatformat:2 }}</td>
+              {% if cot.estado == "borrador" %}<td></td>{% endif %}
+            </tr>
+            <tr class="table-info">
+              <td colspan="6" class="text-end fw-bold fs-6">TOTAL:</td>
+              <td class="text-end fw-bold fs-6">${{ cot.total|floatformat:2 }}</td>
+              {% if cot.estado == "borrador" %}<td></td>{% endif %}
+            </tr>
+          </tfoot>
+          {% endif %}
+        </table>
+      </div>
+    </div>
+  </div>
+
+  {% if cot.notas or cot.terminos %}
+  <div class="row g-3 mb-3">
+    {% if cot.notas %}
+    <div class="col-md-6">
+      <div class="alert alert-light border shadow-sm">
+        <strong><i class="bi bi-chat-text me-1"></i> Notas:</strong>
+        <p class="mb-0 mt-1 small">{{ cot.notas }}</p>
+      </div>
+    </div>
+    {% endif %}
+    {% if cot.terminos %}
+    <div class="col-md-6">
+      <div class="alert alert-light border shadow-sm">
+        <strong><i class="bi bi-file-text me-1"></i> Términos y condiciones:</strong>
+        <p class="mb-0 mt-1 small">{{ cot.terminos }}</p>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <!-- Auditoría -->
+  <div class="card border-0 shadow-sm">
+    <div class="card-body py-2 px-3 text-muted small d-flex justify-content-between">
+      <span>Creado por: <strong>{{ cot.creado_por|default:"—" }}</strong> — {{ cot.creado_en|date:"d/m/Y H:i" }}</span>
+      <span>Última modificación: {{ cot.modificado_en|date:"d/m/Y H:i" }}</span>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

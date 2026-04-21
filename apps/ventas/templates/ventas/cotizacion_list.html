@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Cotizaciones{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3><i class="bi bi-file-earmark-text"></i> Cotizaciones</h3>
+    <a href="{% url 'ventas:cotizacion_create' %}" class="btn btn-info text-white"><i class="bi bi-plus-circle"></i> Nueva Cotización</a>
+  </div>
+  <form method="get" class="row g-2 mb-3">
+    <div class="col-md-5"><input type="text" name="q" value="{{ q }}" class="form-control" placeholder="N° cotización o cliente…"></div>
+    <div class="col-md-3">
+      <select name="estado" class="form-select">
+        <option value="">— Todos los estados —</option>
+        {% for val, label in estados %}<option value="{{ val }}" {% if estado == val %}selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2"><button type="submit" class="btn btn-outline-secondary w-100"><i class="bi bi-search"></i> Filtrar</button></div>
+    <div class="col-md-1"><a href="{% url 'ventas:cotizacion_list' %}" class="btn btn-outline-danger w-100">✕</a></div>
+  </form>
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-dark">
+          <tr><th>N° Cot.</th><th>Cliente</th><th>Emisión</th><th>Vencimiento</th><th class="text-end">Total</th><th>Estado</th><th>Acciones</th></tr>
+        </thead>
+        <tbody>
+          {% for c in cotizaciones %}
+          <tr>
+            <td class="fw-bold"><a href="{% url 'ventas:cotizacion_detail' c.pk %}">COT-{{ c.numero }}</a></td>
+            <td>{{ c.cliente.nombre_display }}</td>
+            <td>{{ c.fecha_emision|date:"d/m/Y" }}</td>
+            <td>{{ c.fecha_vencimiento|date:"d/m/Y" }}</td>
+            <td class="text-end fw-bold">${{ c.total|floatformat:2 }}</td>
+            <td>
+              <span class="badge
+                {% if c.estado == 'aceptada' or c.estado == 'convertida' %}bg-success
+                {% elif c.estado == 'enviada' %}bg-info text-dark
+                {% elif c.estado == 'rechazada' or c.estado == 'vencida' %}bg-danger
+                {% else %}bg-secondary{% endif %}">
+                {{ c.get_estado_display }}
+              </span>
+            </td>
+            <td><a href="{% url 'ventas:cotizacion_detail' c.pk %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></a></td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="7" class="text-center text-muted py-4">No hay cotizaciones.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="card-footer text-muted small">Total: {{ cotizaciones.count }} cotización(es)</div>
+  </div>
+</div>
+{% endblock %}
