@@ -138,3 +138,6 @@ DEFAULT_FROM_EMAIL = f"Sistema ERP <{EMAIL_HOST_USER}>"
 SERVER_EMAIL = EMAIL_HOST_USER
 
 CSRF_TRUSTED_ORIGINS = ['https://*.cloudshell.dev']
+
+ALLOWED_HOSTS = ['erp-limpieza.onrender.com', 'localhost', '127.0.0.1', '.cloudshell.dev']
+CSRF_TRUSTED_ORIGINS = ['https://erp-limpieza.onrender.com', 'https://*.cloudshell.dev']
