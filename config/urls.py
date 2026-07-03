@@ -26,7 +26,7 @@ urlpatterns = [
     path('logistica/', include('apps.logistica.urls', namespace='logistica')),
     path('facturacion/', include('apps.facturacion.urls', namespace='facturacion')),
     path('viaticos/', include('apps.viaticos.urls', namespace='viaticos')),
-    path('transportes/', include('apps.logistica.transportes.urls', namespace='transportes')),
+    path('transportes/', include('apps.transportes.urls', namespace='transportes')),
     path('tesoreria/', include('apps.tesoreria.urls', namespace='tesoreria')),
     path('inventarios/', include('apps.inventarios.urls', namespace='inventarios')),
 ]

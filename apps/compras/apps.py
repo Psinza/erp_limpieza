@@ -2,5 +2,5 @@ from django.apps import AppConfig
 
 class TransportesConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'apps.logistica.transportes'
-    label = 'transportes'
+    name = 'apps.compras'
+    label = 'compras'

@@ -63,3 +63,20 @@ def disponibilidad_productos(request):
 
 def cliente_create(request): pass # Implementar según tus formularios
 def producto_list(request): pass # Implementar lista de precios
+
+def pedido_list(request):
+    pass
+
+
+def pedido_list(request):
+    pass
+
+def pedido_create(request):
+    pass
+
+
+def cotizacion_list(request):
+    pass
+
+def cotizacion_create(request):
+    pass

@@ -136,3 +136,5 @@ EMAIL_HOST_USER = 'tu-correo@gmail.com'  # Tu dirección de correo
 EMAIL_HOST_PASSWORD = 'tu-contrasena-de-aplicacion'  # Tu contraseña o token
 DEFAULT_FROM_EMAIL = f"Sistema ERP <{EMAIL_HOST_USER}>"
 SERVER_EMAIL = EMAIL_HOST_USER
+
+CSRF_TRUSTED_ORIGINS = ['https://*.cloudshell.dev']
