@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block title %}Inventario | {{ titulo }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="bi bi-boxes text-info"></i> {{ titulo }}</h1>
+        <span class="badge bg-info text-dark">Módulo Activo</span>
+    </div>
+    <div class="alert alert-info border-0 shadow-sm">
+        <p class="mb-0"><i class="bi bi-info-circle-fill"></i> Bienvenido al panel de Inventario. Aquí podrá gestionar sus productos, almacenes y movimientos de stock.</p>
+    </div>
+</div>
+{% endblock %}

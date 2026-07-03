@@ -1,0 +1,70 @@
+{% extends "core/base.html" %}
+{% block title %}Configuración de la Empresa | ERP{% endblock %}
+{% block page_title %}Configuración de Empresa{% endblock %}
+{% block breadcrumb %}Sistema / Configuración{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="erp-card">
+            <div class="erp-card-header">
+                <span class="erp-card-title"><i class="bi bi-building-gear me-2"></i>Datos de la Empresa</span>
+            </div>
+            <div class="erp-card-body">
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="row g-3">
+                        {% for field in form %}
+                            <div class="col-md-{% if field.name == 'direccion' %}12{% else %}6{% endif %} mb-3">
+                                <label for="{{ field.id_for_label }}" class="form-label" style="font-weight:600; font-size:13px;">
+                                    {{ field.label }}
+                                </label>
+                                {% if field.name == 'logo' %}
+                                    <div class="mb-2">
+                                        {{ field }}
+                                    </div>
+                                    <small class="text-muted">Formatos permitidos: JPG, PNG. Tamaño ideal: 200x50px</small>
+                                {% else %}
+                                    {{ field }}
+                                {% endif %}
+                                {% if field.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ field.errors|join:", " }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="d-flex justify-content-end mt-4 pt-3 border-top">
+                        <a href="{% url 'core:dashboard' %}" class="btn-erp btn-erp-outline me-2">Cancelar</a>
+                        <button type="submit" class="btn-erp btn-erp-primary">
+                            <i class="bi bi-save me-2"></i>Guardar Configuración
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Aplicar estilos a los inputs de Django para que se vean bien
+    document.addEventListener("DOMContentLoaded", function() {
+        var inputs = document.querySelectorAll('input[type="text"], input[type="email"], textarea, select');
+        inputs.forEach(function(input) {
+            input.classList.add('form-control');
+        });
+    });
+</script>
+{% endblock %}

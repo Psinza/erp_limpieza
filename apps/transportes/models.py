@@ -1,10 +1,20 @@
 # apps/transportes/models.py
 from django.db import models
-from django.contrib.auth import get_user_model
-from django.core.validators import MinValueValidator
+from django.conf import settings # Importar settings
+from django.core.validators import MinValueValidator, RegexValidator
+from django.core.exceptions import ValidationError
 from decimal import Decimal
+from django.utils import timezone
 
-User = get_user_model()
+cedula_validator = RegexValidator(
+    regex=r'^[VE]-?\d{6,9}$',
+    message="Use cedula venezolana o extranjera. Ej: V-12345678.",
+)
+
+rif_validator = RegexValidator(
+    regex=r'^[JGVEP]-?\d{7,9}-?\d?$',
+    message="Use RIF venezolano. Ej: J-12345678-9.",
+)
 
 
 # ─────────────────────────────────────────────
@@ -69,6 +79,10 @@ class Vehiculo(models.Model):
     soat_vencimiento       = models.DateField(null=True, blank=True, verbose_name="Vencimiento SOAT")
     revision_vencimiento   = models.DateField(null=True, blank=True, verbose_name="Vencimiento Revisión Técnica")
     seguro_vencimiento     = models.DateField(null=True, blank=True, verbose_name="Vencimiento Seguro")
+    certificado_registro   = models.CharField(max_length=60, blank=True, verbose_name="Certificado de registro vehicular")
+    poliza_rcv             = models.CharField(max_length=60, blank=True, verbose_name="Poliza RCV")
+    permiso_carga          = models.CharField(max_length=80, blank=True, verbose_name="Permiso / habilitacion de carga")
+    permiso_carga_vencimiento = models.DateField(null=True, blank=True)
 
     foto            = models.FileField(upload_to="vehiculos/", blank=True, null=True)
     observaciones   = models.TextField(blank=True)
@@ -83,9 +97,22 @@ class Vehiculo(models.Model):
     def __str__(self):
         return f"{self.placa} — {self.marca} {self.modelo} ({self.año})"
 
+    def actualizar_estado_mantenimiento(self):
+        """Cambia automáticamente el estado a mantenimiento si existen documentos vencidos."""
+        # Verificar alertas por kilometraje (basado en el último mantenimiento completado)
+        alerta_km = False
+        ultimo_m = self.mantenimientos.filter(estado='completado').order_by('-fecha_ejecucion').first()
+        if ultimo_m and ultimo_m.km_proximo and self.odometro >= ultimo_m.km_proximo:
+            alerta_km = True
+
+        if (self.documentos_vencidos or alerta_km) and self.estado != 'mantenimiento':
+            self.estado = 'mantenimiento'
+            self.save(update_fields=['estado'])
+            return True
+        return False
+
     @property
     def documentos_vencidos(self):
-        from django.utils import timezone
         hoy = timezone.now().date()
         vencidos = []
         if self.soat_vencimiento and self.soat_vencimiento < hoy:
@@ -94,6 +121,8 @@ class Vehiculo(models.Model):
             vencidos.append("Revisión Técnica")
         if self.seguro_vencimiento and self.seguro_vencimiento < hoy:
             vencidos.append("Seguro")
+        if self.permiso_carga_vencimiento and self.permiso_carga_vencimiento < hoy:
+            vencidos.append("Permiso de carga")
         return vencidos
 
 
@@ -108,15 +137,13 @@ class Conductor(models.Model):
         ("vacaciones", "De Vacaciones"),
     ]
     CATEGORIA_LICENCIA_CHOICES = [
-        ("A",   "A — Motos"),
-        ("B",   "B — Vehículo liviano"),
-        ("C",   "C — Camión"),
-        ("D",   "D — Bus"),
-        ("E",   "E — Articulado"),
-        ("F",   "F — Maquinaria pesada"),
+        ("2",   "2do grado"),
+        ("3",   "3er grado"),
+        ("4",   "4to grado"),
+        ("5",   "5to grado / carga pesada"),
     ]
 
-    cedula              = models.CharField(max_length=20, unique=True)
+    cedula              = models.CharField(max_length=20, unique=True, validators=[cedula_validator])
     nombres             = models.CharField(max_length=100)
     apellidos           = models.CharField(max_length=100)
     telefono            = models.CharField(max_length=20, blank=True)
@@ -129,6 +156,9 @@ class Conductor(models.Model):
         max_length=2, choices=CATEGORIA_LICENCIA_CHOICES, blank=True
     )
     licencia_vencimiento= models.DateField(null=True, blank=True)
+    certificado_medico_vencimiento = models.DateField(null=True, blank=True)
+    curso_carga_pesada  = models.BooleanField(default=False)
+    curso_materiales_peligrosos = models.BooleanField(default=False)
 
     estado              = models.CharField(
         max_length=12, choices=ESTADO_CHOICES, default="activo"
@@ -158,9 +188,14 @@ class Conductor(models.Model):
 
     @property
     def licencia_vencida(self):
-        from django.utils import timezone
         if self.licencia_vencimiento:
             return self.licencia_vencimiento < timezone.now().date()
+        return False
+
+    @property
+    def certificado_medico_vencido(self):
+        if self.certificado_medico_vencimiento:
+            return self.certificado_medico_vencimiento < timezone.now().date()
         return False
 
 
@@ -193,6 +228,12 @@ class Ruta(models.Model):
         Zona, on_delete=models.PROTECT, related_name="rutas"
     )
     origen          = models.CharField(max_length=200)
+    latitud_origen  = models.DecimalField(
+        max_digits=9, decimal_places=6, null=True, blank=True, verbose_name="Latitud Origen"
+    )
+    longitud_origen = models.DecimalField(
+        max_digits=9, decimal_places=6, null=True, blank=True, verbose_name="Longitud Origen"
+    )
     destino         = models.CharField(max_length=200)
     distancia_km    = models.DecimalField(
         max_digits=8, decimal_places=2, default=Decimal("0.00")
@@ -223,6 +264,12 @@ class PuntoEntrega(models.Model):
     orden           = models.PositiveIntegerField()
     nombre          = models.CharField(max_length=200)
     direccion       = models.TextField(blank=True)
+    latitud         = models.DecimalField(
+        max_digits=9, decimal_places=6, null=True, blank=True
+    )
+    longitud        = models.DecimalField(
+        max_digits=9, decimal_places=6, null=True, blank=True
+    )
     cliente_ref     = models.CharField(max_length=200, blank=True,
                                        help_text="Nombre del cliente en este punto")
     tiempo_estimado = models.PositiveIntegerField(
@@ -270,6 +317,12 @@ class Despacho(models.Model):
     estado          = models.CharField(
         max_length=15, choices=ESTADO_CHOICES, default="programado"
     )
+    numero_guia_despacho = models.CharField(max_length=60, blank=True)
+    numero_control_guia = models.CharField(max_length=60, blank=True, verbose_name="Nro. control guia")
+    rif_transportista = models.CharField(max_length=20, blank=True, validators=[rif_validator])
+    descripcion_carga = models.CharField(max_length=255, blank=True)
+    peso_carga_kg = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
+    declara_material_peligroso = models.BooleanField(default=False)
 
     # Métricas
     odometro_salida  = models.DecimalField(
@@ -293,8 +346,8 @@ class Despacho(models.Model):
     novedad         = models.TextField(blank=True, help_text="Descripción de novedad si aplica")
 
     # Auditoría
-    creado_por      = models.ForeignKey(
-        User, on_delete=models.SET_NULL, null=True, related_name="despachos_creados"
+    creado_por      = models.ForeignKey( # Usar settings.AUTH_USER_MODEL
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name="despachos_creados"
     )
     creado_en       = models.DateTimeField(auto_now_add=True)
     modificado_en   = models.DateTimeField(auto_now=True)
@@ -307,9 +360,32 @@ class Despacho(models.Model):
     def __str__(self):
         return f"DSP-{self.numero} | {self.ruta.codigo} | {self.vehiculo.placa}"
 
+    def clean(self):
+        super().clean()
+        if self.odometro_llegada > 0 and self.odometro_llegada < self.odometro_salida:
+            raise ValidationError({
+                'odometro_llegada': "El odómetro de llegada no puede ser menor al de salida."
+            })
+
+        # Validación de licencia vencida
+        if self.conductor and self.conductor.licencia_vencida:
+            raise ValidationError({
+                'conductor': f"No se puede asignar al conductor {self.conductor.nombre_completo} "
+                             f"porque su licencia está vencida desde el {self.conductor.licencia_vencimiento}."
+            })
+        if self.conductor and self.conductor.certificado_medico_vencido:
+            raise ValidationError({'conductor': "El certificado medico vial del conductor esta vencido."})
+        if self.vehiculo and self.vehiculo.documentos_vencidos:
+            raise ValidationError({'vehiculo': f"Documentos vencidos: {', '.join(self.vehiculo.documentos_vencidos)}."})
+        if self.peso_carga_kg and self.vehiculo and self.vehiculo.capacidad_carga:
+            capacidad_kg = self.vehiculo.capacidad_carga * Decimal("1000")
+            if self.peso_carga_kg > capacidad_kg:
+                raise ValidationError({'peso_carga_kg': "La carga supera la capacidad registrada del vehiculo."})
+        if self.declara_material_peligroso and self.conductor and not self.conductor.curso_materiales_peligrosos:
+            raise ValidationError({'conductor': "Material peligroso requiere conductor con curso registrado."})
+
     @classmethod
     def generar_numero(cls):
-        from django.utils import timezone
         year  = timezone.now().year
         ultimo = cls.objects.filter(numero__startswith=str(year)).order_by("-numero").first()
         seq = 1
@@ -385,9 +461,12 @@ class Mantenimiento(models.Model):
     km_en_servicio  = models.DecimalField(
         max_digits=10, decimal_places=2, default=Decimal("0.00")
     )
+    km_proximo      = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True, verbose_name="Próximo mantenimiento (km)"
+    )
     observaciones   = models.TextField(blank=True)
     creado_por      = models.ForeignKey(
-        User, on_delete=models.SET_NULL, null=True, related_name="mantenimientos_creados"
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name="mantenimientos_creados"
     )
     creado_en       = models.DateTimeField(auto_now_add=True)
 

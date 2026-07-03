@@ -5,7 +5,7 @@
 
 {% block content %}
 <div class="d-flex align-items-center mb-4 gap-3">
-  <a href="{% url 'comercializacion:listas_precio_list' %}" class="btn-erp btn-erp-outline">
+  <a href="{% url 'comercializacion:lista_precio_list' %}" class="btn-erp btn-erp-outline">
     <i class="bi bi-arrow-left"></i>
   </a>
   <h1 style="font-family:var(--font-head);font-size:20px;font-weight:700;margin:0;">{{ titulo }}</h1>
@@ -49,7 +49,7 @@
             <button type="submit" class="btn-erp btn-erp-primary">
               <i class="bi bi-check2"></i> Crear lista
             </button>
-            <a href="{% url 'comercializacion:listas_precio_list' %}" class="btn-erp btn-erp-outline">Cancelar</a>
+            <a href="{% url 'comercializacion:lista_precio_list' %}" class="btn-erp btn-erp-outline">Cancelar</a>
           </div>
         </form>
       </div>

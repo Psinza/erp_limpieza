@@ -1,0 +1,144 @@
+{% extends 'core/base.html' %}
+{% block title %}Facturación Fiscal | ERP{% endblock %}
+{% block page_title %}Facturación y Ventas{% endblock %}
+{% block breadcrumb %}Módulos / Facturación{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background:#e8f0fe;color:#1a73e8;">
+                <i class="bi bi-receipt"></i>
+            </div>
+            <div>
+                <div class="stat-value">Bs. {{ stats.ventas_mes|floatformat:2 }}</div>
+                <div class="stat-label">Ventas del Mes</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background:#fce8e6;color:#d93025;">
+                <i class="bi bi-file-earmark-text"></i>
+            </div>
+            <div>
+                <div class="stat-value">{{ stats.presupuestos_activos }}</div>
+                <div class="stat-label">Presupuestos Activos</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background:#fef7e0;color:#f9a825;">
+                <i class="bi bi-percent"></i>
+            </div>
+            <div>
+                <div class="stat-value">Bs. {{ stats.iva_por_pagar|floatformat:2 }}</div>
+                <div class="stat-label">IVA por Pagar</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background:#e6f4ea;color:#1e8e3e;">
+                <i class="bi bi-truck"></i>
+            </div>
+            <div>
+                <div class="stat-value">{{ stats.notas_entrega_pendientes }}</div>
+                <div class="stat-label">Notas de Entrega</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Acciones Rápidas -->
+    <div class="col-lg-4">
+        <div class="erp-card">
+            <div class="erp-card-header">
+                <span class="erp-card-title"><i class="bi bi-lightning-charge me-2"></i>Operaciones de Venta</span>
+            </div>
+            <div class="erp-card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'facturacion:presupuesto_list' %}" class="btn-erp btn-erp-outline d-flex align-items-center justify-content-between p-3">
+                        <span><i class="bi bi-file-earmark-text me-2"></i>Presupuestos (Cotizaciones)</span>
+                        <i class="bi bi-chevron-right small"></i>
+                    </a>
+                    <a href="{% url 'facturacion:nota_entrega_list' %}" class="btn-erp btn-erp-outline d-flex align-items-center justify-content-between p-3">
+                        <span><i class="bi bi-truck me-2"></i>Notas de Entrega / Guías</span>
+                        <i class="bi bi-chevron-right small"></i>
+                    </a>
+                    <a href="{% url 'facturacion:factura_list' %}" class="btn-erp btn-erp-primary d-flex align-items-center justify-content-between p-3 mt-2">
+                        <span><i class="bi bi-receipt-cutoff me-2"></i>Facturación Fiscal</span>
+                        <i class="bi bi-plus-circle small"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="erp-card mt-3">
+            <div class="erp-card-header">
+                <span class="erp-card-title"><i class="bi bi-shield-check me-2"></i>Cumplimiento SENIAT</span>
+            </div>
+            <div class="erp-card-body p-0">
+                <div class="list-group list-group-flush">
+                    <a href="{% url 'facturacion:libro_ventas' %}" class="list-group-item list-group-item-action py-3">
+                        <i class="bi bi-journal-text me-2 text-primary"></i>Libro de Ventas Mensual
+                    </a>
+                    <a href="{% url 'facturacion:configurar_correlativos' %}" class="list-group-item list-group-item-action py-3">
+                        <i class="bi bi-hash me-2 text-primary"></i>Correlativos y Control Fiscal
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Últimas Facturas -->
+    <div class="col-lg-8">
+        <div class="erp-card">
+            <div class="erp-card-header d-flex justify-content-between align-items-center">
+                <span class="erp-card-title"><i class="bi bi-clock-history me-2"></i>Facturas Recientes</span>
+                <a href="{% url 'facturacion:factura_list' %}" class="text-primary small fw-bold">Ver todas</a>
+            </div>
+            <div class="erp-card-body p-0">
+                <div class="table-responsive">
+                    <table class="erp-table">
+                        <thead>
+                            <tr>
+                                <th>Nro. Factura</th>
+                                <th>Cliente</th>
+                                <th>Fecha</th>
+                                <th>Total (Bs.)</th>
+                                <th class="text-center">Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for f in facturas_recientes %}
+                            <tr>
+                                <td><strong>{{ f.numero_factura }}</strong></td>
+                                <td>{{ f.cliente.razon_social|truncatechars:30 }}</td>
+                                <td>{{ f.fecha_emision|date:"d/m/Y" }}</td>
+                                <td>{{ f.total|floatformat:2 }}</td>
+                                <td class="text-center">
+                                    {% if not f.anulada %}
+                                        <span class="badge bg-success" style="font-size:10px;">Emitida</span>
+                                    {% else %}
+                                        <span class="badge bg-danger" style="font-size:10px;">Anulada</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-5 text-muted">
+                                    No hay facturas emitidas recientemente.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

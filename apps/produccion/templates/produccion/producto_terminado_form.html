@@ -1,29 +1,89 @@
 {% extends "base.html" %}
 {% block title %}{{ titulo }}{% endblock %}
 {% block content %}
-<div class="container py-4" style="max-width:700px">
+<div class="container py-4" style="max-width:850px">
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h3><i class="bi bi-box-seam"></i> {{ titulo }}</h3>
-    <a href="{% url 'produccion:producto_terminado_list' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Volver</a>
+    <h3 class="fw-bold"><i class="bi bi-box-seam text-success"></i> {{ titulo }}</h3>
+    <a href="{% url 'produccion:producto_terminado_list' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Volver
+    </a>
   </div>
-  <div class="card border-0 shadow-sm">
+
+  <div class="card border-0 shadow-sm overflow-hidden">
+    <div class="card-header bg-success text-white py-3">
+        <h6 class="mb-0 fw-bold">Especificaciones Industriales y Registro Sanitario</h6>
+    </div>
     <div class="card-body p-4">
-      <form method="post">{% csrf_token %}
+      <form method="post">
+        {% csrf_token %}
+        
         <div class="row g-3">
-          <div class="col-md-3"><label class="form-label">Código *</label>{{ form.codigo }}{% if form.codigo.errors %}<div class="text-danger small">{{ form.codigo.errors }}</div>{% endif %}</div>
-          <div class="col-md-9"><label class="form-label">Nombre *</label>{{ form.nombre }}</div>
-          <div class="col-12"><label class="form-label">Descripción</label>{{ form.descripcion }}</div>
-          <div class="col-md-4"><label class="form-label">Categoría</label>{{ form.categoria }}</div>
-          <div class="col-md-4"><label class="form-label">Unidad de Medida</label>{{ form.unidad_medida }}</div>
-          <div class="col-md-4"><label class="form-label">Stock Mínimo</label>{{ form.stock_minimo }}</div>
-          <div class="col-md-4 d-flex align-items-end">
-            <div class="form-check">{{ form.activo }}<label class="form-check-label ms-2">Activo</label></div>
+          <!-- Identificación -->
+          <div class="col-md-9">
+            <label class="form-label fw-bold">Nombre del Producto *</label>
+            {{ form.nombre }}
+            {% if form.nombre.errors %}<div class="text-danger small">{{ form.nombre.errors }}</div>{% endif %}
+          </div>
+          <div class="col-md-3">
+            <label class="form-label fw-bold">Código / SKU *</label>
+            {{ form.sku }}
+            {% if form.sku.errors %}<div class="text-danger small">{{ form.sku.errors }}</div>{% endif %}
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label fw-bold">Categoría</label>
+            {{ form.categoria }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-bold">Presentación (Envase)</label>
+            {{ form.presentacion }}
+          </div>
+
+          <!-- Cumplimiento Normativo (Venezuela) -->
+          <div class="col-12 mt-4">
+              <h6 class="text-success border-bottom pb-2 fw-bold small text-uppercase">Cumplimiento Legal (SENIAT/COVENIN)</h6>
+          </div>
+          
+          <div class="col-md-6">
+            <label class="form-label fw-bold">Registro Sanitario / CPE</label>
+            {{ form.registro_sanitario }}
+            <small class="text-muted small">Obligatorio para productos químicos</small>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-bold">Norma COVENIN Aplicable</label>
+            {{ form.normativa_covenin }}
+            <small class="text-muted small">Ej: COVENIN 662:2018 para Jabón</small>
+          </div>
+
+          <div class="col-md-4 mt-3">
+            <label class="form-label fw-bold">Costo Estimado (Producción)</label>
+            {{ form.costo_estimado }}
+          </div>
+          <div class="col-md-4 mt-3 d-flex align-items-end ps-4">
+            <div class="form-check form-switch mb-2">
+                {{ form.activo }}
+                <label class="form-check-label fw-bold ms-2">Producto Activo</label>
+            </div>
           </div>
         </div>
-        {% if form.errors %}<div class="alert alert-danger mt-3">{% for field in form %}{% for error in field.errors %}<div><strong>{{ field.label }}:</strong> {{ error }}</div>{% endfor %}{% endfor %}</div>{% endif %}
-        <div class="d-flex gap-2 mt-4">
-          <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Guardar</button>
-          <a href="{% url 'produccion:producto_terminado_list' %}" class="btn btn-outline-secondary">Cancelar</a>
+
+        {% if form.errors %}
+        <div class="alert alert-danger mt-4">
+            <ul class="mb-0">
+                {% for field in form %}
+                    {% for error in field.errors %}
+                        <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+                    {% endfor %}
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <div class="d-flex gap-2 mt-5 pt-3 border-top">
+          <button type="submit" class="btn btn-success px-4">
+            <i class="bi bi-save me-1"></i> Guardar Producto
+          </button>
+          <a href="{% url 'produccion:producto_terminado_list' %}" class="btn btn-light border">Cancelar</a>
         </div>
       </form>
     </div>

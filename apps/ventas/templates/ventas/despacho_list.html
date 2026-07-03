@@ -42,10 +42,17 @@
             </td>
             <td>{{ d.despachado_por|default:"—" }}</td>
             <td>
-              <a href="{% url 'ventas:despacho_detail' d.pk %}"
-                 class="btn btn-sm btn-outline-primary">
-                <i class="bi bi-eye"></i>
-              </a>
+              <div class="btn-group btn-group-sm">
+                <a href="{% url 'ventas:despacho_detail' d.pk %}" class="btn btn-outline-primary" title="Ver Detalle">
+                  <i class="bi bi-eye"></i>
+                </a>
+                <a href="{% url 'ventas:despacho_detail' d.pk %}?print=nota" class="btn btn-outline-info" title="Imprimir Nota">
+                  <i class="bi bi-printer"></i>
+                </a>
+                <a href="{% url 'ventas:despacho_detail' d.pk %}?print=packing" class="btn btn-outline-dark" title="Packing List">
+                  <i class="bi bi-box-seam"></i>
+                </a>
+              </div>
             </td>
           </tr>
           {% empty %}

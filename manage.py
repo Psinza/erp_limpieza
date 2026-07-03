@@ -12,10 +12,6 @@ def main():
     try:
         from django.core.management import execute_from_command_line
         
-        # Validación de dependencias críticas
-        import django
-        django.setup()
-        
     except ImportError as exc:
         raise ImportError(
             "No se pudo importar Django. ¿Está instalado y activado el entorno virtual?"

@@ -1,77 +1,87 @@
 {% extends "base.html" %}
-{% block title %}Reporte de Depreciación de Activos Fijos{% endblock %}
+{% block title %}Reporte de Depreciación Contable{% endblock %}
 {% block content %}
-<div class="container-fluid py-4">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h3 class="fw-bold mb-0">Reporte de Depreciación</h3>
-    <a href="{% url 'activos_fijos:activo_list' %}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Volver</a>
-  </div>
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 d-print-none">
+        <div>
+            <h2 class="fw-bold mb-0">Reporte de Depreciación</h2>
+            <p class="text-muted">Cálculo de desvalorización de activos al {% now "d/m/Y" %}.</p>
+        </div>
+        <button onclick="window.print()" class="btn btn-danger shadow-sm">
+            <i class="bi bi-file-earmark-pdf me-1"></i> Exportar a PDF / Imprimir
+        </button>
+    </div>
 
-  <div class="row mb-4">
-    <div class="col-md-4">
-      <div class="card border-0 shadow-sm">
-        <div class="card-body text-center">
-          <h5 class="text-muted">Valor Total de Compra</h5>
-          <h3 class="text-primary">${{ total_valor_compra|floatformat:2 }}</h3>
+    <!-- Summary -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm text-center py-3">
+                <h6 class="text-muted text-uppercase small">Costo Total Inicial</h6>
+                <h3 class="fw-bold text-dark">${{ total_compra|floatformat:2 }}</h3>
+            </div>
         </div>
-      </div>
-    </div>
-    <div class="col-md-4">
-      <div class="card border-0 shadow-sm">
-        <div class="card-body text-center">
-          <h5 class="text-muted">Depreciación Acumulada</h5>
-          <h3 class="text-warning">${{ total_depreciacion_acumulada|floatformat:2 }}</h3>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm text-center py-3">
+                <h6 class="text-muted text-uppercase small">Total Depreciado</h6>
+                <h3 class="fw-bold text-danger">-${{ total_acumulada|floatformat:2 }}</h3>
+            </div>
         </div>
-      </div>
-    </div>
-    <div class="col-md-4">
-      <div class="card border-0 shadow-sm">
-        <div class="card-body text-center">
-          <h5 class="text-muted">Valor en Libros</h5>
-          <h3 class="text-success">${{ total_valor_libro|floatformat:2 }}</h3>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm text-center py-3 bg-success text-white">
+                <h6 class="text-uppercase small opacity-75">Valor Contable Neto</h6>
+                <h3 class="fw-bold">${{ total_libro|floatformat:2 }}</h3>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
 
-  <div class="card border-0 shadow-sm">
-    <div class="card-header bg-white py-3">
-      <h5 class="mb-0">Detalle de Activos</h5>
+    <!-- Table -->
+    <div class="card border-0 shadow-sm overflow-hidden">
+        <div class="card-body p-0">
+            <table class="table table-sm table-striped align-middle mb-0">
+                <thead class="bg-dark text-white">
+                    <tr class="small text-uppercase">
+                        <th class="ps-3">Activo</th>
+                        <th>Fecha Adq.</th>
+                        <th>Método</th>
+                        <th class="text-end">Costo</th>
+                        <th class="text-end">Dep. Acum.</th>
+                        <th class="text-end pe-3">Valor Neto</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for a in activos %}
+                    <tr>
+                        <td class="ps-3">
+                            <div class="fw-bold">{{ a.nombre }}</div>
+                            <small class="text-muted">{{ a.codigo }}</small>
+                        </td>
+                        <td class="small">{{ a.fecha_adquisicion|date:"d/m/Y" }}</td>
+                        <td class="small">{{ a.get_metodo_depreciacion_display }}</td>
+                        <td class="text-end fw-bold">${{ a.valor_compra|floatformat:2 }}</td>
+                        <td class="text-end text-danger">${{ a.depreciacion_acumulada|floatformat:2 }}</td>
+                        <td class="text-end pe-3 fw-bold text-success">${{ a.valor_libro|floatformat:2 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
-    <div class="card-body p-0">
-      <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-          <thead class="table-light">
-            <tr>
-              <th>Código</th>
-              <th>Nombre</th>
-              <th>Valor Compra</th>
-              <th>Depreciación Acumulada</th>
-              <th>Valor en Libros</th>
-              <th>Método</th>
-              <th>Estado</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for activo in activos %}
-            <tr>
-              <td>{{ activo.codigo }}</td>
-              <td>{{ activo.nombre }}</td>
-              <td>${{ activo.valor_compra|floatformat:2 }}</td>
-              <td>${{ activo.depreciacion_acumulada|floatformat:2 }}</td>
-              <td>${{ activo.valor_libro|floatformat:2 }}</td>
-              <td>{{ activo.get_metodo_depreciacion_display }}</td>
-              <td>
-                <span class="badge bg-{% if activo.estado == 'Operativo' %}success{% else %}secondary{% endif %}">
-                  {{ activo.estado }}
-                </span>
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
+    
+    <div class="mt-4 p-3 bg-light border rounded d-none d-print-block">
+        <div class="row">
+            <div class="col-4 text-center">
+                <hr style="width: 80%; margin: 20px auto 5px;">
+                <p class="small mb-0">Preparado por</p>
+            </div>
+            <div class="col-4 text-center">
+                <hr style="width: 80%; margin: 20px auto 5px;">
+                <p class="small mb-0">Revisado por</p>
+            </div>
+            <div class="col-4 text-center">
+                <hr style="width: 80%; margin: 20px auto 5px;">
+                <p class="small mb-0">Aprobado por</p>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
 {% endblock %}

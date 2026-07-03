@@ -1,98 +1,58 @@
 from django import forms
-from .models import Formula, OrdenProduccion, MateriaPrima, ProductoTerminado, LoteProduccion, ControlCalidad
+from .models import Formula, LineaFormula, OrdenProduccion, ControlCalidad, ProductoTerminado
+
+CTR = {"class": "form-control"}
+SEL = {"class": "form-select"}
+NUM = {"class": "form-control", "step": "0.01"}
+DATE = {"class": "form-control", "type": "date"}
+TXT = {"class": "form-control", "rows": 3}
 
 class FormulaForm(forms.ModelForm):
     class Meta:
         model = Formula
-        fields = ['codigo', 'nombre', 'producto', 'version', 'rendimiento', 'unidad_rendimiento', 'instrucciones', 'estado']
+        fields = ['codigo', 'nombre', 'producto', 'version', 'rendimiento', 'unidad_rendimiento', 'procedimiento', 'estado']
         widgets = {
-            'codigo': forms.TextInput(attrs={'class': 'form-control'}),
-            'nombre': forms.TextInput(attrs={'class': 'form-control'}),
-            'producto': forms.Select(attrs={'class': 'form-select'}),
-            'version': forms.TextInput(attrs={'class': 'form-control'}),
-            'rendimiento': forms.NumberInput(attrs={'class': 'form-control'}),
-            'unidad_rendimiento': forms.TextInput(attrs={'class': 'form-control'}),
-            'instrucciones': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-            'estado': forms.Select(attrs={'class': 'form-select'}),
+            'codigo': forms.TextInput(attrs=CTR),
+            'nombre': forms.TextInput(attrs=CTR),
+            'producto': forms.Select(attrs=SEL),
+            'version': forms.TextInput(attrs=CTR),
+            'rendimiento': forms.NumberInput(attrs=NUM),
+            'unidad_rendimiento': forms.TextInput(attrs=CTR),
+            'procedimiento': forms.Textarea(attrs=TXT),
+            'estado': forms.Select(attrs=SEL),
         }
 
 class OrdenProduccionForm(forms.ModelForm):
     class Meta:
         model = OrdenProduccion
-        fields = ['formula', 'cantidad_planificada', 'fecha_planificada', 'prioridad', 'responsable', 'observaciones']
+        fields = ['formula', 'lote_numero', 'cantidad_a_producir', 'prioridad', 'fecha_planificada', 'responsable', 'observaciones']
         widgets = {
-            'formula': forms.Select(attrs={'class': 'form-select'}),
-            'cantidad_planificada': forms.NumberInput(attrs={'class': 'form-control'}),
-            'fecha_planificada': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'prioridad': forms.Select(attrs={'class': 'form-select'}),
-            'responsable': forms.Select(attrs={'class': 'form-select'}),
-            'observaciones': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-        }
-
-class LoteProduccionForm(forms.ModelForm):
-    class Meta:
-        model = LoteProduccion
-        fields = ['orden', 'numero_lote', 'cantidad_producida', 'estado', 'observaciones']
-        widgets = {
-            'orden': forms.Select(attrs={'class': 'form-select'}),
-            'numero_lote': forms.TextInput(attrs={'class': 'form-control'}),
-            'cantidad_producida': forms.NumberInput(attrs={'class': 'form-control'}),
-            'estado': forms.Select(attrs={'class': 'form-select'}),
-            'observaciones': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'formula': forms.Select(attrs=SEL),
+            'lote_numero': forms.TextInput(attrs=CTR),
+            'cantidad_a_producir': forms.NumberInput(attrs=CTR),
+            'prioridad': forms.Select(attrs=SEL),
+            'fecha_planificada': forms.DateInput(attrs=DATE),
+            'responsable': forms.Select(attrs=SEL),
+            'observaciones': forms.Textarea(attrs=TXT),
         }
 
 class ControlCalidadForm(forms.ModelForm):
-    # Añadimos la cantidad final del lote al formulario de QC para que se registre en este paso
-    cantidad_final_lote = forms.DecimalField(
-        max_digits=12, decimal_places=2,
-        label="Cantidad Final Producida",
-        help_text="Cantidad real de producto terminado obtenida en este lote.",
-        required=True,
-        widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'})
-    )
-
     class Meta:
         model = ControlCalidad
         fields = [
-            'ph', 'viscosidad', 'densidad', 'color', 'olor', 'aspecto',
-            'observaciones', 'aprobado', 'inspector'
+            'ph', 'viscosidad', 'densidad', 'concentracion_activo', 
+            'color', 'olor', 'aspecto', 'cumple_covenin', 'aprobado', 'inspector', 'observaciones'
         ]
         widgets = {
-            'ph': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
-            'viscosidad': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
-            'densidad': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.001'}),
-            'color': forms.TextInput(attrs={'class': 'form-control'}),
-            'olor': forms.TextInput(attrs={'class': 'form-control'}),
-            'aspecto': forms.TextInput(attrs={'class': 'form-control'}),
-            'observaciones': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-            'aprobado': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-            'inspector': forms.TextInput(attrs={'class': 'form-control'}),
+            'ph': forms.NumberInput(attrs=NUM),
+            'viscosidad': forms.NumberInput(attrs=NUM),
+            'densidad': forms.NumberInput(attrs=NUM),
+            'concentracion_activo': forms.NumberInput(attrs=NUM),
+            'color': forms.TextInput(attrs=CTR),
+            'olor': forms.TextInput(attrs=CTR),
+            'aspecto': forms.TextInput(attrs=CTR),
+            'cumple_covenin': forms.CheckboxInput(attrs={"class": "form-check-input"}),
+            'aprobado': forms.CheckboxInput(attrs={"class": "form-check-input"}),
+            'inspector': forms.TextInput(attrs=CTR),
+            'observaciones': forms.Textarea(attrs=TXT),
         }
-        labels = {
-            'ph': 'pH del Lote',
-            'viscosidad': 'Viscosidad (cP)',
-            'densidad': 'Densidad (g/cm³)',
-            'color': 'Color Observado',
-            'olor': 'Olor Observado',
-            'aspecto': 'Aspecto Físico',
-            'observaciones': 'Observaciones Adicionales',
-            'aprobado': 'Lote Aprobado',
-            'inspector': 'Nombre del Inspector',
-        }
-
-    def __init__(self, *args, **kwargs):
-        lote_instance = kwargs.pop('lote_instance', None)
-        super().__init__(*args, **kwargs)
-        if lote_instance:
-            # Precargar la cantidad_final_lote si ya existe en el lote
-            self.fields['cantidad_final_lote'].initial = lote_instance.cantidad_final
-
-    def save(self, commit=True):
-        control_calidad = super().save(commit=False)
-        if commit:
-            control_calidad.save()
-            # Actualizar la cantidad_final del lote con el valor del formulario
-            lote = control_calidad.lote
-            lote.cantidad_final = self.cleaned_data['cantidad_final_lote']
-            lote.save(update_fields=['cantidad_final']) # Guardar solo el campo modificado
-        return control_calidad

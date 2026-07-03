@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}Registrar Entrada de Materia Prima{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Nueva Entrada de Materia Prima</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        {{ form.as_p }}
+                        <hr>
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'logistica:entrada_mp_list' %}" class="btn btn-secondary">Cancelar</a>
+                            <button type="submit" class="btn btn-success">Guardar Entrada</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

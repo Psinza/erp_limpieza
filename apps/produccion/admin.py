@@ -4,7 +4,7 @@ from .models import (
     CategoriaProductoTerminado, CategoriaMateriaPrima,
     ProductoTerminado, MateriaPrima,
     Formula, LineaFormula,
-    OrdenProduccion, LoteProduccion,
+    OrdenProduccion, ControlCalidad
 )
 
 @admin.register(CategoriaProductoTerminado)
@@ -17,12 +17,14 @@ class CatMPAdmin(admin.ModelAdmin):
 
 @admin.register(ProductoTerminado)
 class ProductoTerminadoAdmin(admin.ModelAdmin):
-    list_display  = ["sku", "nombre", "categoria", "stock_actual", "activo"]
-    search_fields = ["sku", "nombre"]
+    list_display  = ["sku", "nombre", "presentacion", "categoria", "stock_actual", "activo"]
+    list_filter   = ["presentacion", "categoria", "activo"]
+    search_fields = ["sku", "nombre", "registro_sanitario"]
 
 @admin.register(MateriaPrima)
 class MateriaPrimaAdmin(admin.ModelAdmin):
-    list_display  = ["sku", "nombre", "categoria", "stock_actual", "activo"]
+    list_display  = ["sku", "nombre", "concentracion", "categoria", "stock_actual", "activo"]
+    list_filter   = ["categoria", "activo"]
     search_fields = ["sku", "nombre"]
 
 class LineaFormulaInline(admin.TabularInline):
@@ -31,18 +33,23 @@ class LineaFormulaInline(admin.TabularInline):
 
 @admin.register(Formula)
 class FormulaAdmin(admin.ModelAdmin):
-    list_display    = ["nombre", "producto", "version", "esta_activa"]
+    list_display    = ["codigo", "nombre", "producto", "version", "estado"]
+    list_filter     = ["estado", "producto__categoria"]
     inlines         = [LineaFormulaInline]
+    search_fields   = ["codigo", "nombre"]
 
-class LoteInline(admin.TabularInline):
-    model  = LoteProduccion
-    extra  = 0
+class ControlCalidadInline(admin.StackedInline):
+    model = ControlCalidad
+    extra = 0
 
 @admin.register(OrdenProduccion)
 class OrdenProduccionAdmin(admin.ModelAdmin):
-    list_display    = ["id", "formula", "cantidad_a_producir", "estado", "prioridad"]
-    inlines         = [LoteInline]
+    list_display    = ["id", "lote_numero", "formula", "cantidad_a_producir", "estado", "prioridad"]
+    list_filter     = ["estado", "prioridad", "fecha_planificada"]
+    search_fields   = ["lote_numero", "formula__nombre"]
+    inlines         = [ControlCalidadInline]
 
-@admin.register(LoteProduccion)
-class LoteProduccionAdmin(admin.ModelAdmin):
-    list_display = ["numero_lote", "orden", "estado"]
+@admin.register(ControlCalidad)
+class ControlCalidadAdmin(admin.ModelAdmin):
+    list_display = ["orden", "fecha_inspeccion", "aprobado", "inspector", "cumple_covenin"]
+    list_filter  = ["aprobado", "cumple_covenin", "fecha_inspeccion"]

@@ -1,0 +1,139 @@
+{% extends "core/base.html" %}
+
+{% block title %}Registrar Activo Fijo | ERP{% endblock %}
+{% block page_title %}Registrar Activo Fijo{% endblock %}
+{% block breadcrumb %}Activos Fijos / Nuevo{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="erp-card shadow-sm border-0">
+            <div class="erp-card-header bg-white border-bottom">
+                <span class="erp-card-title text-primary"><i class="bi bi-box-seam me-2"></i>Ficha de Incorporación (SUDEBIP)</span>
+            </div>
+            <div class="erp-card-body p-4">
+                <form method="post" class="needs-validation" novalidate>
+                    {% csrf_token %}
+                    
+                    {% if form.errors %}
+                        <div class="alert alert-danger shadow-sm small">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>Por favor corrija los errores indicados abajo.
+                        </div>
+                    {% endif %}
+
+                    <h6 class="text-secondary fw-bold border-bottom pb-2 mb-3"><i class="bi bi-info-circle me-2"></i>Información Principal</h6>
+                    
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold text-dark small" for="{{ form.codigo.id_for_label }}">Cód. Bien Nacional <span class="text-danger">*</span></label>
+                            {{ form.codigo }}
+                            {% if form.codigo.errors %}<div class="text-danger small mt-1">{{ form.codigo.errors }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold text-dark small" for="{{ form.serial.id_for_label }}">Serial de Fábrica</label>
+                            {{ form.serial }}
+                            {% if form.serial.errors %}<div class="text-danger small mt-1">{{ form.serial.errors }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold text-dark small" for="{{ form.etiqueta.id_for_label }}">Etiqueta Física (Opcional)</label>
+                            {{ form.etiqueta }}
+                            {% if form.etiqueta.errors %}<div class="text-danger small mt-1">{{ form.etiqueta.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="col-md-8">
+                            <label class="form-label fw-bold text-dark small" for="{{ form.nombre.id_for_label }}">Nombre del Activo <span class="text-danger">*</span></label>
+                            {{ form.nombre }}
+                            {% if form.nombre.errors %}<div class="text-danger small mt-1">{{ form.nombre.errors }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold text-dark small" for="{{ form.categoria.id_for_label }}">Clasificación SUDEBIP</label>
+                            {{ form.categoria }}
+                            {% if form.categoria.errors %}<div class="text-danger small mt-1">{{ form.categoria.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold text-dark small" for="{{ form.descripcion.id_for_label }}">Descripción Detallada</label>
+                            {{ form.descripcion }}
+                            <div class="form-text small text-muted">Ej: Marca, color, dimensiones, características técnicas.</div>
+                            {% if form.descripcion.errors %}<div class="text-danger small mt-1">{{ form.descripcion.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-dark small" for="{{ form.modelo.id_for_label }}">Modelo</label>
+                            {{ form.modelo }}
+                            {% if form.modelo.errors %}<div class="text-danger small mt-1">{{ form.modelo.errors }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-dark small" for="{{ form.anio_fabricacion.id_for_label }}">Año de Fabricación</label>
+                            {{ form.anio_fabricacion }}
+                            {% if form.anio_fabricacion.errors %}<div class="text-danger small mt-1">{{ form.anio_fabricacion.errors }}</div>{% endif %}
+                        </div>
+                    </div>
+
+                    <h6 class="text-secondary fw-bold border-bottom pb-2 mb-3 mt-4"><i class="bi bi-cash-coin me-2"></i>Valor y Adquisición</h6>
+                    
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold text-dark small" for="{{ form.fecha_adquisicion.id_for_label }}">Fecha de Incorporación <span class="text-danger">*</span></label>
+                            {{ form.fecha_adquisicion }}
+                            {% if form.fecha_adquisicion.errors %}<div class="text-danger small mt-1">{{ form.fecha_adquisicion.errors }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold text-dark small" for="{{ form.valor_compra.id_for_label }}">Costo de Adquisición (Bs.) <span class="text-danger">*</span></label>
+                            {{ form.valor_compra }}
+                            {% if form.valor_compra.errors %}<div class="text-danger small mt-1">{{ form.valor_compra.errors }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold text-dark small" for="{{ form.valor_residual.id_for_label }}">Valor Residual (Bs.)</label>
+                            {{ form.valor_residual }}
+                            {% if form.valor_residual.errors %}<div class="text-danger small mt-1">{{ form.valor_residual.errors }}</div>{% endif %}
+                        </div>
+                    </div>
+
+                    <h6 class="text-secondary fw-bold border-bottom pb-2 mb-3 mt-4"><i class="bi bi-shield-check me-2"></i>Control de Uso e Inventario</h6>
+                    
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold text-dark small" for="{{ form.estado.id_for_label }}">Estado Físico <span class="text-danger">*</span></label>
+                            {{ form.estado }}
+                            {% if form.estado.errors %}<div class="text-danger small mt-1">{{ form.estado.errors }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold text-dark small" for="{{ form.ubicacion.id_for_label }}">Ubicación Actual</label>
+                            {{ form.ubicacion }}
+                            {% if form.ubicacion.errors %}<div class="text-danger small mt-1">{{ form.ubicacion.errors }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label fw-bold text-dark small" for="{{ form.responsable.id_for_label }}">Responsable Directo / Usuario</label>
+                            {{ form.responsable }}
+                            {% if form.responsable.errors %}<div class="text-danger small mt-1">{{ form.responsable.errors }}</div>{% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mt-3">
+                            <label class="form-label fw-bold text-dark small" for="{{ form.vida_util_anios.id_for_label }}">Años de Vida Útil Contable <span class="text-danger">*</span></label>
+                            {{ form.vida_util_anios }}
+                            {% if form.vida_util_anios.errors %}<div class="text-danger small mt-1">{{ form.vida_util_anios.errors }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6 mt-3">
+                            <label class="form-label fw-bold text-dark small" for="{{ form.metodo_depreciacion.id_for_label }}">Método de Depreciación</label>
+                            {{ form.metodo_depreciacion }}
+                            {% if form.metodo_depreciacion.errors %}<div class="text-danger small mt-1">{{ form.metodo_depreciacion.errors }}</div>{% endif %}
+                        </div>
+                    </div>
+
+                    <hr class="mt-5 mb-4 text-muted">
+                    
+                    <div class="d-flex justify-content-end gap-2">
+                        <a href="{% url 'activos_fijos:activo_list' %}" class="btn-erp btn-erp-outline">
+                            <i class="bi bi-x-circle me-1"></i>Cancelar
+                        </a>
+                        <button type="submit" class="btn-erp btn-erp-primary px-4">
+                            <i class="bi bi-save2 me-1"></i>Guardar Activo
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

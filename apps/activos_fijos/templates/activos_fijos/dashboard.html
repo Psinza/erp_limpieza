@@ -1,0 +1,154 @@
+{% extends "core/base.html" %}
+
+{% block title %}Activos Fijos | ERP{% endblock %}
+{% block page_title %}Control de Activos Fijos{% endblock %}
+{% block breadcrumb %}Gestión / Activos Fijos{% endblock %}
+
+{% block content %}
+<!-- KPIs -->
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#e8f0fe;color:#1a73e8;">
+        <i class="bi bi-building-gear"></i>
+      </div>
+      <div>
+        <div class="stat-value">{{ stats.total_activos }}</div>
+        <div class="stat-label">Total Activos</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#e6f4ea;color:#1e8e3e;">
+        <i class="bi bi-cash-coin"></i>
+      </div>
+      <div>
+        <div class="stat-value" style="font-size:18px;">${{ stats.valor_compra|floatformat:0 }}</div>
+        <div class="stat-label">Valor de Adquisición</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#fce8e6;color:#d93025;">
+        <i class="bi bi-arrow-down-circle"></i>
+      </div>
+      <div>
+        <div class="stat-value" style="font-size:18px;">${{ stats.depreciacion_total|floatformat:0 }}</div>
+        <div class="stat-label">Depreciación Acumulada</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="stat-card" style="background:linear-gradient(135deg,#0d47a1 60%,#1565c0);">
+      <div class="stat-icon" style="background:rgba(255,255,255,0.15);color:#fff;">
+        <i class="bi bi-wallet2"></i>
+      </div>
+      <div>
+        <div class="stat-value" style="color:#fff;font-size:18px;">${{ stats.valor_libro_total|floatformat:0 }}</div>
+        <div class="stat-label" style="color:rgba(255,255,255,0.7);">Valor en Libros</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- Adquisiciones Recientes -->
+  <div class="col-lg-7">
+    <div class="erp-card">
+      <div class="erp-card-header">
+        <span class="erp-card-title"><i class="bi bi-clock-history me-2"></i>Adquisiciones Recientes</span>
+        <div class="d-flex gap-2">
+          <a href="{% url 'activos_fijos:activo_create' %}" class="btn-erp btn-erp-primary">
+            <i class="bi bi-plus-lg"></i> Registrar Activo
+          </a>
+          <a href="{% url 'activos_fijos:activo_list' %}" class="btn-erp btn-erp-outline">Ver Inventario</a>
+        </div>
+      </div>
+      <div class="erp-card-body p-0">
+        <table class="erp-table">
+          <thead>
+            <tr>
+              <th>Cód. Bien Nacional</th>
+              <th>Activo / Clasificación</th>
+              <th>Fecha Incorp.</th>
+              <th>Estado Físico</th>
+              <th class="text-end">Valor Adquisición</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for a in activos_recientes %}
+            <tr>
+              <td style="font-weight:700;color:#0d47a1;">{{ a.codigo }}</td>
+              <td>
+                <div style="font-weight:600;font-size:13px;">{{ a.nombre }}</div>
+                <div class="badge-area mt-1">{{ a.categoria.nombre|default:"Sin clasificación" }}</div>
+              </td>
+              <td class="text-muted small">{{ a.fecha_adquisicion|date:"d/m/Y" }}</td>
+              <td>
+                {% if 'operativo' in a.estado|lower or 'buen' in a.estado|lower %}
+                    <span class="badge bg-success">Bueno</span>
+                {% elif 'malo' in a.estado|lower %}
+                    <span class="badge bg-danger">Malo</span>
+                {% else %}
+                    <span class="badge bg-warning text-dark">Regular</span>
+                {% endif %}
+              </td>
+              <td class="text-end fw-bold">Bs. {{ a.valor_compra }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" class="text-center py-5 text-muted">No hay activos registrados aún.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Próximos Mantenimientos + Acciones -->
+  <div class="col-lg-5">
+    <div class="erp-card mb-4">
+      <div class="erp-card-header">
+        <span class="erp-card-title"><i class="bi bi-tools me-2 text-warning"></i>Próximos Mantenimientos</span>
+      </div>
+      <div class="erp-card-body p-0">
+        <div class="list-group list-group-flush">
+          {% for m in mantenimientos_proximos %}
+          <div class="list-group-item border-0 py-3 d-flex justify-content-between align-items-start">
+            <div>
+              <div style="font-weight:600;font-size:13px;">{{ m.activo.nombre }}</div>
+              <div class="text-muted" style="font-size:11px;">{{ m.descripcion|truncatechars:40 }}</div>
+            </div>
+            <span class="badge bg-warning text-dark" style="font-size:10px;white-space:nowrap;">
+              {{ m.proximo_mantenimiento|date:"d/m/Y" }}
+            </span>
+          </div>
+          {% empty %}
+          <div class="text-center py-4">
+            <i class="bi bi-check2-circle text-success" style="font-size:24px;"></i>
+            <p class="text-muted small mt-2">Sin mantenimientos programados.</p>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div class="erp-card">
+      <div class="erp-card-header">
+        <span class="erp-card-title"><i class="bi bi-bar-chart me-2"></i>Reportes</span>
+      </div>
+      <div class="erp-card-body pt-0">
+        <div class="d-grid gap-2 mt-3">
+          <a href="{% url 'activos_fijos:reporte_depreciacion' %}" class="btn-erp btn-erp-outline">
+            <i class="bi bi-graph-down-arrow"></i> Reporte de Depreciación
+          </a>
+          <a href="{% url 'activos_fijos:activo_list' %}" class="btn-erp btn-erp-outline">
+            <i class="bi bi-list-ul"></i> Inventario Completo
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

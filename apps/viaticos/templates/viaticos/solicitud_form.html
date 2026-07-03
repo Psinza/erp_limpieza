@@ -1,0 +1,100 @@
+{% extends 'core/base.html' %}
+{% block title %}{{ titulo }} | ERP{% endblock %}
+{% block page_title %}{{ titulo }}{% endblock %}
+{% block breadcrumb %}Viáticos / Formulario{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="erp-card shadow-sm border-0">
+            <div class="erp-card-header bg-white border-bottom py-3">
+                <span class="erp-card-title text-primary"><i class="bi bi-file-earmark-plus me-2"></i>Datos de la Solicitud de Viático / Bono</span>
+            </div>
+            <div class="erp-card-body p-4">
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="alert alert-info border-0 shadow-sm small mb-4">
+                        <i class="bi bi-info-circle-fill me-2"></i>
+                        Puede seleccionar un <strong>Empleado</strong> registrado para cargar sus datos automáticamente, o completar los campos de <strong>Beneficiario Externo</strong> si la persona no figura en nómina.
+                    </div>
+
+                    <h6 class="text-secondary fw-bold border-bottom pb-2 mb-3"><i class="bi bi-person-badge me-2"></i>Identificación del Beneficiario</h6>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold text-dark small">Empleado en Nómina</label>
+                            {{ form.empleado }}
+                            {% if form.empleado.errors %}<div class="text-danger small mt-1">{{ form.empleado.errors }}</div>{% endif %}
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold text-dark small">Nombre Beneficiario (Manual)</label>
+                            {{ form.beneficiario_nombre }}
+                            {% if form.beneficiario_nombre.errors %}<div class="text-danger small mt-1">{{ form.beneficiario_nombre.errors }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold text-dark small">Cargo</label>
+                            {{ form.beneficiario_cargo }}
+                            {% if form.beneficiario_cargo.errors %}<div class="text-danger small mt-1">{{ form.beneficiario_cargo.errors }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold text-dark small">Departamento</label>
+                            {{ form.beneficiario_departamento }}
+                            {% if form.beneficiario_departamento.errors %}<div class="text-danger small mt-1">{{ form.beneficiario_departamento.errors }}</div>{% endif %}
+                        </div>
+                    </div>
+
+                    <h6 class="text-secondary fw-bold border-bottom pb-2 mb-3 mt-4"><i class="bi bi-geo-alt me-2"></i>Detalles del Viaje / Destino</h6>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold text-dark small">Fecha Programada</label>
+                            {{ form.fecha_viaje }}
+                            {% if form.fecha_viaje.errors %}<div class="text-danger small mt-1">{{ form.fecha_viaje.errors }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label fw-bold text-dark small">Destino / Ruta</label>
+                            {{ form.destino }}
+                            {% if form.destino.errors %}<div class="text-danger small mt-1">{{ form.destino.errors }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold text-dark small">Motivo / Descripción del Gasto</label>
+                            {{ form.motivo }}
+                            {% if form.motivo.errors %}<div class="text-danger small mt-1">{{ form.motivo.errors }}</div>{% endif %}
+                        </div>
+                    </div>
+
+                    <h6 class="text-secondary fw-bold border-bottom pb-2 mb-3 mt-4"><i class="bi bi-currency-dollar me-2"></i>Presupuesto Estimado</h6>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold text-dark small">Monto Estimado</label>
+                            {{ form.monto_estimado }}
+                            {% if form.monto_estimado.errors %}<div class="text-danger small mt-1">{{ form.monto_estimado.errors }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold text-dark small">Moneda</label>
+                            {{ form.moneda }}
+                            {% if form.moneda.errors %}<div class="text-danger small mt-1">{{ form.moneda.errors }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold text-dark small">Tasa de Cambio (BCV)</label>
+                            {{ form.tasa_bcv }}
+                            {% if form.tasa_bcv.errors %}<div class="text-danger small mt-1">{{ form.tasa_bcv.errors }}</div>{% endif %}
+                        </div>
+                    </div>
+
+                    <hr class="mt-5 mb-4 text-muted">
+                    
+                    <div class="d-flex justify-content-end gap-2">
+                        <a href="{% url 'viaticos:dashboard' %}" class="btn-erp btn-erp-outline">
+                            <i class="bi bi-x-circle me-1"></i>Cancelar
+                        </a>
+                        <button type="submit" class="btn-erp btn-erp-primary px-4">
+                            <i class="bi bi-save2 me-1"></i>Guardar Solicitud
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

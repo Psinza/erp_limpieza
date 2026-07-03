@@ -1,41 +1,88 @@
 {% extends "base.html" %}
-{% block content %}
-<div class="container mt-4">
-  <nav aria-label="breadcrumb">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item"><a href="{% url 'produccion:orden_list' %}">Órdenes</a></li>
-      <li class="breadcrumb-item"><a href="{% url 'produccion:orden_detail' orden.pk %}">OP-{{ orden.id }}</a></li>
-      <li class="breadcrumb-item active">{{ titulo }}</li>
-    </ol>
-  </nav>
+{% load bootstrap5 %}
 
-  <div class="card shadow-sm mb-4">
-    <div class="card-header bg-primary text-white">
-      <h5 class="mb-0"><i class="bi bi-clipboard-check"></i> {{ titulo }}</h5>
-    </div>
-    <div class="card-body">
-      <p><strong>Lote de Producción:</strong> {{ lote.numero_lote }}</p>
-      <p><strong>Producto:</strong> {{ lote.orden.formula.producto.nombre }}</p>
-      <hr>
-      <form method="post">
-        {% csrf_token %}
-        {% for field in form %}
-        <div class="mb-3">
-          <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-          {{ field }}
-          {% if field.help_text %}
-          <div class="form-text">{{ field.help_text }}</div>
-          {% endif %}
-          {% for error in field.errors %}
-          <div class="invalid-feedback d-block">{{ error }}</div>
-          {% endfor %}
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-lg">
+                <div class="card-header bg-info text-white py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0 fw-bold"><i class="bi bi-microscope me-2"></i> {{ titulo }}</h4>
+                        <span class="badge bg-white text-info px-3">LOTE: {{ orden.lote_numero }}</span>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <div class="alert alert-light border mb-4">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <small class="text-muted d-block">Producto:</small>
+                                <span class="fw-bold">{{ orden.formula.producto.nombre }}</span>
+                            </div>
+                            <div class="col-md-6 text-md-end">
+                                <small class="text-muted d-block">Normativa:</small>
+                                <span class="badge bg-primary">{{ orden.formula.producto.normativa_covenin|default:"COVENIN GENÉRICA" }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form method="post" class="needs-validation">
+                        {% csrf_token %}
+                        
+                        <div class="row g-3">
+                            <div class="col-md-4">{% bootstrap_field form.ph %}</div>
+                            <div class="col-md-4">{% bootstrap_field form.densidad %}</div>
+                            <div class="col-md-4">{% bootstrap_field form.viscosidad %}</div>
+                            
+                            <div class="col-md-12">
+                                <div class="p-3 bg-light rounded border mb-3">
+                                    <h6 class="fw-bold mb-3"><i class="bi bi-eye me-2"></i>Pruebas Organolépticas y Activos</h6>
+                                    <div class="row g-3">
+                                        <div class="col-md-4">{% bootstrap_field form.color %}</div>
+                                        <div class="col-md-4">{% bootstrap_field form.olor %}</div>
+                                        <div class="col-md-4">{% bootstrap_field form.aspecto %}</div>
+                                        <div class="col-md-12">{% bootstrap_field form.concentracion_activo %}</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-12">
+                                <div class="card border-warning mb-3">
+                                    <div class="card-body">
+                                        <h6 class="fw-bold text-warning mb-3"><i class="bi bi-shield-check me-2"></i>Declaración de Cumplimiento</h6>
+                                        <div class="row">
+                                            <div class="col-md-6">{% bootstrap_field form.cumple_covenin %}</div>
+                                            <div class="col-md-6">{% bootstrap_field form.estabilidad_alcalina %}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-12">{% bootstrap_field form.observaciones %}</div>
+                            <div class="col-md-6">{% bootstrap_field form.inspector %}</div>
+                            <div class="col-md-6 d-flex align-items-end justify-content-end pb-3">
+                                <div class="form-check form-switch fs-5">
+                                    {{ form.aprobado }}
+                                    <label class="form-check-label fw-bold text-success" for="{{ form.aprobado.id_for_label }}">APROBAR LOTE</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 pt-3 border-top d-flex justify-content-between">
+                            <a href="{% url 'produccion:orden_detail' orden.pk %}" class="btn btn-outline-secondary px-4">Cancelar</a>
+                            <button type="submit" class="btn btn-info text-white px-5 shadow-sm">
+                                <i class="bi bi-save me-2"></i>Guardar Resultados QC
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
-        {% endfor %}
-        <button type="submit" class="btn btn-success mt-3"><i class="bi bi-save"></i> Guardar Control de
-          Calidad</button>
-        <a href="{% url 'produccion:orden_detail' orden.pk %}" class="btn btn-secondary mt-3 ms-2">Cancelar</a>
-      </form>
     </div>
-  </div>
 </div>
+
+<style>
+    .form-label { font-weight: 600; color: #495057; }
+    .card-header { background: linear-gradient(45deg, #0dcaf0, #0aa2c0) !important; }
+</style>
 {% endblock %}

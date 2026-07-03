@@ -1,6 +1,7 @@
 from django.apps import AppConfig
 
+
 class ContabilidadConfig(AppConfig):
-    default_auto_field = "django.db.models.BigAutoField"
-    name = "apps.contabilidad"
-    label = "erp_contabilidad_app"  # <--- ESTO DEBE SER ÚNICO
+    default_auto_field = 'django.db.models.BigAutoField'
+    name = 'apps.contabilidad'
+    verbose_name = 'Contabilidad'

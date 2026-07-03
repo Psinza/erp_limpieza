@@ -27,6 +27,14 @@
         <i class="bi bi-check-circle"></i> Marcar Entregado
       </a>
       {% endif %}
+      <div class="btn-group btn-group-sm me-2">
+        <button onclick="printNota();" class="btn btn-primary">
+          <i class="bi bi-printer"></i> Nota de Entrega
+        </button>
+        <button onclick="printPacking();" class="btn btn-dark">
+          <i class="bi bi-box-seam"></i> Packing List
+        </button>
+      </div>
       <a href="{% url 'ventas:despacho_list' %}" class="btn btn-outline-secondary btn-sm">
         <i class="bi bi-arrow-left"></i> Volver
       </a>
@@ -133,4 +141,195 @@
   </div>
 
 </div>
+
+<!-- SECCIÓN IMPRIMIBLE (OCULTA EN NAVEGADOR) -->
+<div class="d-none d-print-block print-container">
+    <!-- NOTA DE ENTREGA -->
+    <div class="printable-page nota-entrega-print">
+        <div class="row mb-4 border-bottom pb-3">
+            <div class="col-6">
+                <h4 class="fw-bold mb-0">ERP LIMPIEZA C.A.</h4>
+                <p class="small text-muted mb-0">RIF: J-12345678-9</p>
+                <p class="small text-muted">Planta Industrial, Valencia, Edo. Carabobo.</p>
+            </div>
+            <div class="col-6 text-end">
+                <h2 class="fw-bold text-primary">NOTA DE ENTREGA</h2>
+                <h4 class="mb-0">N° {{ desp.numero }}</h4>
+                <p class="small mb-0">Fecha: {{ desp.fecha_despacho|date:"d/m/Y" }}</p>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-7">
+                <h6 class="text-uppercase fw-bold small text-muted border-bottom">Destinatario / Cliente</h6>
+                <p class="mb-1 fw-bold">{{ desp.pedido.cliente.razon_social|default:desp.pedido.cliente.nombre_display }}</p>
+                <p class="mb-1 small">RIF: {{ desp.pedido.cliente.rif|default:"—" }}</p>
+                <p class="small">Dirección: {{ desp.pedido.cliente.direccion|default:"—" }}</p>
+            </div>
+            <div class="col-5">
+                <h6 class="text-uppercase fw-bold small text-muted border-bottom">Información de Envío</h6>
+                <p class="mb-1 small"><strong>Pedido Ref:</strong> {{ desp.pedido.numero }}</p>
+                <p class="mb-1 small"><strong>Transportista:</strong> {{ desp.transportista|default:"Propio" }}</p>
+                <p class="mb-1 small"><strong>N° Guía:</strong> {{ desp.numero_guia|default:"N/A" }}</p>
+            </div>
+        </div>
+
+        <table class="table table-bordered table-sm align-middle mb-5">
+            <thead class="table-light">
+                <tr class="small text-uppercase">
+                    <th style="width: 15%;">Código</th>
+                    <th style="width: 55%;">Descripción del Producto</th>
+                    <th style="width: 15%;" class="text-center">Cant. Pedida</th>
+                    <th style="width: 15%;" class="text-center">Cant. Entregada</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for d in detalles %}
+                <tr>
+                    <td class="small">{{ d.detalle_pedido.producto.codigo }}</td>
+                    <td class="small">
+                        <div class="fw-bold">{{ d.detalle_pedido.producto.nombre }}</div>
+                        {% if d.observacion %}<small class="text-muted">{{ d.observacion }}</small>{% endif %}
+                    </td>
+                    <td class="text-center small">{{ d.detalle_pedido.cantidad }}</td>
+                    <td class="text-center fw-bold">{{ d.cantidad_despachada }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="row mt-5">
+            <div class="col-4 text-center">
+                <div class="border-top pt-2 mx-3">
+                    <p class="small mb-0 fw-bold">Despachado por:</p>
+                    <p class="small text-muted">{{ desp.despachado_por|default:"Almacén Central" }}</p>
+                </div>
+            </div>
+            <div class="col-4 text-center">
+                <div class="border-top pt-2 mx-3">
+                    <p class="small mb-0 fw-bold">Transportista:</p>
+                    <p class="small text-muted">{{ desp.transportista|default:"Firma Autorizada" }}</p>
+                </div>
+            </div>
+            <div class="col-4 text-center">
+                <div class="border-top pt-2 mx-3">
+                    <p class="small mb-0 fw-bold">Recibido Conforme:</p>
+                    <p class="small text-muted">Nombre, C.I. y Sello</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PACKING LIST (LISTA DE EMPAQUE) -->
+    <div class="printable-page packing-list-print d-none">
+        <div class="row mb-4 border-bottom border-dark pb-3">
+            <div class="col-6">
+                <h4 class="fw-bold mb-0">ERP LIMPIEZA C.A.</h4>
+                <p class="small mb-0 text-uppercase">Lista de Empaque / Packing List</p>
+            </div>
+            <div class="col-6 text-end">
+                <h4 class="mb-0">DESP-{{ desp.numero }}</h4>
+                <p class="small mb-0">Fecha de Carga: {{ desp.fecha_despacho|date:"d/m/Y" }}</p>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-6">
+                <p class="mb-0 small"><strong>Cliente:</strong> {{ desp.pedido.cliente.nombre_display }}</p>
+                <p class="mb-0 small"><strong>Pedido:</strong> {{ desp.pedido.numero }}</p>
+            </div>
+            <div class="col-6 text-end">
+                <p class="mb-0 small"><strong>Transportista:</strong> {{ desp.transportista|default:"—" }}</p>
+                <p class="mb-0 small"><strong>Placa/Guía:</strong> {{ desp.numero_guia|default:"—" }}</p>
+            </div>
+        </div>
+
+        <table class="table table-bordered table-sm">
+            <thead class="bg-light">
+                <tr class="small text-center">
+                    <th>Ítem</th>
+                    <th>Producto / Descripción</th>
+                    <th>Unidad</th>
+                    <th>Cant. Despachada</th>
+                    <th>N° Bultos / Empaque</th>
+                    <th>Peso Est. (Kg)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for d in detalles %}
+                <tr class="text-center">
+                    <td>{{ forloop.counter }}</td>
+                    <td class="text-start">
+                        <div class="fw-bold">{{ d.detalle_pedido.producto.nombre }}</div>
+                        <small>{{ d.detalle_pedido.producto.codigo }}</small>
+                    </td>
+                    <td>{{ d.detalle_pedido.producto.get_unidad_medida_display }}</td>
+                    <td class="fw-bold fs-5">{{ d.cantidad_despachada }}</td>
+                    <td class="border-bottom border-dark" style="width: 15%;"></td>
+                    <td class="border-bottom border-dark" style="width: 15%;"></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="mt-5">
+            <h6 class="small fw-bold text-uppercase border-bottom">Observaciones de Despacho:</h6>
+            <div class="border p-3" style="min-height: 80px;">
+                {{ desp.observaciones|default:"" }}
+            </div>
+        </div>
+
+        <div class="row mt-5">
+            <div class="col-6 text-center">
+                <div class="border-top pt-2 mx-5">
+                    <p class="small mb-0">Preparado por (Almacén)</p>
+                </div>
+            </div>
+            <div class="col-6 text-center">
+                <div class="border-top pt-2 mx-5">
+                    <p class="small mb-0">Revisado por (Control de Calidad)</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function printNota() {
+        document.querySelector('.nota-entrega-print').classList.remove('d-none');
+        document.querySelector('.packing-list-print').classList.add('d-none');
+        window.print();
+    }
+    function printPacking() {
+        document.querySelector('.nota-entrega-print').classList.add('d-none');
+        document.querySelector('.packing-list-print').classList.remove('d-none');
+        window.print();
+    }
+
+    // Auto-print logic
+    window.addEventListener('load', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('print') === 'nota') {
+            printNota();
+        } else if (urlParams.get('print') === 'packing') {
+            printPacking();
+        }
+    });
+</script>
+
+<style>
+    @media print {
+        .container-fluid, .navbar, .d-print-none, .btn, .footer { display: none !important; }
+        .print-container { display: block !important; width: 100% !important; margin: 0; padding: 0; }
+        .printable-page { 
+            background: white; 
+            padding: 2cm; 
+            min-height: 29.7cm; 
+            font-size: 12px;
+            color: black !important;
+        }
+        .table { border-color: #000 !important; }
+        .text-primary { color: #000 !important; }
+    }
+</style>
 {% endblock %}

@@ -4,10 +4,13 @@ from . import views
 app_name = 'activos_fijos'
 
 urlpatterns = [
-    path('', views.ActivoFijoListView.as_view(), name='activo_list'), # Lista y búsqueda
-    path('nuevo/', views.ActivoFijoCreateView.as_view(), name='activo_create'),
-    path('editar/<int:pk>/', views.ActivoFijoUpdateView.as_view(), name='activo_update'),
-    path('eliminar/<int:pk>/', views.ActivoFijoDeleteView.as_view(), name='activo_delete'),
-    path('exportar/', views.exportar_activos_a_excel, name='exportar_excel'), # Exportar a Excel
+    path('', views.dashboard, name='dashboard'),
+    path('lista/', views.activo_list, name='activo_list'),
+    path('nuevo/', views.activo_create, name='activo_create'),
+    path('<int:pk>/', views.activo_detail, name='activo_detail'),
+    path('<int:pk>/editar/', views.activo_edit, name='activo_edit'),
+    path('<int:pk>/eliminar/', views.activo_delete, name='activo_delete'),
     path('reporte-depreciacion/', views.reporte_depreciacion, name='reporte_depreciacion'),
+    path('<int:pk>/asignacion/', views.asignacion_create, name='asignacion_create'),
+    path('<int:pk>/mantenimiento/', views.mantenimiento_create, name='mantenimiento_create'),
 ]

@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Barra de Herramientas -->
+            <div class="d-flex justify-content-between mb-4 d-print-none">
+                <a href="{% url 'facturacion:dashboard' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Volver
+                </a>
+                <div>
+                    <button onclick="window.print();" class="btn btn-primary shadow-sm">
+                        <i class="bi bi-printer me-2"></i> Imprimir Factura
+                    </button>
+                    <button class="btn btn-outline-danger ms-2">
+                        <i class="bi bi-file-earmark-pdf"></i> PDF
+                    </button>
+                </div>
+            </div>
+
+            <!-- Hoja de Factura Fiscal -->
+            <div class="card border-0 shadow-lg invoice-print-area">
+                <div class="card-body p-5">
+                    <!-- Cabecera -->
+                    <div class="row mb-5">
+                        <div class="col-md-6">
+                            <h2 class="fw-bold text-primary mb-0">ERP LIMPIEZA C.A.</h2>
+                            <p class="text-muted small mb-0">R.I.F.: J-12345678-9</p>
+                            <p class="text-muted small mb-0">Calle Industrial Nro. 45, Valencia, Carabobo.</p>
+                            <p class="text-muted small">Teléfono: 0241-1234567</p>
+                        </div>
+                        <div class="col-md-6 text-md-end">
+                            <div class="display-6 fw-bold text-success mb-1">FACTURA</div>
+                            <h4 class="mb-0 text-dark">NRO: <span class="text-danger">{{ factura.nro_factura }}</span></h4>
+                            <h5 class="text-muted">NRO CONTROL: {{ factura.nro_control }}</h5>
+                        </div>
+                    </div>
+
+                    <!-- Datos del Cliente -->
+                    <div class="row mb-5 bg-light p-4 rounded">
+                        <div class="col-md-7">
+                            <h6 class="text-muted text-uppercase small fw-bold">Cliente:</h6>
+                            <h4 class="fw-bold mb-1">{{ factura.cliente.razon_social }}</h4>
+                            <p class="mb-0"><strong>RIF:</strong> {{ factura.cliente.rif }}</p>
+                            <p class="mb-0"><strong>Dirección:</strong> {{ factura.cliente.direccion }}</p>
+                        </div>
+                        <div class="col-md-5 text-md-end">
+                            <p class="mb-1"><strong>Fecha Emisión:</strong> {{ factura.fecha_emision|date:"d/m/Y" }}</p>
+                            <p class="mb-1"><strong>Fecha Venc.:</strong> {{ factura.fecha_vencimiento|date:"d/m/Y" }}</p>
+                            <p class="mb-0"><strong>Condición:</strong> Contado / Crédito</p>
+                            {% if factura.pedido %}
+                            <p class="mb-0 text-muted small">Origen: Pedido {{ factura.pedido.numero }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Detalle de Productos -->
+                    <div class="table-responsive mb-5">
+                        <table class="table table-borderless table-striped align-middle">
+                            <thead class="border-bottom border-2">
+                                <tr class="text-uppercase small fw-bold">
+                                    <th style="width: 100px;">Código</th>
+                                    <th>Descripción / Producto</th>
+                                    <th class="text-center">Cant.</th>
+                                    <th class="text-end">P. Unitario</th>
+                                    <th class="text-end">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for d in detalles %}
+                                <tr>
+                                    <td class="text-muted small">{{ d.producto.codigo }}</td>
+                                    <td>
+                                        <div class="fw-bold">{{ d.producto.nombre }}</div>
+                                        <small class="text-muted">{{ d.descripcion_personalizada }}</small>
+                                    </td>
+                                    <td class="text-center">{{ d.cantidad|floatformat:0 }}</td>
+                                    <td class="text-end">Bs. {{ d.precio_unitario|floatformat:2 }}</td>
+                                    <td class="text-end fw-bold">Bs. {{ d.subtotal_linea|floatformat:2 }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Totales y Leyendas -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="p-3 border rounded h-100">
+                                <p class="small text-muted mb-2 fw-bold text-uppercase">Notas Fiscales:</p>
+                                <p class="small text-muted mb-0">Esta factura cumple con la Providencia Administrativa SNAT/2011/00071.</p>
+                                <p class="small text-muted mt-2"><strong>IGTF:</strong> El cargo del 3% se aplica a pagos realizados en moneda extranjera.</p>
+                                {% if factura.observaciones %}
+                                <div class="mt-3 p-2 bg-light rounded small">
+                                    {{ factura.observaciones }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-borderless table-sm">
+                                <tr>
+                                    <td class="text-muted">Monto Exento:</td>
+                                    <td class="text-end fw-bold">Bs. {{ factura.monto_exento|floatformat:2 }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Base Imponible:</td>
+                                    <td class="text-end fw-bold">Bs. {{ factura.base_imponible|floatformat:2 }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">IVA ({{ factura.iva_porcentaje }}%):</td>
+                                    <td class="text-end fw-bold">Bs. {{ factura.monto_iva|floatformat:2 }}</td>
+                                </tr>
+                                {% if factura.aplica_igtf %}
+                                <tr>
+                                    <td class="text-muted">IGTF (3%):</td>
+                                    <td class="text-end fw-bold text-danger">Bs. {{ factura.monto_igtf|floatformat:2 }}</td>
+                                </tr>
+                                {% endif %}
+                                <tr class="border-top border-2">
+                                    <td class="h4 fw-bold">TOTAL:</td>
+                                    <td class="h4 fw-bold text-end">Bs. {{ factura.total|floatformat:2 }}</td>
+                                </tr>
+                                {% if factura.moneda == 'VES' %}
+                                <tr>
+                                    <td class="small text-muted text-end" colspan="2">Equivalente a tasa BCV ({{ factura.tasa_bcv }}): <strong>${{ factura.get_total_usd|floatformat:2 }}</strong></td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td class="small text-muted text-end" colspan="2">Equivalente a tasa BCV ({{ factura.tasa_bcv }}): <strong>Bs. {{ factura.get_total_ves|floatformat:2 }}</strong></td>
+                                </tr>
+                                {% endif %}
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-white text-center py-4 border-top border-2">
+                    <p class="small text-muted mb-0">*** GRACIAS POR SU COMPRA ***</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    @media print {
+        body { background: white !important; }
+        .navbar, .d-print-none, .footer { display: none !important; }
+        .invoice-print-area { box-shadow: none !important; border: 1px solid #eee !important; margin: 0 !important; }
+        .container { max-width: 100% !important; width: 100% !important; margin: 0 !important; padding: 0 !important; }
+    }
+    .invoice-print-area { min-height: 29.7cm; }
+</style>
+{% endblock %}

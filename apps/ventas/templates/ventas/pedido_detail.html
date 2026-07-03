@@ -24,6 +24,9 @@
         {% else %}bg-secondary{% endif %}">
         {{ pedido.get_estado_display }}
       </span>
+      <button onclick="window.print();" class="btn btn-outline-primary btn-sm me-1">
+        <i class="bi bi-printer"></i> Imprimir Pedido
+      </button>
       <a href="{% url 'ventas:pedido_list' %}" class="btn btn-outline-secondary btn-sm">
         <i class="bi bi-arrow-left"></i> Volver
       </a>
@@ -89,6 +92,9 @@
     {% elif pedido.estado == "despachado" %}
       <a href="{% url 'ventas:despacho_create' pedido.pk %}" class="btn btn-outline-warning">
         <i class="bi bi-truck"></i> Nuevo Despacho Parcial
+      </a>
+      <a href="{% url 'facturacion:factura_create_from_pedido' pedido.pk %}" class="btn btn-success">
+        <i class="bi bi-receipt-cutoff"></i> Generar Factura Fiscal
       </a>
     {% endif %}
     {% if pedido.estado not in "entregado,facturado,anulado" %}
@@ -284,4 +290,89 @@
   </div>
 
 </div>
+
+<!-- SECCIÓN IMPRIMIBLE (COTIZACIÓN / PEDIDO) -->
+<div class="d-none d-print-block print-container">
+    <div class="printable-page">
+        <div class="row mb-4 border-bottom pb-3">
+            <div class="col-6">
+                <h4 class="fw-bold mb-0">ERP LIMPIEZA C.A.</h4>
+                <p class="small text-muted mb-0">RIF: J-12345678-9</p>
+                <p class="small text-muted">Planta Industrial, Valencia, Edo. Carabobo.</p>
+            </div>
+            <div class="col-6 text-end">
+                <h2 class="fw-bold text-primary">PEDIDO DE VENTA</h2>
+                <h4 class="mb-0">N° PED-{{ pedido.numero }}</h4>
+                <p class="small mb-0">Fecha: {{ pedido.fecha_pedido|date:"d/m/Y" }}</p>
+                <p class="small mb-0">Vendedor: {{ pedido.vendedor|default:"N/A" }}</p>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-12">
+                <h6 class="text-uppercase fw-bold small text-muted border-bottom">Información del Cliente</h6>
+                <p class="mb-1 fw-bold fs-5">{{ pedido.cliente.razon_social|default:pedido.cliente.nombre_display }}</p>
+                <p class="mb-1 small"><strong>RIF:</strong> {{ pedido.cliente.rif|default:"—" }}</p>
+                <p class="small"><strong>Dirección:</strong> {{ pedido.cliente.direccion|default:"—" }}</p>
+            </div>
+        </div>
+
+        <table class="table table-bordered table-sm align-middle mb-4">
+            <thead class="table-light">
+                <tr class="small text-uppercase">
+                    <th>Código</th>
+                    <th>Descripción</th>
+                    <th class="text-center">Cant.</th>
+                    <th class="text-end">P. Unitario</th>
+                    <th class="text-end">Desc %</th>
+                    <th class="text-end">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for d in detalles %}
+                <tr>
+                    <td class="small">{{ d.producto.codigo }}</td>
+                    <td class="small">{{ d.producto.nombre }}</td>
+                    <td class="text-center small">{{ d.cantidad }}</td>
+                    <td class="text-end small">${{ d.precio_unitario|floatformat:2 }}</td>
+                    <td class="text-end small">{{ d.descuento_pct }}%</td>
+                    <td class="text-end fw-bold small">${{ d.subtotal|floatformat:2 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot class="table-light">
+                <tr>
+                    <td colspan="5" class="text-end small">Subtotal:</td>
+                    <td class="text-end small">${{ pedido.subtotal|floatformat:2 }}</td>
+                </tr>
+                <tr>
+                    <td colspan="5" class="text-end small">IVA ({{ pedido.impuesto_pct }}%):</td>
+                    <td class="text-end small">${{ pedido.impuesto_total|floatformat:2 }}</td>
+                </tr>
+                <tr>
+                    <td colspan="5" class="text-end fw-bold">TOTAL:</td>
+                    <td class="text-end fw-bold fs-5">${{ pedido.total|floatformat:2 }}</td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <div class="mt-4 p-3 border bg-light small">
+            <p class="fw-bold mb-1">Términos y Condiciones:</p>
+            <ul class="mb-0">
+                <li>Precios sujetos a cambio sin previo aviso.</li>
+                <li>Validez de este documento: 5 días hábiles.</li>
+                <li>Forma de pago: Según acuerdo comercial.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<style>
+    @media print {
+        .container-fluid, .navbar, .d-print-none, .btn, .footer { display: none !important; }
+        .print-container { display: block !important; width: 100% !important; margin: 0; padding: 0; }
+        .printable-page { background: white; padding: 1.5cm; min-height: 29.7cm; color: black !important; }
+        .table { border-color: #000 !important; }
+    }
+</style>
 {% endblock %}

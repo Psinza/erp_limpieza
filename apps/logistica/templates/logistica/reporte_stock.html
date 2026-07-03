@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}Reporte de Existencias{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-0">Reporte Maestro de Existencias</h2>
+            <p class="text-muted mb-0">Stock consolidado y por almacén</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button onclick="window.print()" class="btn btn-outline-dark">
+                <i class="bi bi-printer me-1"></i> Imprimir
+            </button>
+            <a href="{% url 'logistica:dashboard' %}" class="btn btn-light border">Volver</a>
+        </div>
+    </div>
+
+    <!-- Pestañas para MP y PT -->
+    <ul class="nav nav-pills mb-4" id="stockTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="mp-tab" data-bs-toggle="pill" data-bs-target="#mp" type="button" role="tab">Materias Primas</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="pt-tab" data-bs-toggle="pill" data-bs-target="#pt" type="button" role="tab">Productos Terminados</button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="stockTabsContent">
+        <!-- Tab Materia Prima -->
+        <div class="tab-pane fade show active" id="mp" role="tabpanel">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-0">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th class="ps-4">Código / SKU</th>
+                                <th>Nombre</th>
+                                <th>Categoría</th>
+                                <th class="text-end">Stock Total</th>
+                                <th>Unidad</th>
+                                <th class="text-end pe-4">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for m in materias_primas %}
+                            <tr class="{% if m.stock_actual <= m.stock_minimo %}table-danger{% endif %}">
+                                <td class="ps-4"><code>{{ m.sku }}</code></td>
+                                <td class="fw-bold">{{ m.nombre }}</td>
+                                <td>{{ m.categoria|default:"—" }}</td>
+                                <td class="text-end fw-bold fs-5">{{ m.stock_actual }}</td>
+                                <td>{{ m.get_unidad_medida_display }}</td>
+                                <td class="text-end pe-4">
+                                    <a href="{% url 'logistica:movimiento_create' %}?mp={{ m.id }}" class="btn btn-sm btn-outline-primary">Mover</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Producto Terminado -->
+        <div class="tab-pane fade" id="pt" role="tabpanel">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-0">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-success text-dark">
+                            <tr>
+                                <th class="ps-4">Código / SKU</th>
+                                <th>Nombre</th>
+                                <th>Presentación</th>
+                                <th class="text-end">Stock Total</th>
+                                <th class="text-end pe-4">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in productos_terminados %}
+                            <tr>
+                                <td class="ps-4"><code>{{ p.sku }}</code></td>
+                                <td class="fw-bold">{{ p.nombre }}</td>
+                                <td>{{ p.get_presentacion_display }}</td>
+                                <td class="text-end fw-bold fs-5">{{ p.stock_actual }}</td>
+                                <td class="text-end pe-4">
+                                    <a href="{% url 'logistica:movimiento_create' %}?pt={{ p.id }}" class="btn btn-sm btn-outline-success">Mover</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

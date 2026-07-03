@@ -1,282 +1,235 @@
 {% extends "base.html" %}
-{% block title %}OC-{{ orden.numero }}{% endblock %}
+{% block title %}OC-{{ orden.numero|default:orden.id }}{% endblock %}
 {% block content %}
 <div class="container-fluid py-4">
 
   <!-- Header -->
   <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-      <h3 class="mb-0"><i class="bi bi-file-earmark-text"></i> Orden de Compra — OC-{{ orden.numero }}</h3>
-      <small class="text-muted">Proveedor: <strong>{{ orden.proveedor.nombre_display }}</strong>
-        | Emitida: {{ orden.fecha_emision|date:"d/m/Y" }}
-        {% if orden.fecha_entrega %}| Entrega esperada: {{ orden.fecha_entrega|date:"d/m/Y" }}{% endif %}
-      </small>
+      <h3 class="mb-0 fw-bold"><i class="bi bi-file-earmark-text text-primary"></i> Orden de Compra #{{ orden.numero|default:orden.id }}</h3>
+      <div class="mt-1">
+        <span class="badge bg-light text-dark border"><i class="bi bi-building"></i> {{ orden.proveedor.razon_social }}</span>
+        <span class="badge bg-light text-dark border ms-2"><i class="bi bi-calendar-event"></i> Emisión: {{ orden.fecha_emision|date:"d/m/Y" }}</span>
+        {% if orden.nro_factura %}
+        <span class="badge bg-info text-dark border ms-2"><i class="bi bi-receipt"></i> Factura: {{ orden.nro_factura }}</span>
+        {% endif %}
+      </div>
     </div>
     <div class="d-flex align-items-center gap-2">
-      <span class="badge fs-6
+      <span class="badge fs-6 px-3 py-2
         {% if orden.estado == 'completada' %}bg-success
         {% elif orden.estado == 'confirmada' %}bg-primary
-        {% elif orden.estado == 'enviada' %}bg-info text-dark
-        {% elif orden.estado == 'recibida' %}bg-warning text-dark
         {% elif orden.estado == 'anulada' %}bg-danger
         {% else %}bg-secondary{% endif %}">
-        {{ orden.get_estado_display }}
+        {{ orden.estado|upper }}
       </span>
-      <a href="{% url 'compras:orden_list' %}" class="btn btn-outline-secondary btn-sm">
+      <a href="{% url 'compras:orden_list' %}" class="btn btn-outline-secondary">
         <i class="bi bi-arrow-left"></i> Volver
       </a>
     </div>
   </div>
 
-  <!-- KPI Cards -->
-  <div class="row g-3 mb-4">
-    <div class="col-6 col-md-3">
-      <div class="card border-0 shadow-sm text-center">
-        <div class="card-body py-3">
-          <p class="text-muted small mb-0">Subtotal</p>
-          <h5 class="mb-0">${{ orden.subtotal|floatformat:2 }}</h5>
+  <div class="row g-4 mb-4">
+    <!-- Información de Pago y Tasa -->
+    <div class="col-md-8">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white fw-bold"><i class="bi bi-cash-coin text-success"></i> Detalles Financieros</div>
+        <div class="card-body">
+          <div class="row text-center">
+            <div class="col-md-3 border-end">
+              <p class="text-muted small mb-1">Moneda</p>
+              <h5 class="fw-bold">{{ orden.get_moneda_display }}</h5>
+            </div>
+            <div class="col-md-3 border-end">
+              <p class="text-muted small mb-1">Tasa BCV</p>
+              <h5 class="fw-bold">{{ orden.tasa_bcv }} <small class="text-muted">VES/USD</small></h5>
+            </div>
+            <div class="col-md-3 border-end text-danger">
+              <p class="text-muted small mb-1">Retención IVA Prov.</p>
+              <h5 class="fw-bold">{{ orden.proveedor.porcentaje_retencion_iva }}%</h5>
+            </div>
+            <div class="col-md-3">
+              <p class="text-muted small mb-1">IGTF (3%)</p>
+              <h5 class="fw-bold">{% if orden.aplica_igtf %}<span class="text-success">SI</span>{% else %}<span class="text-muted">NO</span>{% endif %}</h5>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Tabla de ítems -->
+      <div class="card border-0 shadow-sm mt-4">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+          <span class="fw-bold"><i class="bi bi-list-ul text-primary"></i> Ítems de la Orden</span>
+          {% if orden.estado == "borrador" %}
+          <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#modalAddItem">
+            <i class="bi bi-plus-lg"></i> Agregar Ítem
+          </button>
+          {% endif %}
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th class="ps-3">Producto</th>
+                  <th class="text-center">Cant.</th>
+                  <th class="text-end">Precio Unit.</th>
+                  <th class="text-center">IVA</th>
+                  <th class="text-end">Subtotal</th>
+                  {% if orden.estado == "borrador" %}<th></th>{% endif %}
+                </tr>
+              </thead>
+              <tbody>
+                {% for d in detalles %}
+                <tr>
+                  <td class="ps-3">
+                    <div class="fw-bold">{{ d.producto.nombre }}</div>
+                    <small class="text-muted">{{ d.producto.codigo }}</small>
+                  </td>
+                  <td class="text-center">{{ d.cantidad }}</td>
+                  <td class="text-end">{{ d.precio_unitario|floatformat:2 }}</td>
+                  <td class="text-center">
+                    {% if d.producto.es_exento %}
+                    <span class="badge bg-light text-dark border">Exento</span>
+                    {% else %}
+                    <span class="badge bg-primary-subtle text-primary">{{ orden.iva_porcentaje }}%</span>
+                    {% endif %}
+                  </td>
+                  <td class="text-end fw-bold">{{ d.subtotal|floatformat:2 }}</td>
+                  {% if orden.estado == "borrador" %}
+                  <td class="text-end pe-3">
+                    <form method="post" action="{% url 'compras:orden_eliminar_detalle' orden.pk d.pk %}" class="d-inline">
+                      {% csrf_token %}
+                      <button class="btn btn-sm text-danger" title="Eliminar"><i class="bi bi-trash"></i></button>
+                    </form>
+                  </td>
+                  {% endif %}
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" class="text-center py-4 text-muted">No hay ítems cargados.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
-    <div class="col-6 col-md-3">
-      <div class="card border-0 shadow-sm text-center">
-        <div class="card-body py-3">
-          <p class="text-muted small mb-0">Descuento</p>
-          <h5 class="mb-0 text-warning">${{ orden.descuento_total|floatformat:2 }}</h5>
+
+    <!-- Totales -->
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm bg-dark text-white mb-4">
+        <div class="card-body">
+          <h5 class="card-title mb-4 border-bottom border-secondary pb-2">Resumen Fiscal</h5>
+          
+          <div class="d-flex justify-content-between mb-2">
+            <span class="text-secondary small text-uppercase">Monto Exento</span>
+            <span>{{ orden.monto_exento|floatformat:2 }} <small>{{ orden.moneda }}</small></span>
+          </div>
+          <div class="d-flex justify-content-between mb-2">
+            <span class="text-secondary small text-uppercase">Base Imponible</span>
+            <span>{{ orden.base_imponible|floatformat:2 }} <small>{{ orden.moneda }}</small></span>
+          </div>
+          <div class="d-flex justify-content-between mb-2">
+            <span class="text-secondary small text-uppercase">IVA ({{ orden.iva_porcentaje }}%)</span>
+            <span>{{ orden.monto_iva|floatformat:2 }} <small>{{ orden.moneda }}</small></span>
+          </div>
+          
+          {% if orden.aplica_igtf %}
+          <div class="d-flex justify-content-between mb-2 text-warning">
+            <span class="small text-uppercase">IGTF (3%)</span>
+            <span>{{ orden.monto_igtf|floatformat:2 }} <small>{{ orden.moneda }}</small></span>
+          </div>
+          {% endif %}
+          
+          <hr class="border-secondary">
+          
+          <div class="d-flex justify-content-between align-items-center mt-3">
+            <h4 class="mb-0 fw-bold">TOTAL</h4>
+            <h3 class="mb-0 fw-bold text-success">{{ orden.total|floatformat:2 }} <small>{{ orden.moneda }}</small></h3>
+          </div>
+          
+          {% if orden.moneda == 'USD' %}
+          <div class="mt-3 pt-3 border-top border-secondary text-end">
+            <small class="text-secondary text-uppercase">Equivalente en Bolívares</small>
+            <h5 class="mb-0 fw-bold">VES {{ orden.total|floatformat:2 }}</h5>
+            <small class="text-muted">(A tasa BCV: {{ orden.tasa_bcv }})</small>
+          </div>
+          {% endif %}
         </div>
       </div>
-    </div>
-    <div class="col-6 col-md-3">
-      <div class="card border-0 shadow-sm text-center">
-        <div class="card-body py-3">
-          <p class="text-muted small mb-0">IVA ({{ orden.impuesto_pct }}%)</p>
-          <h5 class="mb-0 text-secondary">${{ orden.impuesto_total|floatformat:2 }}</h5>
-        </div>
-      </div>
-    </div>
-    <div class="col-6 col-md-3">
-      <div class="card border-0 shadow-sm text-center bg-primary text-white">
-        <div class="card-body py-3">
-          <p class="small mb-0 opacity-75">TOTAL</p>
-          <h4 class="mb-0 fw-bold">${{ orden.total|floatformat:2 }}</h4>
+
+      <!-- Acciones de Flujo -->
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <h6 class="fw-bold mb-3">Flujo de Proceso</h6>
+          <div class="d-grid gap-2">
+            {% if orden.estado == "borrador" %}
+              <a href="{% url 'compras:orden_enviar' orden.pk %}" class="btn btn-info text-white">
+                <i class="bi bi-send"></i> Enviar a Proveedor
+              </a>
+              <a href="{% url 'compras:orden_edit' orden.pk %}" class="btn btn-outline-secondary">
+                <i class="bi bi-pencil"></i> Modificar Encabezado
+              </a>
+            {% elif orden.estado == "enviada" %}
+              <a href="{% url 'compras:orden_confirmar' orden.pk %}" class="btn btn-primary">
+                <i class="bi bi-check-circle"></i> Confirmar / Aprobar
+              </a>
+            {% elif orden.estado in "confirmada recibida" %}
+              <a href="{% url 'compras:recepcion_create' orden.pk %}" class="btn btn-success">
+                <i class="bi bi-box-arrow-in-down"></i> Registrar Recepción
+              </a>
+            {% endif %}
+            
+            {% if orden.estado != "anulada" and orden.estado != "completada" %}
+            <form method="post" action="{% url 'compras:orden_anular' orden.pk %}" onsubmit="return confirm('¿Seguro que desea anular esta orden?')">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-outline-danger w-100">
+                <i class="bi bi-x-circle"></i> Anular Orden
+              </button>
+            </form>
+            {% endif %}
+          </div>
         </div>
       </div>
     </div>
   </div>
+</div>
 
-  <!-- Botones de flujo -->
-  <div class="mb-4 d-flex gap-2 flex-wrap">
-    {% if orden.estado == "borrador" %}
-      <a href="{% url 'compras:orden_edit' orden.pk %}" class="btn btn-outline-secondary">
-        <i class="bi bi-pencil"></i> Editar Orden
-      </a>
-      <a href="{% url 'compras:orden_enviar' orden.pk %}" class="btn btn-info">
-        <i class="bi bi-send"></i> Enviar al Proveedor
-      </a>
-    {% elif orden.estado == "enviada" %}
-      <a href="{% url 'compras:orden_confirmar' orden.pk %}" class="btn btn-primary">
-        <i class="bi bi-check-circle"></i> Confirmar Orden
-      </a>
-    {% elif orden.estado in "confirmada recibida" %}
-      <a href="{% url 'compras:recepcion_create' orden.pk %}" class="btn btn-success">
-        <i class="bi bi-box-arrow-in-down"></i> Registrar Recepción
-      </a>
-    {% endif %}
-    {% if orden.estado not in "completada anulada" %}
-    <form method="post" action="{% url 'compras:orden_anular' orden.pk %}" class="d-inline"
-          onsubmit="return confirm('¿Anular esta orden?')">
-      {% csrf_token %}
-      <button type="submit" class="btn btn-outline-danger">
-        <i class="bi bi-x-circle"></i> Anular
-      </button>
-    </form>
-    {% endif %}
-  </div>
-
-  <!-- Agregar ítem (solo borrador) -->
-  {% if orden.estado == "borrador" %}
-  <div class="card border-0 shadow-sm mb-4">
-    <div class="card-header bg-white fw-semibold border-bottom">
-      <i class="bi bi-plus-square text-primary me-1"></i> Agregar Ítem a la Orden
-    </div>
-    <div class="card-body">
+<!-- Modal para agregar ítem -->
+{% if orden.estado == "borrador" %}
+<div class="modal fade" id="modalAddItem" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
       <form method="post" action="{% url 'compras:orden_agregar_detalle' orden.pk %}">
         {% csrf_token %}
-        <div class="row g-2 align-items-end">
-          <div class="col-md-3">
-            <label class="form-label small mb-1">Producto *</label>
+        <div class="modal-header">
+          <h5 class="modal-title">Agregar Ítem</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Producto</label>
             {{ det_form.producto }}
           </div>
-          <div class="col-md-3">
-            <label class="form-label small mb-1">Descripción adicional</label>
-            {{ det_form.descripcion }}
+          <div class="row">
+            <div class="col-6 mb-3">
+              <label class="form-label">Cantidad</label>
+              {{ det_form.cantidad }}
+            </div>
+            <div class="col-6 mb-3">
+              <label class="form-label">Precio Unitario ({{ orden.moneda }})</label>
+              {{ det_form.precio_unitario }}
+            </div>
           </div>
-          <div class="col-md-2">
-            <label class="form-label small mb-1">Cantidad *</label>
-            {{ det_form.cantidad }}
-          </div>
-          <div class="col-md-2">
-            <label class="form-label small mb-1">Precio Unitario *</label>
-            {{ det_form.precio_unitario }}
-          </div>
-          <div class="col-md-1">
-            <label class="form-label small mb-1">Desc. %</label>
-            {{ det_form.descuento_pct }}
-          </div>
-          <div class="col-md-1">
-            <button type="submit" class="btn btn-primary w-100">
-              <i class="bi bi-plus-lg"></i>
-            </button>
-          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-toggle="modal">Cerrar</button>
+          <button type="submit" class="btn btn-primary">Agregar Ítem</button>
         </div>
       </form>
     </div>
   </div>
-  {% endif %}
-
-  <!-- Tabla de ítems -->
-  <div class="card border-0 shadow-sm mb-4">
-    <div class="card-header bg-white fw-semibold">
-      <i class="bi bi-table text-success me-1"></i>
-      Ítems de la Orden
-      <span class="badge bg-secondary ms-1">{{ detalles.count }}</span>
-    </div>
-    <div class="card-body p-0">
-      <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-          <thead class="table-dark">
-            <tr>
-              <th>#</th>
-              <th>Producto</th>
-              <th>Descripción</th>
-              <th class="text-end">Cantidad</th>
-              <th class="text-end">Precio Unit.</th>
-              <th class="text-end">Desc. %</th>
-              <th class="text-end">Desc. $</th>
-              <th class="text-end">Subtotal</th>
-              <th class="text-end">Recibido</th>
-              {% if orden.estado == "borrador" %}<th></th>{% endif %}
-            </tr>
-          </thead>
-          <tbody>
-            {% for d in detalles %}
-            <tr>
-              <td class="text-muted small">{{ forloop.counter }}</td>
-              <td>
-                <code class="small">{{ d.producto.codigo }}</code><br>
-                <span class="small">{{ d.producto.nombre }}</span>
-              </td>
-              <td class="text-muted small">{{ d.descripcion|default:"—" }}</td>
-              <td class="text-end">{{ d.cantidad }} {{ d.producto.get_unidad_medida_display }}</td>
-              <td class="text-end">${{ d.precio_unitario }}</td>
-              <td class="text-end">{{ d.descuento_pct }}%</td>
-              <td class="text-end text-warning">${{ d.descuento_monto|floatformat:2 }}</td>
-              <td class="text-end fw-semibold">${{ d.subtotal|floatformat:2 }}</td>
-              <td class="text-end">
-                <span class="badge {% if d.cantidad_recibida >= d.cantidad %}bg-success{% elif d.cantidad_recibida > 0 %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
-                  {{ d.cantidad_recibida }}/{{ d.cantidad }}
-                </span>
-              </td>
-              {% if orden.estado == "borrador" %}
-              <td>
-                <form method="post" action="{% url 'compras:orden_eliminar_detalle' orden.pk d.pk %}"
-                      onsubmit="return confirm('¿Eliminar este ítem?')">
-                  {% csrf_token %}
-                  <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
-                </form>
-              </td>
-              {% endif %}
-            </tr>
-            {% empty %}
-            <tr>
-              <td colspan="10" class="text-center text-muted py-4">
-                {% if orden.estado == "borrador" %}
-                Agregue ítems usando el formulario de arriba.
-                {% else %}
-                Sin ítems en esta orden.
-                {% endif %}
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-          {% if detalles.count > 0 %}
-          <tfoot class="table-light">
-            <tr>
-              <td colspan="7" class="text-end fw-bold">Subtotal:</td>
-              <td class="text-end fw-bold">${{ orden.subtotal|floatformat:2 }}</td>
-              <td colspan="{% if orden.estado == 'borrador' %}2{% else %}1{% endif %}"></td>
-            </tr>
-            <tr>
-              <td colspan="7" class="text-end text-warning">Descuento total:</td>
-              <td class="text-end text-warning">-${{ orden.descuento_total|floatformat:2 }}</td>
-              <td colspan="{% if orden.estado == 'borrador' %}2{% else %}1{% endif %}"></td>
-            </tr>
-            <tr>
-              <td colspan="7" class="text-end text-muted">Base imponible:</td>
-              <td class="text-end text-muted">${{ orden.base_imponible|floatformat:2 }}</td>
-              <td colspan="{% if orden.estado == 'borrador' %}2{% else %}1{% endif %}"></td>
-            </tr>
-            <tr>
-              <td colspan="7" class="text-end text-secondary">IVA ({{ orden.impuesto_pct }}%):</td>
-              <td class="text-end text-secondary">${{ orden.impuesto_total|floatformat:2 }}</td>
-              <td colspan="{% if orden.estado == 'borrador' %}2{% else %}1{% endif %}"></td>
-            </tr>
-            <tr class="table-primary">
-              <td colspan="7" class="text-end fw-bold fs-6">TOTAL:</td>
-              <td class="text-end fw-bold fs-6">${{ orden.total|floatformat:2 }}</td>
-              <td colspan="{% if orden.estado == 'borrador' %}2{% else %}1{% endif %}"></td>
-            </tr>
-          </tfoot>
-          {% endif %}
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- Recepciones -->
-  {% if recepciones %}
-  <div class="card border-0 shadow-sm">
-    <div class="card-header bg-white fw-semibold">
-      <i class="bi bi-box-arrow-in-down text-success me-1"></i> Recepciones Registradas
-    </div>
-    <div class="card-body p-0">
-      <table class="table table-hover align-middle mb-0">
-        <thead class="table-light">
-          <tr><th>N° Recepción</th><th>Fecha</th><th>Factura</th><th>Recibido por</th><th>Estado</th><th></th></tr>
-        </thead>
-        <tbody>
-          {% for r in recepciones %}
-          <tr>
-            <td><a href="{% url 'compras:recepcion_detail' r.pk %}">REC-{{ r.numero }}</a></td>
-            <td>{{ r.fecha_recepcion|date:"d/m/Y" }}</td>
-            <td>{{ r.nro_factura|default:"—" }}</td>
-            <td>{{ r.recibido_por|default:"—" }}</td>
-            <td>
-              <span class="badge {% if r.estado == 'aprobada' %}bg-success{% elif r.estado == 'rechazada' %}bg-danger{% else %}bg-warning text-dark{% endif %}">
-                {{ r.get_estado_display }}
-              </span>
-            </td>
-            <td>
-              <a href="{% url 'compras:recepcion_detail' r.pk %}" class="btn btn-sm btn-outline-primary">
-                <i class="bi bi-eye"></i>
-              </a>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  </div>
-  {% endif %}
-
-  <!-- Auditoría -->
-  <div class="card border-0 shadow-sm mt-4">
-    <div class="card-body py-2 px-3 text-muted small d-flex justify-content-between">
-      <span>Creado por: <strong>{{ orden.creado_por|default:"—" }}</strong> — {{ orden.creado_en|date:"d/m/Y H:i" }}</span>
-      <span>Última modificación: {{ orden.modificado_en|date:"d/m/Y H:i" }}</span>
-      {% if orden.aprobado_por %}<span>Aprobado por: <strong>{{ orden.aprobado_por }}</strong></span>{% endif %}
-    </div>
-  </div>
-
 </div>
+{% endif %}
+
 {% endblock %}

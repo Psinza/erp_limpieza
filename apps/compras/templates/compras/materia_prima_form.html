@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}{{ titulo }}{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="mb-4">
+        <a href="{% url 'compras:materia_prima_list' %}" class="btn btn-sm btn-erp-outline mb-3">
+            <i class="bi bi-arrow-left"></i> Volver al listado
+        </a>
+        <h2 class="topbar-title fs-3 mb-0">{{ titulo }}</h2>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-xl-8">
+            <form method="post" class="erp-card shadow-sm">
+                {% csrf_token %}
+                <div class="erp-card-header">
+                    <h5 class="erp-card-title mb-0">Información Técnica de Materia Prima</h5>
+                </div>
+                <div class="erp-card-body">
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label">Nombre del Insumo / Químico</label>
+                            {{ form.nombre }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">SKU / Código</label>
+                            {{ form.sku }}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Categoría</label>
+                            {{ form.categoria }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Unidad de Medida</label>
+                            {{ form.unidad_medida }}
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Stock Mínimo</label>
+                            {{ form.stock_minimo }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Costo Unitario ($)</label>
+                            {{ form.costo_unitario }}
+                        </div>
+                        <div class="col-md-4 d-flex align-items-center mt-4">
+                            <div class="form-check">
+                                {{ form.activo }}
+                                <label class="form-check-label ms-2">Materia Prima Activa</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="erp-card-footer bg-light p-3 border-top d-flex justify-content-end gap-2">
+                    <a href="{% url 'compras:materia_prima_list' %}" class="btn btn-erp btn-erp-outline">Cancelar</a>
+                    <button type="submit" class="btn btn-erp btn-erp-primary">
+                        <i class="bi bi-save"></i> Guardar Materia Prima
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

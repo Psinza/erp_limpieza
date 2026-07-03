@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard Tesorería{% endblock %}
+
+{% block content %}
+<style>
+    .header-gradient {
+        background: linear-gradient(135deg, #2193b0 0%, #6dd5ed 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+    }
+
+    .card-balance {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    }
+</style>
+
+<div class="container-fluid py-4">
+    <div class="header-gradient shadow">
+        <h1 class="display-6 fw-bold">Tesorería y Disponibilidad</h1>
+        <p>Control multimoneda y flujo de efectivo | Tasa BCV: <b>{{ tasa_cambio }} VES</b></p>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="card card-balance p-4 text-center">
+                <i class="bi bi-bank fs-1 text-primary mb-2"></i>
+                <h5 class="text-muted">Disponibilidad en Bolívares</h5>
+                <h2 class="fw-bold text-primary">{{ stats.disponible_ves|default:"0.00" }} VES</h2>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card card-balance p-4 text-center">
+                <i class="bi bi-currency-dollar fs-1 text-success mb-2"></i>
+                <h5 class="text-muted">Disponibilidad en Divisas</h5>
+                <h2 class="fw-bold text-success">{{ stats.disponible_usd|default:"0.00" }} USD</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card border-0 shadow-sm p-4">
+                <h5 class="mb-4">Acciones Rápidas</h5>
+                <div class="d-flex gap-3">
+                    <a href="{% url 'tesoreria:conciliacion' %}" class="btn btn-outline-primary rounded-pill">
+                        <i class="bi bi-check2-all"></i> Conciliación Bancaria
+                    </a>
+                    <a href="{% url 'tesoreria:flujo_caja' %}" class="btn btn-outline-info rounded-pill">
+                        <i class="bi bi-graph-up-arrow"></i> Flujo de Caja
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -3,7 +3,7 @@ from django.dispatch import receiver
 from django.db import transaction
 from django.db.models import F
 
-from apps.logistica.models import MovimientoInventario
+from apps.logistica.models import MovimientoInventario, ExistenciaAlmacen
 from apps.produccion.models import MateriaPrima, ProductoTerminado
 
 
@@ -35,25 +35,40 @@ def update_inventory_on_movement_save(sender, instance, created, **kwargs):
         # Obtenemos el objeto del ítem de la base de datos y lo bloqueamos para actualización
         # para asegurar que obtenemos el stock_actual más reciente y evitar condiciones de carrera.
         item_obj = item_model.objects.select_for_update().get(pk=item.pk)
-        
+
+        # 1. Actualización de Stock Global
         stock_change = 0
         if instance.tipo == 'E':  # Entrada
             stock_change = instance.cantidad
         elif instance.tipo == 'S':  # Salida
             stock_change = -instance.cantidad
-        # Para 'T' (Transferencia), el stock_actual global no cambia.
-        # Si se necesita control de stock por almacén, el diseño del modelo debería ser diferente.
 
-        # Actualizamos el stock_actual global del ítem usando una operación atómica (F()).
-        item_obj.stock_actual = F('stock_actual') + stock_change
-        item_obj.save(update_fields=['stock_actual'])
+        if stock_change != 0:
+            item_obj.stock_actual = F('stock_actual') + stock_change
+            item_obj.save(update_fields=['stock_actual'])
         
-        # Recargamos item_obj para obtener el nuevo valor de stock_actual después de la actualización atómica.
-        item_obj.refresh_from_db()
+        # 2. Actualización de Stock por Almacén (ExistenciaAlmacen)
+        item_query = {'materia_prima': instance.materia_prima} if instance.materia_prima else {'producto_pt': instance.producto_pt}
 
-        # Actualizamos el saldo_stock de la instancia actual de MovimientoInventario
-        # para reflejar el stock global después de este movimiento.
+        # Descontar de Origen (Salidas y Transferencias)
+        if instance.tipo in ['S', 'T'] and instance.almacen_origen:
+            exis_origen, _ = ExistenciaAlmacen.objects.get_or_create(
+                almacen=instance.almacen_origen,
+                **item_query,
+                defaults={'stock': 0}
+            )
+            ExistenciaAlmacen.objects.filter(pk=exis_origen.pk).update(stock=F('stock') - instance.cantidad)
+
+        # Aumentar en Destino (Entradas y Transferencias)
+        if instance.tipo in ['E', 'T'] and instance.almacen_destino:
+            exis_destino, _ = ExistenciaAlmacen.objects.get_or_create(
+                almacen=instance.almacen_destino,
+                **item_query,
+                defaults={'stock': 0}
+            )
+            ExistenciaAlmacen.objects.filter(pk=exis_destino.pk).update(stock=F('stock') + instance.cantidad)
+
+        # Finalización: Actualizar saldo_stock en el movimiento para el Kardex Global
+        item_obj.refresh_from_db()
         instance.saldo_stock = item_obj.stock_actual
-        # Guardamos la instancia de MovimientoInventario, actualizando solo saldo_stock
-        # para evitar que esta señal se dispare recursivamente por otros campos.
         instance.save(update_fields=['saldo_stock'])

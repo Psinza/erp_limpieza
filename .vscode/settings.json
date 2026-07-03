@@ -12,5 +12,7 @@
             "database": "postgres",
             "username": "postgres"
         }
-    ]
+    ],
+    "geminicodeassist.outlines.automaticOutlineGeneration": true,
+    "python.pythonPath": "venv\\Scripts\\python.exe"
 }

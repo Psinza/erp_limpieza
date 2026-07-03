@@ -1,78 +1,57 @@
 from django import forms
-from .models import (
-    Proveedor, CategoriaProveedor, OrdenCompra, 
-    ProductoCompra, DetalleOrdenCompra, RecepcionCompra, DetalleRecepcion
-)
+from .models import OrdenCompra, FacturaCompra, DetalleFacturaCompra, ProductoCompra
+from apps.facturacion.models import Proveedor
+from apps.produccion.models import MateriaPrima
 
-class CategoriaProveedorForm(forms.ModelForm):
-    class Meta:
-        model = CategoriaProveedor
-        fields = ['nombre', 'descripcion']
-        widgets = {
-            'nombre': forms.TextInput(attrs={'class': 'form-control'}),
-            'descripcion': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
-        }
+CTR = {"class": "form-control"}
+SEL = {"class": "form-select"}
+NUM = {"class": "form-control", "step": "0.01"}
+DATE = {"class": "form-control", "type": "date"}
+TXT = {"class": "form-control", "rows": 3}
 
 class ProveedorForm(forms.ModelForm):
     class Meta:
         model = Proveedor
-        fields = ['ruc', 'razon_social', 'nombre_comercial', 'categoria', 'telefono', 'email', 'direccion', 'estado']
+        fields = ['razon_social', 'rif', 'direccion', 'telefono', 'email']
         widgets = {
-            'ruc': forms.TextInput(attrs={'class': 'form-control'}),
-            'razon_social': forms.TextInput(attrs={'class': 'form-control'}),
-            'nombre_comercial': forms.TextInput(attrs={'class': 'form-control'}),
-            'categoria': forms.Select(attrs={'class': 'form-select'}),
-            'telefono': forms.TextInput(attrs={'class': 'form-control'}),
-            'email': forms.EmailInput(attrs={'class': 'form-control'}),
-            'direccion': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
-            'estado': forms.TextInput(attrs={'class': 'form-control'}),
+            'razon_social': forms.TextInput(attrs=CTR),
+            'rif': forms.TextInput(attrs=CTR),
+            'direccion': forms.Textarea(attrs=TXT),
+            'telefono': forms.TextInput(attrs=CTR),
+            'email': forms.EmailInput(attrs=CTR),
+        }
+
+class MateriaPrimaForm(forms.ModelForm):
+    class Meta:
+        model = MateriaPrima
+        fields = ['nombre', 'sku', 'categoria', 'unidad_medida', 'stock_minimo', 'costo_unitario', 'activo']
+        widgets = {
+            'nombre': forms.TextInput(attrs=CTR),
+            'sku': forms.TextInput(attrs=CTR),
+            'categoria': forms.Select(attrs=SEL),
+            'unidad_medida': forms.Select(attrs=SEL),
+            'stock_minimo': forms.NumberInput(attrs=NUM),
+            'costo_unitario': forms.NumberInput(attrs=NUM),
+            'activo': forms.CheckboxInput(attrs={"class": "form-check-input"}),
         }
 
 class ProductoCompraForm(forms.ModelForm):
     class Meta:
         model = ProductoCompra
-        fields = '__all__'
+        fields = ['nombre', 'codigo', 'descripcion', 'precio_referencia']
         widgets = {
-            'nombre': forms.TextInput(attrs={'class': 'form-control'}),
-            'codigo': forms.TextInput(attrs={'class': 'form-control'}),
-            'categoria': forms.Select(attrs={'class': 'form-select'}),
-            'precio_unitario': forms.NumberInput(attrs={'class': 'form-control'}),
+            'nombre': forms.TextInput(attrs=CTR),
+            'codigo': forms.TextInput(attrs=CTR),
+            'descripcion': forms.Textarea(attrs=TXT),
+            'precio_referencia': forms.NumberInput(attrs=NUM),
         }
 
 class OrdenCompraForm(forms.ModelForm):
     class Meta:
         model = OrdenCompra
-        fields = ['proveedor', 'fecha_entrega', 'observaciones']
+        fields = ['proveedor', 'fecha_emision', 'estado']
         widgets = {
-            'proveedor': forms.Select(attrs={'class': 'form-select'}),
-            'fecha_entrega': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'observaciones': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-        }
-
-class DetalleOrdenCompraForm(forms.ModelForm):
-    class Meta:
-        model = DetalleOrdenCompra
-        fields = ['producto', 'cantidad', 'precio_unitario']
-        widgets = {
-            'producto': forms.Select(attrs={'class': 'form-select'}),
-            'cantidad': forms.NumberInput(attrs={'class': 'form-control'}),
-            'precio_unitario': forms.NumberInput(attrs={'class': 'form-control'}),
-        }
-
-class RecepcionCompraForm(forms.ModelForm):
-    class Meta:
-        model = RecepcionCompra
-        fields = ['orden']
-        widgets = {
-            'orden': forms.Select(attrs={'class': 'form-select'}),
-        }
-
-class DetalleRecepcionForm(forms.ModelForm):
-    class Meta:
-        model = DetalleRecepcion
-        fields = ['detalle_orden', 'cantidad_aceptada', 'observaciones']
-        widgets = {
-            'detalle_orden': forms.Select(attrs={'class': 'form-select'}),
-            'cantidad_aceptada': forms.NumberInput(attrs={'class': 'form-control'}),
-            'observaciones': forms.TextInput(attrs={'class': 'form-control'}),
+            'proveedor': forms.Select(attrs=SEL),
+            'fecha_emision': forms.DateInput(attrs=DATE),
+            'estado': forms.Select(attrs=SEL),
         }

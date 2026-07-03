@@ -1,5 +1,16 @@
 from django.contrib import admin
-from .models import EjercicioContable, CuentaContable, AsientoContable, LineaAsiento, PeriodoContable, ConfiguracionContable
+from .models import (
+    EjercicioContable, CuentaContable, AsientoContable, LineaAsiento, 
+    PeriodoContable, ConfiguracionContable, Empresa, Area, Rol, Usuario
+)
+
+@admin.register(Empresa)
+class EmpresaAdmin(admin.ModelAdmin):
+    list_display = ('nombre', 'rif', 'telefono', 'email')
+    fieldsets = (
+        ('Datos Fiscales (Venezuela)', {'fields': ('nombre', 'rif', 'direccion')}),
+        ('Contacto y Marca', {'fields': ('logo', 'telefono', 'email')}),
+    )
 
 @admin.register(EjercicioContable)
 class EjercicioContableAdmin(admin.ModelAdmin):
@@ -43,3 +54,16 @@ class ConfiguracionContableAdmin(admin.ModelAdmin):
     list_display = ('clave', 'cuenta', 'descripcion')
     search_fields = ('clave', 'cuenta__nombre')
     raw_id_fields = ('cuenta',)
+
+@admin.register(Area)
+class AreaAdmin(admin.ModelAdmin):
+    list_display = ('nombre', 'codigo', 'activo')
+
+@admin.register(Rol)
+class RolAdmin(admin.ModelAdmin):
+    list_display = ('nombre', 'nivel', 'activo')
+
+@admin.register(Usuario)
+class UsuarioAdmin(admin.ModelAdmin):
+    list_display = ('username', 'nombres', 'apellidos', 'area', 'estado', 'activo')
+    list_filter = ('estado', 'area', 'activo')

@@ -139,6 +139,77 @@ CREATE TABLE IF NOT EXISTS compras_proveedor (
 ) ENGINE=InnoDB;
 
 -- ============================================================
+--  MÓDULO: VENTAS
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS ventas_cliente (
+    id              INT AUTO_INCREMENT PRIMARY KEY,
+    documento       VARCHAR(20) NOT NULL UNIQUE, -- RUC/CEDULA
+    nombre          VARCHAR(200) NOT NULL,
+    direccion       TEXT,
+    telefono        VARCHAR(20),
+    email           VARCHAR(254),
+    estado          VARCHAR(10) NOT NULL DEFAULT 'activo',
+    creado_en       DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS ventas_producto_venta (
+    id                  INT AUTO_INCREMENT PRIMARY KEY,
+    nombre              VARCHAR(200) NOT NULL,
+    producto_base_id    INT, -- Vínculo con Producción
+    precio_unidad       DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+    moneda              VARCHAR(5) DEFAULT 'USD',
+    disponibilidad      TINYINT(1) NOT NULL DEFAULT 1,
+    tipo_producto       VARCHAR(50), -- Limpieza Hogar, Industrial, etc.
+    CONSTRAINT fk_vpt_pt FOREIGN KEY (producto_base_id) REFERENCES produccion_producto_terminado(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS ventas_pedido (
+    id                          INT AUTO_INCREMENT PRIMARY KEY,
+    numero                      VARCHAR(20) UNIQUE,
+    cliente_id                  INT NOT NULL,
+    fecha_emision               DATE NOT NULL,
+    dias_credito                INT NOT NULL DEFAULT 0,
+    direccion_despacho          TEXT,
+    iva_porcentaje              DECIMAL(5,2) NOT NULL DEFAULT 16.00,
+    descuento_global_porcentaje DECIMAL(5,2) NOT NULL DEFAULT 0.00,
+    subtotal                    DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+    iva_total                   DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+    total                       DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+    estado                      VARCHAR(15) NOT NULL DEFAULT 'borrador',
+    observaciones               TEXT,
+    creado_por_id               INT,
+    creado_en                   DATETIME DEFAULT CURRENT_TIMESTAMP,
+    modificado_en               DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_pedido_cliente FOREIGN KEY (cliente_id) REFERENCES ventas_cliente(id) ON DELETE PROTECT,
+    CONSTRAINT fk_pedido_creado_por FOREIGN KEY (creado_por_id) REFERENCES auth_user(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS ventas_detalle_pedido (
+    id                  INT AUTO_INCREMENT PRIMARY KEY,
+    pedido_id           INT NOT NULL,
+    producto_id         INT NOT NULL,
+    cantidad            DECIMAL(10,2) NOT NULL DEFAULT 1.00,
+    precio_unitario     DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+    subtotal_linea      DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+    observaciones       TEXT,
+    CONSTRAINT fk_detalle_pedido_pedido FOREIGN KEY (pedido_id) REFERENCES ventas_pedido(id) ON DELETE CASCADE,
+    CONSTRAINT fk_detalle_pedido_producto FOREIGN KEY (producto_id) REFERENCES ventas_producto_venta(id) ON DELETE PROTECT,
+    UNIQUE (pedido_id, producto_id)
+) ENGINE=InnoDB;
+
+-- Tabla para trazabilidad Compras/Materia Prima
+CREATE TABLE IF NOT EXISTS compras_producto_mp (
+    id                  INT AUTO_INCREMENT PRIMARY KEY,
+    proveedor_id        INT NOT NULL,
+    materia_prima_id    INT NOT NULL,
+    costo_ultimo        DECIMAL(12,4),
+    referencia_interna  VARCHAR(100),
+    CONSTRAINT fk_compra_mp_prov FOREIGN KEY (proveedor_id) REFERENCES compras_proveedor(id),
+    CONSTRAINT fk_compra_mp_base FOREIGN KEY (materia_prima_id) REFERENCES produccion_materia_prima(id)
+) ENGINE=InnoDB;
+
+-- ============================================================
 --  MÓDULO: PRODUCCIÓN
 -- ============================================================
 

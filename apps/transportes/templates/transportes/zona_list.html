@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">{{ titulo }}</h1>
+        <a href="{% url 'transportes:zona_create' %}" class="btn btn-primary shadow-sm">
+            <i class="fas fa-plus fa-sm text-white-50"></i> Nueva Zona
+        </a>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Listado de Zonas Geográficas</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Descripción</th>
+                            <th>Estado</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for zona in zonas %}
+                        <tr>
+                            <td>{{ zona.nombre }}</td>
+                            <td>{{ zona.descripcion|default:"---" }}</td>
+                            <td>
+                                {% if zona.activa %}
+                                <span class="badge bg-success">Activa</span>
+                                {% else %}
+                                <span class="badge bg-danger">Inactiva</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <a href="{% url 'transportes:zona_update' zona.pk %}"
+                                    class="btn btn-sm btn-info btn-circle" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center">No hay zonas configuradas.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

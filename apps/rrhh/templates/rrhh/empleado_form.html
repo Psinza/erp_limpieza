@@ -15,70 +15,136 @@
         {% csrf_token %}
 
         <h6 class="text-muted text-uppercase fw-bold mb-3 border-bottom pb-2">
-          Datos Personales
+          Datos Personales y de Contacto
         </h6>
         <div class="row g-3 mb-4">
-          <div class="col-md-4">
-            <label class="form-label">Cédula / DNI *</label>
+          <div class="col-md-3">
+            <label class="form-label">Nacionalidad *</label>
+            {{ form.nacionalidad }}
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Cédula de Identidad *</label>
             {{ form.cedula }}
           </div>
-          <div class="col-md-4">
+          <div class="col-md-6">
             <label class="form-label">Nombres *</label>
             {{ form.nombres }}
           </div>
-          <div class="col-md-4">
+          <div class="col-md-6">
             <label class="form-label">Apellidos *</label>
             {{ form.apellidos }}
           </div>
-          <div class="col-md-3">
-            <label class="form-label">Sexo</label>
-            {{ form.sexo }}
-          </div>
-          <div class="col-md-3">
-            <label class="form-label">Fecha de Nacimiento *</label>
+          <div class="col-md-6">
+            <label class="form-label">Fecha de Nacimiento</label>
             {{ form.fecha_nacimiento }}
           </div>
-          <div class="col-md-3">
-            <label class="form-label">Teléfono</label>
+          <div class="col-md-6">
+            <label class="form-label">Cargas Familiares</label>
+            {{ form.cargas_familiares }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Grado de Instrucción / Estudios</label>
+            {{ form.grado_instruccion }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Números de Contacto</label>
             {{ form.telefono }}
           </div>
-          <div class="col-md-3">
-            <label class="form-label">Email</label>
-            {{ form.email }}
-          </div>
-          <div class="col-md-8">
-            <label class="form-label">Dirección</label>
+          <div class="col-md-12">
+            <label class="form-label">Dirección de Habitación</label>
             {{ form.direccion }}
           </div>
-          <div class="col-md-4">
-            <label class="form-label">Foto</label>
-            {{ form.foto }}
+          <div class="col-md-12">
+            <label class="form-label">Cuenta Bancaria (20 dígitos)</label>
+            {{ form.cuenta_bancaria }}
           </div>
         </div>
 
-        <h6 class="text-muted text-uppercase fw-bold mb-3 border-bottom pb-2">
-          Datos Laborales
+        <h6 class="text-muted text-uppercase fw-bold mb-3 border-bottom pb-2 mt-4">
+          Datos Médicos y de Salud
+        </h6>
+        <div class="row g-3 mb-4">
+          <div class="col-md-4">
+            <label class="form-label">Tipo de Sangre</label>
+            {{ form.tipo_sangre }}
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Peso (kg)</label>
+            {{ form.peso }}
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Estatura (metros)</label>
+            {{ form.estatura }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Enfermedades o Alergias</label>
+            {{ form.enfermedades }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Discapacidades (si aplica)</label>
+            {{ form.discapacidad }}
+          </div>
+        </div>
+
+        <h6 class="text-muted text-uppercase fw-bold mb-3 border-bottom pb-2 mt-4">
+          Dotación de Uniforme
+        </h6>
+        <div class="row g-3 mb-4">
+          <div class="col-md-4">
+            <label class="form-label">Talla de Camisa</label>
+            {{ form.talla_camisa }}
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Talla de Pantalón</label>
+            {{ form.talla_pantalon }}
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Talla de Calzado</label>
+            {{ form.talla_calzado }}
+          </div>
+        </div>
+
+        <h6 class="text-muted text-uppercase fw-bold mb-3 border-bottom pb-2 mt-4">
+          Datos Laborales (LOTTT)
         </h6>
         <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label">Departamento *</label>
+            {{ form.departamento }}
+          </div>
           <div class="col-md-4">
             <label class="form-label">Cargo *</label>
             {{ form.cargo }}
           </div>
           <div class="col-md-4">
-            <label class="form-label">Tipo de Contrato</label>
+            <label class="form-label">Tipo de Contrato *</label>
             {{ form.tipo_contrato }}
           </div>
+          
           <div class="col-md-4">
-            <label class="form-label">Estado</label>
-            {{ form.estado }}
+            <label class="form-label">Salario Base (VES) *</label>
+            {{ form.salario_base }}
           </div>
           <div class="col-md-4">
+            <label class="form-label">Cesta Ticket (VES)</label>
+            {{ form.bono_alimentacion }}
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Bono Complementario (USD)</label>
+            {{ form.bono_divisas }}
+          </div>
+
+          <div class="col-md-6">
             <label class="form-label">Fecha de Ingreso *</label>
             {{ form.fecha_ingreso }}
           </div>
-          <div class="col-md-4">
-            <label class="form-label">Salario *</label>
-            {{ form.salario }}
+          <div class="col-md-6 d-flex align-items-center mt-4">
+            <div class="form-check">
+              {{ form.activo }}
+              <label class="form-check-label ms-2" for="{{ form.activo.id_for_label }}">
+                Empleado Activo
+              </label>
+            </div>
           </div>
         </div>
 
@@ -92,7 +158,7 @@
 
         <div class="d-flex gap-2 mt-4">
           <button type="submit" class="btn btn-primary">
-            <i class="bi bi-save"></i> Guardar
+            <i class="bi bi-save"></i> Guardar Empleado
           </button>
           <a href="{% url 'rrhh:empleado_list' %}" class="btn btn-outline-secondary">
             Cancelar

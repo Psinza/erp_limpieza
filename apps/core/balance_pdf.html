@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        @page { size: letter; margin: 1.5cm; }
+        body { font-family: Helvetica, Arial, sans-serif; font-size: 10pt; color: #333; }
+        .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #444; padding-bottom: 10px; }
+        .section-title { background-color: #f2f2f2; font-weight: bold; padding: 5px; margin-top: 15px; border: 1px solid #ccc; }
+        table { width: 100%; border-collapse: collapse; margin-top: 5px; }
+        th, td { padding: 4px; text-align: left; border-bottom: 0.5pt solid #ddd; }
+        .amount { text-align: right; }
+        .total-row { font-weight: bold; background-color: #eee; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>{{ empresa }}</h2>
+        <h3>BALANCE GENERAL</h3>
+        <p>Al: {{ fecha|date:"d/m/Y" }}</p>
+    </div>
+
+    <div class="section-title">ACTIVOS</div>
+    <table>
+        {% for cuenta in activos %}
+        <tr>
+            <td>{{ cuenta.codigo }} - {{ cuenta.nombre }}</td>
+            <td class="amount">{{ cuenta.saldo_historico|floatformat:2 }}</td>
+        </tr>
+        {% endfor %}
+        <tr class="total-row">
+            <td>TOTAL ACTIVOS</td>
+            <td class="amount">{{ total_activos|floatformat:2 }}</td>
+        </tr>
+    </table>
+
+    <div class="section-title">PASIVOS Y PATRIMONIO</div>
+    <table>
+        {% for cuenta in pasivos %}
+        <tr><td>{{ cuenta.nombre }}</td><td class="amount">{{ cuenta.saldo_historico|floatformat:2 }}</td></tr>
+        {% endfor %}
+        {% for cuenta in patrimonio %}
+        <tr><td>{{ cuenta.nombre }}</td><td class="amount">{{ cuenta.saldo_historico|floatformat:2 }}</td></tr>
+        {% endfor %}
+        <tr class="total-row">
+            <td>TOTAL PASIVOS + PATRIMONIO</td>
+            <td class="amount">{{ total_pasivos|add:total_patrimonio|floatformat:2 }}</td>
+        </tr>
+    </table>
+</body>
+</html>

@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from celery.schedules import crontab
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -17,10 +18,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     
-    # Módulos del ERP
-    'apps.core',
-    'apps.administracion',
-    'apps.rrhh',
+    # Núcleo del Sistema (Debe ir primero para AUTH_USER_MODEL)
+    'apps.core.apps.CoreConfig', 
+    
+    # Módulos Funcionales
     'apps.contabilidad',
     'apps.vendedores',
     'apps.compras',
@@ -32,6 +33,11 @@ INSTALLED_APPS = [
     'apps.logistica',
     'apps.facturacion',
     'apps.viaticos',
+    'apps.transportes',
+    'apps.tesoreria',
+    'apps.inventarios.apps.InventariosConfig',
+    'apps.administracion',
+    'apps.rrhh',
 ]
 
 MIDDLEWARE = [
@@ -79,10 +85,13 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-LANGUAGE_CODE = 'es-co'
-TIME_ZONE = 'America/Bogota'
+LANGUAGE_CODE = 'es-ve'
+TIME_ZONE = 'America/Caracas'
 USE_I18N = True
 USE_TZ = True
+
+# Modelo de Usuario Personalizado
+AUTH_USER_MODEL = 'core.Usuario'
 
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
@@ -101,3 +110,29 @@ ERP_CONFIG = {
 LOGIN_URL = '/accounts/login/'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/accounts/login/'
+
+# Configuración de Celery
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = TIME_ZONE
+
+CELERY_BEAT_SCHEDULE = {
+    'enviar-reporte-mensual-fin-mes': {
+        'task': 'apps.contabilidad.tasks.enviar_reporte_mensual_task',
+        'schedule': crontab(minute=55, hour=23, day_of_month='28-31'),
+        'description': 'Ejecuta el envío del reporte financiero el último día de cada mes a las 23:55'
+    },
+}
+
+# Configuración de Correo SMTP
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'  # Cambiar por tu servidor (ej. smtp.mailtrap.io para pruebas)
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'tu-correo@gmail.com'  # Tu dirección de correo
+EMAIL_HOST_PASSWORD = 'tu-contrasena-de-aplicacion'  # Tu contraseña o token
+DEFAULT_FROM_EMAIL = f"Sistema ERP <{EMAIL_HOST_USER}>"
+SERVER_EMAIL = EMAIL_HOST_USER

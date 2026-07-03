@@ -1,134 +1,160 @@
-{% extends "base.html" %}
-{% block title %}Compras — Dashboard{% endblock %}
+{% extends "core/base.html" %}
+
+{% block title %}Compras y Proveedores | ERP{% endblock %}
+{% block page_title %}Módulo de Compras{% endblock %}
+{% block breadcrumb %}Operaciones / Compras{% endblock %}
+
 {% block content %}
-<div class="container-fluid py-4">
-  <h2 class="mb-4"><i class="bi bi-cart4"></i> Módulo de Compras</h2>
+<!-- KPIs -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background:#e8f0fe;color:#1a73e8;">
+                <i class="bi bi-people"></i>
+            </div>
+            <div>
+                <div class="stat-value">{{ total_proveedores }}</div>
+                <div class="stat-label">Proveedores Registrados</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background:#fef7e0;color:#f9a825;">
+                <i class="bi bi-file-earmark-text"></i>
+            </div>
+            <div>
+                <div class="stat-value">{{ ordenes_pendientes }}</div>
+                <div class="stat-label">Órdenes Pendientes</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background:#e6f4ea;color:#1e8e3e;">
+                <i class="bi bi-check2-square"></i>
+            </div>
+            <div>
+                <div class="stat-value">{{ recepciones_recientes.count }}</div>
+                <div class="stat-label">Recepciones Recientes</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background:#fce8e6;color:#d93025;">
+                <i class="bi bi-credit-card"></i>
+            </div>
+            <div>
+                <div class="stat-value" style="font-size:22px;">Bs. {{ total_compras_mes|floatformat:0 }}</div>
+                <div class="stat-label">Gasto del Mes</div>
+            </div>
+        </div>
+    </div>
+</div>
 
-  <!-- KPIs -->
-  <div class="row g-3 mb-4">
-    <div class="col-6 col-md-3">
-      <div class="card border-0 shadow-sm bg-primary text-white">
-        <div class="card-body d-flex justify-content-between align-items-center">
-          <div><p class="mb-0 small">Proveedores Activos</p><h3 class="mb-0 fw-bold">{{ total_proveedores }}</h3></div>
-          <i class="bi bi-building fs-1 opacity-50"></i>
+<div class="row g-4">
+    <!-- Órdenes de Compra -->
+    <div class="col-lg-8">
+        <div class="erp-card">
+            <div class="erp-card-header">
+                <span class="erp-card-title"><i class="bi bi-cart-check me-2"></i>Últimas Órdenes de Compra</span>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'compras:orden_create' %}" class="btn-erp btn-erp-primary">
+                        <i class="bi bi-plus-lg"></i> Nueva Orden
+                    </a>
+                    <a href="{% url 'compras:orden_list' %}" class="btn-erp btn-erp-outline">Ver Todas</a>
+                </div>
+            </div>
+            <div class="erp-card-body p-0">
+                <table class="erp-table">
+                    <thead>
+                        <tr>
+                            <th>Número</th>
+                            <th>Proveedor</th>
+                            <th>Fecha</th>
+                            <th class="text-center">Estado</th>
+                            <th class="text-end">Monto</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for orden in ultimas_ordenes %}
+                        <tr>
+                            <td style="font-weight:600;">{{ orden.numero }}</td>
+                            <td>{{ orden.proveedor.nombre }}</td>
+                            <td class="text-muted small">{{ orden.fecha|date:"d/m/Y" }}</td>
+                            <td class="text-center">
+                                {% if orden.estado == 'pendiente' %}
+                                    <span class="badge bg-warning text-dark" style="font-size:10px;">Pendiente</span>
+                                {% elif orden.estado == 'enviada' %}
+                                    <span class="badge bg-info text-dark" style="font-size:10px;">Enviada</span>
+                                {% elif orden.estado == 'recibida' %}
+                                    <span class="badge bg-success" style="font-size:10px;">Recibida</span>
+                                {% else %}
+                                    <span class="badge bg-secondary" style="font-size:10px;">{{ orden.get_estado_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end fw-bold">Bs. {{ orden.total|floatformat:2 }}</td>
+                            <td class="text-end">
+                                <a href="{% url 'compras:orden_detail' orden.pk %}" class="btn-erp btn-erp-outline" style="padding:4px 8px;">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-muted">No hay órdenes recientes.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
-      </div>
-    </div>
-    <div class="col-6 col-md-3">
-      <div class="card border-0 shadow-sm bg-warning text-dark">
-        <div class="card-body d-flex justify-content-between align-items-center">
-          <div><p class="mb-0 small">Órdenes Activas</p><h3 class="mb-0 fw-bold">{{ ordenes_pendientes }}</h3></div>
-          <i class="bi bi-file-earmark-text fs-1 opacity-50"></i>
-        </div>
-      </div>
-    </div>
-    <div class="col-6 col-md-3">
-      <div class="card border-0 shadow-sm bg-success text-white">
-        <div class="card-body d-flex justify-content-between align-items-center">
-          <div><p class="mb-0 small">Compras del Mes</p><h3 class="mb-0 fw-bold">${{ total_mes|floatformat:2 }}</h3></div>
-          <i class="bi bi-cash-stack fs-1 opacity-50"></i>
-        </div>
-      </div>
-    </div>
-    <div class="col-6 col-md-3">
-      <div class="card border-0 shadow-sm bg-info text-dark">
-        <div class="card-body d-flex justify-content-between align-items-center">
-          <div><p class="mb-0 small">Recepciones Pendientes</p><h3 class="mb-0 fw-bold">{{ recepciones_pend }}</h3></div>
-          <i class="bi bi-box-seam fs-1 opacity-50"></i>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Accesos rápidos -->
-  <div class="row g-2 mb-4">
-    <div class="col-6 col-md-3">
-      <a href="{% url 'compras:orden_create' %}" class="btn btn-primary w-100 py-2">
-        <i class="bi bi-plus-circle me-1"></i> Nueva Orden
-      </a>
-    </div>
-    <div class="col-6 col-md-3">
-      <a href="{% url 'compras:proveedor_create' %}" class="btn btn-outline-primary w-100 py-2">
-        <i class="bi bi-building-add me-1"></i> Nuevo Proveedor
-      </a>
-    </div>
-    <div class="col-6 col-md-3">
-      <a href="{% url 'compras:orden_list' %}" class="btn btn-outline-warning w-100 py-2">
-        <i class="bi bi-list-ul me-1"></i> Ver Órdenes
-      </a>
-    </div>
-    <div class="col-6 col-md-3">
-      <a href="{% url 'compras:recepcion_list' %}" class="btn btn-outline-success w-100 py-2">
-        <i class="bi bi-box-seam me-1"></i> Recepciones
-      </a>
-    </div>
-  </div>
-
-  <div class="row g-4">
-    <!-- Últimas órdenes -->
-    <div class="col-md-8">
-      <div class="card border-0 shadow-sm">
-        <div class="card-header bg-white fw-semibold">
-          <i class="bi bi-file-earmark-text text-primary me-1"></i> Últimas Órdenes de Compra
-        </div>
-        <div class="card-body p-0">
-          <table class="table table-hover mb-0 align-middle">
-            <thead class="table-light">
-              <tr><th>N° Orden</th><th>Proveedor</th><th>Fecha</th><th>Total</th><th>Estado</th></tr>
-            </thead>
-            <tbody>
-              {% for o in ultimas_ordenes %}
-              <tr>
-                <td><a href="{% url 'compras:orden_detail' o.pk %}" class="fw-semibold">{{ o.numero }}</a></td>
-                <td>{{ o.proveedor.nombre_display }}</td>
-                <td>{{ o.fecha_emision|date:"d/m/Y" }}</td>
-                <td class="fw-bold">${{ o.total|floatformat:2 }}</td>
-                <td>
-                  <span class="badge
-                    {% if o.estado == 'completada' %}bg-success
-                    {% elif o.estado == 'confirmada' %}bg-primary
-                    {% elif o.estado == 'enviada' %}bg-info text-dark
-                    {% elif o.estado == 'anulada' %}bg-danger
-                    {% elif o.estado == 'recibida' %}bg-warning text-dark
-                    {% else %}bg-secondary{% endif %}">
-                    {{ o.get_estado_display }}
-                  </span>
-                </td>
-              </tr>
-              {% empty %}
-              <tr><td colspan="5" class="text-center text-muted py-3">Sin órdenes aún.</td></tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </div>
     </div>
 
-    <!-- Top proveedores -->
-    <div class="col-md-4">
-      <div class="card border-0 shadow-sm">
-        <div class="card-header bg-white fw-semibold">
-          <i class="bi bi-trophy text-warning me-1"></i> Top Proveedores
+    <!-- Acceso Rápido -->
+    <div class="col-lg-4">
+        <div class="erp-card mb-4">
+            <div class="erp-card-header">
+                <span class="erp-card-title"><i class="bi bi-star me-2"></i>Acciones Rápidas</span>
+            </div>
+            <div class="erp-card-body pt-0">
+                <div class="d-grid gap-2 mt-3">
+                    <a href="{% url 'compras:proveedor_list' %}" class="btn-erp btn-erp-outline">
+                        <i class="bi bi-person-lines-fill"></i> Directorio de Proveedores
+                    </a>
+                    <a href="{% url 'compras:producto_list' %}" class="btn-erp btn-erp-outline">
+                        <i class="bi bi-box-seam"></i> Insumos y Productos
+                    </a>
+                    <a href="{% url 'compras:recepcion_list' %}" class="btn-erp btn-erp-outline">
+                        <i class="bi bi-truck"></i> Control de Recepciones
+                    </a>
+                </div>
+            </div>
         </div>
-        <div class="card-body p-0">
-          <table class="table table-hover mb-0">
-            <thead class="table-light">
-              <tr><th>Proveedor</th><th class="text-center">Órdenes</th></tr>
-            </thead>
-            <tbody>
-              {% for p in top_proveedores %}
-              <tr>
-                <td><a href="{% url 'compras:proveedor_detail' p.pk %}">{{ p.nombre_display }}</a></td>
-                <td class="text-center"><span class="badge bg-primary">{{ p.num_ordenes }}</span></td>
-              </tr>
-              {% empty %}
-              <tr><td colspan="2" class="text-muted text-center py-3">Sin datos.</td></tr>
-              {% endfor %}
-            </tbody>
-          </table>
+
+        <!-- Recepciones Recientes -->
+        <div class="erp-card">
+            <div class="erp-card-header">
+                <span class="erp-card-title"><i class="bi bi-clock-history me-2"></i>Últimas Recepciones</span>
+            </div>
+            <div class="erp-card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for rec in recepciones_recientes %}
+                    <div class="list-group-item border-0 py-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span style="font-weight:600;font-size:13px;">{{ rec.numero }}</span>
+                            <span class="text-muted small">{{ rec.fecha|date:"d/m/Y" }}</span>
+                        </div>
+                        <div class="text-muted small">Orden: {{ rec.orden.numero }}</div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-4 text-muted small">Sin recepciones registradas.</div>
+                    {% endfor %}
+                </div>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
 </div>
 {% endblock %}

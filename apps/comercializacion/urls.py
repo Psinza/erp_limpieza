@@ -12,21 +12,26 @@ urlpatterns = [
     path('categorias/<int:pk>/editar/', views.categoria_update, name='categoria_update'),
     path('categorias/<int:pk>/eliminar/', views.categoria_delete, name='categoria_delete'),
     
-    # Información Comercial
-    path('productos/', views.producto_comercial_list, name='producto_comercial_list'),
-    path('productos/crear/', views.producto_comercial_create, name='producto_comercial_create'),
-    path('productos/<int:pk>/editar/', views.producto_comercial_update, name='producto_comercial_update'),
-    path('productos/<int:pk>/eliminar/', views.producto_comercial_delete, name='producto_comercial_delete'),
+    # Información Comercial (Catálogo)
+    path('productos/', views.producto_comercial_list, name='catalogo_list'),
+    path('productos/crear/', views.producto_comercial_create, name='catalogo_create'),
+    path('productos/<int:pk>/editar/', views.producto_comercial_update, name='catalogo_edit'),
+    path('productos/<int:pk>/eliminar/', views.producto_comercial_delete, name='catalogo_delete'),
     
     # Listas de Precio
     path('listas/', views.lista_precio_list, name='lista_precio_list'),
     path('listas/crear/', views.lista_precio_create, name='lista_precio_create'),
     path('listas/<int:pk>/editar/', views.lista_precio_update, name='lista_precio_update'),
     path('listas/<int:pk>/eliminar/', views.lista_precio_delete, name='lista_precio_delete'),
+    path('listas/<int:pk>/detalle/', views.item_precio_list, name='lista_precio_detail'),
+    path('listas/<int:pk>/imprimir/', views.lista_imprimir, name='lista_imprimir'),
     
     # Items de Precio
     path('listas/<int:lista_id>/items/', views.item_precio_list, name='item_precio_list'),
     path('listas/<int:lista_id>/items/crear/', views.item_precio_create, name='item_precio_create'),
     path('items/<int:pk>/editar/', views.item_precio_update, name='item_precio_update'),
     path('items/<int:pk>/eliminar/', views.item_precio_delete, name='item_precio_delete'),
+
+    # Promociones
+    path('promociones/crear/', views.promocion_create, name='promocion_create'),
 ]

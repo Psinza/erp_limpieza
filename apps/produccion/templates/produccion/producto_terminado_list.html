@@ -29,23 +29,31 @@
     <div class="card-body p-0">
       <table class="table table-hover align-middle mb-0">
         <thead class="table-dark">
-          <tr><th>Código</th><th>Nombre</th><th>Categoría</th><th>Unidad</th>
-              <th class="text-end">Stock</th><th class="text-end">Stock Mín.</th>
-              <th class="text-end">Costo Est.</th><th>Estado</th><th>Acciones</th></tr>
+          <tr>
+              <th>SKU</th>
+              <th>Nombre</th>
+              <th>Categoría</th>
+              <th>Presentación</th>
+              <th class="text-end">Stock</th>
+              <th class="text-end">Costo Est.</th>
+              <th>Registro / CPE</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+          </tr>
         </thead>
         <tbody>
           {% for p in productos %}
           <tr class="{% if p.stock_bajo %}table-warning{% endif %}">
-            <td><code>{{ p.codigo }}</code></td>
+            <td><code>{{ p.sku }}</code></td>
             <td class="fw-semibold">
               {{ p.nombre }}
               {% if p.stock_bajo %}<span class="badge bg-warning text-dark ms-1">Stock bajo</span>{% endif %}
             </td>
             <td>{{ p.categoria|default:"—" }}</td>
-            <td>{{ p.get_unidad_medida_display }}</td>
+            <td>{{ p.get_presentacion_display }}</td>
             <td class="text-end fw-bold {% if p.stock_bajo %}text-danger{% else %}text-success{% endif %}">{{ p.stock_actual }}</td>
-            <td class="text-end text-muted">{{ p.stock_minimo }}</td>
             <td class="text-end">${{ p.costo_estimado }}</td>
+            <td class="small">{{ p.registro_sanitario|default:"—" }}</td>
             <td><span class="badge {% if p.activo %}bg-success{% else %}bg-secondary{% endif %}">{% if p.activo %}Activo{% else %}Inactivo{% endif %}</span></td>
             <td>
               <a href="{% url 'produccion:producto_terminado_edit' p.pk %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>

@@ -1,122 +1,159 @@
-{% extends "base.html" %}
-{% block title %}Logística e Inventarios{% endblock %}
+{% extends "core/base.html" %}
+
+{% block title %}Logística e Inventarios | ERP{% endblock %}
+{% block page_title %}Gestión de Inventarios{% endblock %}
+{% block breadcrumb %}Operaciones / Logística{% endblock %}
+
 {% block content %}
-<div class="container-fluid py-4">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="fw-bold mb-0"><i class="bi bi-box-seam text-primary"></i> Control de Logística</h2>
-    <div class="d-flex gap-2">
-      <a href="{% url 'logistica:reporte_stock' %}" class="btn btn-outline-dark"><i class="bi bi-file-earmark-bar-graph"></i> Reporte de Stock</a>
-      <a href="{% url 'logistica:entrada_mp_create' %}" class="btn btn-primary"><i class="bi bi-plus-circle"></i> Nueva Entrada MP</a>
-    </div>
-  </div>
-
-  <div class="row g-4 mb-4">
+<!-- KPIs -->
+<div class="row g-3 mb-4">
     <div class="col-md-3">
-      <div class="card border-0 shadow-sm">
-        <div class="card-body">
-          <p class="text-muted small uppercase fw-bold mb-1">Materia Prima</p>
-          <h2 class="fw-bold mb-0 text-primary">{{ total_mp }}</h2>
-          <p class="small text-muted mt-2 mb-0">Ítems registrados</p>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-3">
-      <div class="card border-0 shadow-sm">
-        <div class="card-body">
-          <p class="text-muted small uppercase fw-bold mb-1">Prod. Terminados</p>
-          <h2 class="fw-bold mb-0 text-success">{{ total_pt }}</h2>
-          <p class="small text-muted mt-2 mb-0">Listos para despacho</p>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-3">
-      <div class="card border-0 shadow-sm">
-        <div class="card-body">
-          <p class="text-muted small uppercase fw-bold mb-1">Almacenes</p>
-          <h2 class="fw-bold mb-0 text-dark">{{ num_almacenes }}</h2>
-          <p class="small text-muted mt-2 mb-0">Ubicaciones activas</p>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm bg-primary text-white">
-          <div class="card-body">
-            <p class="small uppercase fw-bold mb-1 opacity-75">Estado de Red</p>
-            <h2 class="fw-bold mb-0">Óptimo</h2>
-            <div class="progress mt-2" style="height: 4px; background: rgba(255,255,255,0.2);">
-                <div class="progress-bar bg-white" style="width: 100%;"></div>
+        <div class="stat-card">
+            <div class="stat-icon" style="background:#e8f0fe;color:#1a73e8;">
+                <i class="bi bi-wallet2"></i>
             </div>
-          </div>
-        </div>
-    </div>
-  </div>
-
-  <div class="row g-4">
-    <!-- Listado de Almacenes -->
-    <div class="col-md-4">
-      <div class="card border-0 shadow-sm">
-        <div class="card-header bg-white py-3 fw-bold">Bodegas y Almacenes</div>
-        <div class="card-body p-0">
-          <div class="list-group list-group-flush">
-            {% for alm in almacenes %}
-            <div class="list-group-item d-flex justify-content-between align-items-center border-0 py-3">
-              <div>
-                <h6 class="mb-0 fw-bold">{{ alm.nombre }}</h6>
-                <p class="text-muted small mb-0">{{ alm.ubicacion|default:"Sin ubicación" }}</p>
-              </div>
-              {% if alm.es_principal %}
-              <span class="badge bg-primary">Principal</span>
-              {% endif %}
+            <div>
+                <div class="stat-value" style="font-size:22px;">Bs. {{ valor_total_mp|floatformat:0 }}</div>
+                <div class="stat-label">Valor Inventario MP</div>
             </div>
-            {% endfor %}
-          </div>
         </div>
-      </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background:#fce8e6;color:#d93025;">
+                <i class="bi bi-exclamation-triangle"></i>
+            </div>
+            <div>
+                <div class="stat-value">{{ alerta_mp }}</div>
+                <div class="stat-label">Stock Bajo MP</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background:#e6f4ea;color:#1e8e3e;">
+                <i class="bi bi-box-seam"></i>
+            </div>
+            <div>
+                <div class="stat-value">{{ total_pt }}</div>
+                <div class="stat-label">Productos Terminados</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background:#f1f5f9;color:#475569;">
+                <i class="bi bi-house-door"></i>
+            </div>
+            <div>
+                <div class="stat-value">{{ almacenes.count }}</div>
+                <div class="stat-label">Almacenes Activos</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Kardex Reciente -->
+    <div class="col-lg-8">
+        <div class="erp-card">
+            <div class="erp-card-header">
+                <span class="erp-card-title"><i class="bi bi-clock-history me-2"></i>Movimientos Recientes (Kardex)</span>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'logistica:movimiento_create' %}" class="btn-erp btn-erp-primary">
+                        <i class="bi bi-plus-lg"></i> Nuevo Movimiento
+                    </a>
+                    <a href="{% url 'logistica:reporte_stock' %}" class="btn-erp btn-erp-outline">Existencias</a>
+                </div>
+            </div>
+            <div class="erp-card-body p-0">
+                <table class="erp-table">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Ítem / Referencia</th>
+                            <th>Tipo</th>
+                            <th class="text-end">Cantidad</th>
+                            <th class="text-end">Saldo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for mov in movimientos_recientes %}
+                        <tr>
+                            <td class="text-muted small">{{ mov.fecha|date:"d/m/y H:i" }}</td>
+                            <td>
+                                <div style="font-weight:600;">{{ mov.materia_prima.nombre|default:mov.producto_pt.nombre }}</div>
+                                <div class="text-muted" style="font-size:11px;">{{ mov.referencia|default:"—" }}</div>
+                            </td>
+                            <td>
+                                {% if mov.tipo == 'E' %}
+                                <span class="badge bg-success" style="font-size:10px;">Entrada</span>
+                                {% elif mov.tipo == 'S' %}
+                                <span class="badge bg-danger" style="font-size:10px;">Salida</span>
+                                {% else %}
+                                <span class="badge bg-info text-dark" style="font-size:10px;">Transfer</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end fw-bold {% if mov.tipo == 'E' %}text-success{% else %}text-danger{% endif %}">
+                                {% if mov.tipo == 'E' %}+{% else %}-{% endif %}{{ mov.cantidad }}
+                            </td>
+                            <td class="text-end fw-bold">{{ mov.saldo_stock|default:"—" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted">No hay movimientos registrados.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
-    <!-- Movimientos Recientes -->
-    <div class="col-md-8">
-      <div class="card border-0 shadow-sm">
-        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-            <span class="fw-bold">Movimientos Recientes</span>
-            <a href="{% url 'logistica:entrada_mp_list' %}" class="small text-decoration-none">Ver todos</a>
+    <!-- Almacenes y Alertas -->
+    <div class="col-lg-4">
+        <div class="erp-card mb-4">
+            <div class="erp-card-header">
+                <span class="erp-card-title"><i class="bi bi-house-door me-2"></i>Almacenes</span>
+                <a href="{% url 'logistica:almacen_list' %}" class="btn-erp btn-erp-outline" style="font-size:11px;padding:2px 8px;">Ver todos</a>
+            </div>
+            <div class="erp-card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for alm in almacenes %}
+                    <div class="list-group-item border-0 py-3 d-flex justify-content-between align-items-center">
+                        <div>
+                            <div style="font-weight:600;font-size:13px;">{{ alm.nombre }}</div>
+                            <div class="text-muted" style="font-size:11px;">{{ alm.ubicacion }}</div>
+                        </div>
+                        {% if alm.es_principal %}
+                        <span class="badge-area" style="background:#e3f2fd;color:#0d47a1;">Principal</span>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
         </div>
-        <div class="card-body p-0">
-          <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-              <thead class="table-light">
-                <tr>
-                  <th>Fecha</th>
-                  <th>Tipo</th>
-                  <th>Ítem</th>
-                  <th>Cantidad</th>
-                  <th>Almacén</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for mov in ultimos_movimientos %}
-                <tr>
-                  <td class="small">{{ mov.fecha|date:"d/m/Y H:i" }}</td>
-                  <td>
-                    <span class="badge {% if mov.tipo == 'E' %}bg-success-subtle text-success{% else %}bg-danger-subtle text-danger{% endif %}">
-                        {{ mov.get_tipo_display }}
-                    </span>
-                  </td>
-                  <td class="fw-bold small">
-                    {% if mov.materia_prima %}{{ mov.materia_prima.nombre }}{% else %}{{ mov.producto_pt.nombre }}{% endif %}
-                  </td>
-                  <td class="fw-bold">{{ mov.cantidad }}</td>
-                  <td class="small">{{ mov.almacen_destino.nombre|default:mov.almacen_origen.nombre }}</td>
-                </tr>
-                {% empty %}
-                <tr><td colspan="5" class="text-center py-4 text-muted">No hay movimientos registrados.</td></tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
+
+        <div class="erp-card border-start border-danger border-4">
+            <div class="erp-card-header">
+                <span class="erp-card-title text-danger"><i class="bi bi-bell me-2"></i>Alertas de Stock Bajo</span>
+            </div>
+            <div class="erp-card-body pt-0">
+                <ul class="list-unstyled mb-0 mt-3">
+                    {% for item in materias_primas_alerta %}
+                    <li class="mb-3 d-flex justify-content-between align-items-center">
+                        <span class="small" style="font-weight:600;">{{ item.nombre }}</span>
+                        <span class="badge bg-danger" style="font-size:10px;">{{ item.stock_actual }} / {{ item.stock_minimo }}</span>
+                    </li>
+                    {% empty %}
+                    <div class="text-center py-2">
+                        <i class="bi bi-check-circle text-success h4"></i>
+                        <p class="text-muted small mb-0">Niveles óptimos.</p>
+                    </div>
+                    {% endfor %}
+                </ul>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
 </div>
 {% endblock %}

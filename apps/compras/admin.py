@@ -1,24 +1,24 @@
-# apps/compras/admin.py
 from django.contrib import admin
-from .models import (
-    CategoriaProveedor, Proveedor,
-    OrdenCompra,
-)
+from .models import ProductoCompra, OrdenCompra, FacturaCompra, DetalleFacturaCompra
 
-@admin.register(CategoriaProveedor)
-class CategoriaProveedorAdmin(admin.ModelAdmin):
-    list_display  = ["nombre"]
-    search_fields = ["nombre"]
-
-@admin.register(Proveedor)
-class ProveedorAdmin(admin.ModelAdmin):
-    list_display   = ["ruc", "razon_social", "categoria", "telefono", "estado", "creado_en"]
-    list_filter    = ["estado", "tipo", "categoria"]
-    search_fields  = ["ruc", "razon_social", "nombre_comercial"]
-    readonly_fields= ["creado_en"]
+@admin.register(ProductoCompra)
+class ProductoCompraAdmin(admin.ModelAdmin):
+    list_display = ["codigo", "nombre", "precio_referencia"]
+    search_fields = ["codigo", "nombre"]
 
 @admin.register(OrdenCompra)
 class OrdenCompraAdmin(admin.ModelAdmin):
-    list_display    = ["id", "proveedor", "fecha_emision", "estado", "total"]
-    list_filter     = ["estado"]
-    search_fields   = ["proveedor__razon_social"]
+    list_display = ["numero", "proveedor", "fecha_emision", "estado", "total"]
+    list_filter = ["estado"]
+    search_fields = ["numero", "proveedor__razon_social"]
+
+class DetalleFacturaCompraInline(admin.TabularInline):
+    model = DetalleFacturaCompra
+    extra = 1
+
+@admin.register(FacturaCompra)
+class FacturaCompraAdmin(admin.ModelAdmin):
+    list_display = ["numero_factura", "proveedor", "orden_compra", "fecha_emision", "estado", "total"]
+    list_filter = ["estado"]
+    search_fields = ["numero_factura", "numero_control", "proveedor__razon_social"]
+    inlines = [DetalleFacturaCompraInline]

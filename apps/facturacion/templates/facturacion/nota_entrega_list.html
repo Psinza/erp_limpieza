@@ -1,0 +1,77 @@
+{% extends "core/base.html" %}
+{% block title %}{{ titulo }} | ERP{% endblock %}
+{% block page_title %}{{ titulo }}{% endblock %}
+{% block breadcrumb %}Facturación / Notas de Entrega{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-0">Notas de Entrega y Guías</h2>
+        <p class="text-muted">Documentos de traslado y recepción de mercancía (Sin valor fiscal).</p>
+    </div>
+    <a href="{% url 'ventas:pedido_list' %}" class="btn-erp btn-erp-primary">
+        <i class="bi bi-plus-circle me-1"></i> Despachar Pedido
+    </a>
+</div>
+
+<div class="erp-card shadow-sm overflow-hidden">
+    <div class="erp-card-body p-0">
+        <div class="table-responsive">
+            <table class="table erp-table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-4">Nro. Guía / Control</th>
+                        <th>Cliente / Pedido</th>
+                        <th>Transportista</th>
+                        <th>Fecha Despacho</th>
+                        <th>Destino</th>
+                        <th class="text-center">Estado</th>
+                        <th class="text-end pe-4">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for n in notas %}
+                    <tr>
+                        <td class="ps-4">
+                            <div class="fw-bold text-primary">{{ n.numero_guia }}</div>
+                            <small class="text-muted">Ctrl: {{ n.numero_control|default:"-" }}</small>
+                        </td>
+                        <td>
+                            <div class="fw-bold text-dark">{{ n.pedido.cliente.razon_social }}</div>
+                            <small class="text-muted">PED: {{ n.pedido.numero }}</small>
+                        </td>
+                        <td>
+                            <div class="small">{{ n.transportista|default:"Propio" }}</div>
+                            <small class="text-muted">{{ n.placa_vehiculo }}</small>
+                        </td>
+                        <td>{{ n.fecha_despacho|date:"d/m/Y" }}</td>
+                        <td><small>{{ n.destino|truncatechars:30 }}</small></td>
+                        <td class="text-center">
+                            <span class="badge {% if n.estado == 'entregado' %}bg-success{% elif n.estado == 'despachado' %}bg-primary{% else %}bg-warning text-dark{% endif %} px-3">
+                                {{ n.get_estado_display }}
+                            </span>
+                        </td>
+                        <td class="text-end pe-4">
+                            <div class="btn-group">
+                                <a href="{% url 'ventas:despacho_detail' n.pk %}" class="btn btn-sm btn-outline-primary" title="Ver Detalle">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="#" class="btn btn-sm btn-outline-secondary" title="Imprimir Guía">
+                                    <i class="bi bi-printer"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5 text-muted">
+                            No hay notas de entrega registradas.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

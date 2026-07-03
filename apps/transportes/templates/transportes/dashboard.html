@@ -1,0 +1,125 @@
+{% extends 'core/base.html' %}
+{% block title %}Transportes | ERP{% endblock %}
+{% block page_title %}Gestión de Flota y Logística{% endblock %}
+{% block breadcrumb %}Módulos / Transportes{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background:#e8f0fe;color:#1a73e8;">
+                <i class="bi bi-truck"></i>
+            </div>
+            <div>
+                <div class="stat-value">{{ stats.total_vehiculos }}</div>
+                <div class="stat-label">Total Vehículos</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background:#fce8e6;color:#d93025;">
+                <i class="bi bi-tools"></i>
+            </div>
+            <div>
+                <div class="stat-value">{{ stats.vehiculos_mantenimiento }}</div>
+                <div class="stat-label">En Mantenimiento</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background:#e6f4ea;color:#1e8e3e;">
+                <i class="bi bi-person-badge"></i>
+            </div>
+            <div>
+                <div class="stat-value">{{ stats.conductores_activos }}</div>
+                <div class="stat-label">Conductores Activos</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background:#fef7e0;color:#f9a825;">
+                <i class="bi bi-geo-alt-fill"></i>
+            </div>
+            <div>
+                <div class="stat-value">{{ stats.despachos_en_ruta }}</div>
+                <div class="stat-label">Despachos en Ruta</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-8">
+        <div class="erp-card shadow-sm border-0">
+            <div class="erp-card-header bg-white border-bottom d-flex justify-content-between align-items-center">
+                <span class="erp-card-title text-primary"><i class="bi bi-list-task me-2"></i>Últimos Despachos</span>
+                <a href="{% url 'transportes:despacho_list' %}" class="btn-erp btn-erp-outline btn-sm">Ver todos</a>
+            </div>
+            <div class="erp-card-body p-0">
+                <div class="table-responsive">
+                    <table class="table erp-table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Nro.</th>
+                                <th>Vehículo</th>
+                                <th>Conductor</th>
+                                <th>Fecha Salida</th>
+                                <th>Estado</th>
+                                <th class="text-center">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for d in ultimos_despachos %}
+                            <tr>
+                                <td><strong>#{{ d.numero }}</strong></td>
+                                <td>{{ d.vehiculo.placa }}</td>
+                                <td>{{ d.conductor.nombre_completo }}</td>
+                                <td>{{ d.fecha_salida|date:"d/m/Y H:i" }}</td>
+                                <td>
+                                    <span class="badge {% if d.estado == 'completado' %}bg-success{% elif d.estado == 'en_ruta' %}bg-warning text-dark{% else %}bg-secondary{% endif %} px-3">
+                                        {{ d.get_estado_display }}
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <a href="{% url 'transportes:despacho_detail' d.pk %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="6" class="text-center py-5 text-muted">No hay despachos registrados.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="erp-card shadow-sm border-0">
+            <div class="erp-card-header bg-white border-bottom">
+                <span class="erp-card-title text-dark"><i class="bi bi-speedometer2 me-2"></i>Acceso Rápido</span>
+            </div>
+            <div class="erp-card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'transportes:despacho_create' %}" class="btn-erp btn-erp-primary">
+                        <i class="bi bi-plus-circle me-2"></i> Nuevo Despacho
+                    </a>
+                    <a href="{% url 'transportes:mantenimiento_create' %}" class="btn-erp btn-erp-outline text-danger">
+                        <i class="bi bi-tools me-2"></i> Registrar Mantenimiento
+                    </a>
+                    <a href="{% url 'transportes:vehiculo_create' %}" class="btn-erp btn-erp-outline">
+                        <i class="bi bi-truck me-2"></i> Agregar Vehículo
+                    </a>
+                    <a href="{% url 'transportes:conductor_create' %}" class="btn-erp btn-erp-outline">
+                        <i class="bi bi-person-plus me-2"></i> Nuevo Conductor
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

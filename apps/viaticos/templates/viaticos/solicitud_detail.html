@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block title %}Detalle de Viático #{{ solicitud.id }}{% endblock %}
+{% block content %}
+<div class="container py-4">
+    <div class="row g-4">
+        <!-- Info de la Solicitud -->
+        <div class="col-md-5">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold">Solicitud #{{ solicitud.id }}</h5>
+                    <span class="badge {% if solicitud.estado == 'aprobado' %}bg-success{% elif solicitud.estado == 'pendiente' %}bg-warning text-dark{% else %}bg-danger{% endif %} text-uppercase">
+                        {{ solicitud.estado }}
+                    </span>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <div class="bg-light p-3 rounded-circle d-inline-block mb-2">
+                            <i class="bi bi-person-circle fs-1 text-primary"></i>
+                        </div>
+                        <h5 class="fw-bold mb-0">{{ solicitud.empleado.nombres }} {{ solicitud.empleado.apellidos }}</h5>
+                        <p class="text-muted small">C.I.: {{ solicitud.empleado.cedula }}</p>
+                    </div>
+
+                    <dl class="row small mb-0">
+                        <dt class="col-sm-5">Destino:</dt>
+                        <dd class="col-sm-7 fw-bold"><i class="bi bi-geo-alt-fill text-danger"></i> {{ solicitud.destino }}</dd>
+                        
+                        <dt class="col-sm-5">Fecha Viaje:</dt>
+                        <dd class="col-sm-7">{{ solicitud.fecha_viaje|date:"d/m/Y" }}</dd>
+                        
+                        <dt class="col-sm-5">Monto Estimado:</dt>
+                        <dd class="col-sm-7 text-success fw-bold">${{ solicitud.monto_estimado }}</dd>
+                    </dl>
+                    <hr>
+                    <div class="mb-3">
+                        <label class="fw-bold small text-muted text-uppercase d-block mb-1">Motivo / Justificación:</label>
+                        <p class="small bg-light p-2 rounded">{{ solicitud.motivo }}</p>
+                    </div>
+
+                    {% if solicitud.estado == 'pendiente' %}
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'viaticos:aprobar' solicitud.pk %}" class="btn btn-success">
+                            <i class="bi bi-check-lg"></i> Aprobar Solicitud
+                        </a>
+                        <a href="{% url 'viaticos:rechazar' solicitud.pk %}" class="btn btn-outline-danger">
+                            <i class="bi bi-x-lg"></i> Rechazar
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Relación de Gastos (Rendición) -->
+        <div class="col-md-7">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold"><i class="bi bi-receipt text-info me-2"></i> Rendición de Gastos</h5>
+                    {% if solicitud.estado == 'aprobado' %}
+                    <a href="{% url 'viaticos:gasto_create' solicitud.id %}" class="btn btn-sm btn-primary">
+                        <i class="bi bi-plus-lg"></i> Cargar Gasto
+                    </a>
+                    {% endif %}
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light small text-uppercase text-muted">
+                                <tr>
+                                    <th class="ps-3">Fecha</th>
+                                    <th>Concepto</th>
+                                    <th>Tipo</th>
+                                    <th class="text-end pe-3">Monto</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for g in gastos %}
+                                <tr>
+                                    <td class="ps-3 small">{{ g.fecha|date:"d/m/Y" }}</td>
+                                    <td>
+                                        <div class="fw-bold">{{ g.descripcion }}</div>
+                                        {% if g.comprobante %}
+                                        <small><a href="{{ g.comprobante.url }}" target="_blank"><i class="bi bi-file-earmark-image"></i> Ver Adjunto</a></small>
+                                        {% endif %}
+                                    </td>
+                                    <td><span class="badge bg-light text-dark border">{{ g.get_tipo_display }}</span></td>
+                                    <td class="text-end pe-3 fw-bold">${{ g.monto }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-5 text-muted">No hay gastos registrados aún.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot class="bg-light border-top">
+                                <tr>
+                                    <th colspan="3" class="ps-3 text-end">TOTAL RENDIDO:</th>
+                                    <th class="text-end pe-3 fw-bold text-primary fs-5">${{ total_gastos }}</th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer bg-white py-3">
+                    <div class="row align-items-center">
+                        <div class="col-6">
+                            <small class="text-muted">Balance vs Estimado:</small>
+                        </div>
+                        <div class="col-6 text-end">
+                            {% if total_gastos > solicitud.monto_estimado %}
+                            <span class="text-danger fw-bold">Excedido en ${{ total_gastos|add:solicitud.monto_estimado|floatformat:2 }}</span>
+                            {% else %}
+                            <span class="text-success fw-bold">Saldo favor empresa: ${{ solicitud.monto_estimado|add:"-total_gastos"|floatformat:2 }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

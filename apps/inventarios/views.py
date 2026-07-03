@@ -1,6 +1,9 @@
+from django.db.models import DecimalField, ExpressionWrapper, Q, Sum, Value
+from django.db.models.functions import Coalesce
 from django.views.generic import ListView
-from django.db.models import Sum, Q
+
 from apps.compras.models import ProductoCompra
+
 
 class InventarioGlobalListView(ListView):
     model = ProductoCompra
@@ -8,8 +11,20 @@ class InventarioGlobalListView(ListView):
     context_object_name = 'productos'
 
     def get_queryset(self):
-        # Esta consulta es "Oro puro": calcula el stock real al vuelo
-        return ProductoCompra.objects.filter(activo=True).annotate(
-            total_entradas=Sum('movimientos__cantidad', filter=Q(movimientos__tipo='ENTRADA')),
-            total_salidas=Sum('movimientos__cantidad', filter=Q(movimientos__tipo='SALIDA'))
+        return ProductoCompra.objects.annotate(
+            total_entradas=Coalesce(
+                Sum('movimientos__cantidad', filter=Q(movimientos__tipo='ENTRADA')),
+                Value(0),
+                output_field=DecimalField(max_digits=12, decimal_places=2),
+            ),
+            total_salidas=Coalesce(
+                Sum('movimientos__cantidad', filter=Q(movimientos__tipo='SALIDA')),
+                Value(0),
+                output_field=DecimalField(max_digits=12, decimal_places=2),
+            ),
+        ).annotate(
+            stock_actual=ExpressionWrapper(
+                Coalesce('total_entradas', Value(0)) - Coalesce('total_salidas', Value(0)),
+                output_field=DecimalField(max_digits=12, decimal_places=2),
+            )
         ).order_by('nombre')

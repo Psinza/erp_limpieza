@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard de Vendedores{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="h3 mb-4 text-gray-800">Dashboard de Vendedores</h1>
+
+    <div class="row">
+        <!-- Total Vendedores Activos -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Vendedores Activos</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_vendedores }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-person-badge fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Aquí se pueden añadir más tarjetas de métricas -->
+    </div>
+
+    <!-- Últimas Comisiones (Ejemplo) -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Últimas Comisiones Registradas</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Vendedor</th>
+                            <th>Monto Venta</th>
+                            <th>Monto Comisión</th>
+                            <th>Pagada</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for comision in ultimas_comisiones %}
+                        <tr>
+                            <td>{{ comision.fecha|date:"d/m/Y" }}</td>
+                            <td>{{ comision.vendedor.usuario.nombre_completo }}</td>
+                            <td>${{ comision.monto_venta|floatformat:2 }}</td>
+                            <td>${{ comision.monto_comision|floatformat:2 }}</td>
+                            <td>
+                                {% if comision.pagada %}
+                                <span class="badge bg-success">Sí</span>
+                                {% else %}
+                                <span class="badge bg-warning">No</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5">No hay comisiones recientes.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

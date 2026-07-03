@@ -1,0 +1,73 @@
+{% extends "core/base.html" %}
+{% block title %}{{ titulo }} | ERP{% endblock %}
+{% block page_title %}{{ titulo }}{% endblock %}
+{% block breadcrumb %}Facturación / Presupuestos{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-0">Gestión de Presupuestos</h2>
+        <p class="text-muted">Consulte y convierta cotizaciones en documentos fiscales.</p>
+    </div>
+    <a href="{% url 'ventas:cotizacion_create' %}" class="btn-erp btn-erp-primary">
+        <i class="bi bi-plus-circle me-1"></i> Nuevo Presupuesto
+    </a>
+</div>
+
+<div class="erp-card shadow-sm overflow-hidden">
+    <div class="erp-card-body p-0">
+        <div class="table-responsive">
+            <table class="table erp-table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-4">Número</th>
+                        <th>Cliente</th>
+                        <th>Fecha Emisión</th>
+                        <th>Vencimiento</th>
+                        <th class="text-end">Monto Total</th>
+                        <th class="text-center">Estado</th>
+                        <th class="text-end pe-4">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in presupuestos %}
+                    <tr>
+                        <td class="ps-4"><strong>{{ p.numero }}</strong></td>
+                        <td>
+                            <div class="fw-bold text-dark">{{ p.cliente.razon_social }}</div>
+                            <small class="text-muted">{{ p.cliente.rif }}</small>
+                        </td>
+                        <td>{{ p.fecha_emision|date:"d/m/Y" }}</td>
+                        <td>{{ p.fecha_vencimiento|date:"d/m/Y" }}</td>
+                        <td class="text-end fw-bold">Bs. {{ p.total|floatformat:2 }}</td>
+                        <td class="text-center">
+                            <span class="badge {% if p.estado == 'aceptada' %}bg-success{% elif p.estado == 'vencida' %}bg-danger{% else %}bg-info text-dark{% endif %} px-3">
+                                {{ p.get_estado_display }}
+                            </span>
+                        </td>
+                        <td class="text-end pe-4">
+                            <div class="btn-group">
+                                <a href="{% url 'ventas:cotizacion_detail' p.pk %}" class="btn btn-sm btn-outline-primary" title="Ver Detalle">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                {% if p.estado != 'convertida' %}
+                                <a href="#" class="btn btn-sm btn-outline-success" title="Facturar">
+                                    <i class="bi bi-receipt"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5 text-muted">
+                            No hay presupuestos registrados.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

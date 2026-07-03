@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}{{ titulo }}{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="mb-4">
+        <a href="{% url 'logistica:movimiento_list' %}" class="btn btn-sm btn-erp-outline mb-3">
+            <i class="bi bi-arrow-left"></i> Volver al listado
+        </a>
+        <h2 class="topbar-title fs-3 mb-0">{{ titulo }}</h2>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-xl-8">
+            <form method="post" class="erp-card shadow-sm">
+                {% csrf_token %}
+                <div class="erp-card-header">
+                    <h5 class="erp-card-title mb-0">Detalles del Movimiento</h5>
+                </div>
+                <div class="erp-card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Tipo de Movimiento</label>
+                            {{ form.tipo }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Motivo</label>
+                            {{ form.motivo }}
+                        </div>
+
+                        <div class="col-md-12">
+                            <label class="form-label">Tipo de Item</label>
+                            {{ form.item_tipo }}
+                        </div>
+
+                        <div id="div_materia_prima" class="col-md-12">
+                            <label class="form-label">Materia Prima</label>
+                            {{ form.materia_prima }}
+                        </div>
+                        <div id="div_producto_pt" class="col-md-12" style="display:none;">
+                            <label class="form-label">Producto Terminado</label>
+                            {{ form.producto_pt }}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Almacén Origen (Salida)</label>
+                            {{ form.almacen_origen }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Almacén Destino (Entrada)</label>
+                            {{ form.almacen_destino }}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Cantidad</label>
+                            {{ form.cantidad }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Referencia / Documento</label>
+                            {{ form.referencia }}
+                        </div>
+                    </div>
+                </div>
+                <div class="erp-card-footer bg-light p-3 border-top d-flex justify-content-end gap-2">
+                    <a href="{% url 'logistica:movimiento_list' %}" class="btn btn-erp btn-erp-outline">Cancelar</a>
+                    <button type="submit" class="btn btn-erp btn-erp-primary">
+                        <i class="bi bi-save"></i> Registrar Movimiento
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const itemTipo = document.getElementById('{{ form.item_tipo.id_for_label }}');
+    const divMP = document.getElementById('div_materia_prima');
+    const divPT = document.getElementById('div_producto_pt');
+
+    function toggleFields() {
+        if (itemTipo.value === 'mp') {
+            divMP.style.display = 'block';
+            divPT.style.display = 'none';
+        } else {
+            divMP.style.display = 'none';
+            divPT.style.display = 'block';
+        }
+    }
+
+    itemTipo.addEventListener('change', toggleFields);
+    toggleFields();
+});
+</script>
+{% endblock %}

@@ -1,46 +1,49 @@
 from django import forms
-from .models import Cliente, Factura, ItemFactura, NotaEntrega, Presupuesto, ItemPresupuesto
+from .models import Empresa, FacturaVenta, DetalleFacturaVenta
 
-class ClienteForm(forms.ModelForm):
+class EmpresaForm(forms.ModelForm):
     class Meta:
-        model = Cliente
-        fields = ['nombre', 'ruc', 'email', 'telefono', 'direccion', 'activo']
-
-class FacturaForm(forms.ModelForm):
-    class Meta:
-        model = Factura
-        fields = ['numero', 'cliente', 'fecha_emision', 'fecha_vencimiento', 'notas']
+        model = Empresa
+        fields = [
+            'nombre', 'rif', 'direccion', 'telefono', 
+            'email', 'logo', 'moneda_simbolo', 
+            'contribuyente_especial', 'iva_porcentaje'
+        ]
         widgets = {
-            'fecha_emision': forms.DateInput(attrs={'type': 'date'}),
-            'fecha_vencimiento': forms.DateInput(attrs={'type': 'date'}),
-            'notas': forms.Textarea(attrs={'rows': 3}),
+            'nombre': forms.TextInput(attrs={'class': 'form-control'}),
+            'rif': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: J-12345678-0'}),
+            'direccion': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'telefono': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
         }
 
-class ItemFacturaForm(forms.ModelForm):
+class FacturaVentaForm(forms.ModelForm):
     class Meta:
-        model = ItemFactura
-        fields = ['descripcion', 'cantidad', 'precio_unitario']
-
-class NotaEntregaForm(forms.ModelForm):
-    class Meta:
-        model = NotaEntrega
-        fields = ['numero', 'cliente', 'fecha', 'notas']
+        model = FacturaVenta
+        fields = [
+            'cliente', 'pedido', 'tipo_documento', 'numero_factura', 
+            'numero_control', 'fecha_emision', 'fecha_vencimiento',
+            'monto_igtf'
+        ]
         widgets = {
-            'fecha': forms.DateInput(attrs={'type': 'date'}),
-            'notas': forms.Textarea(attrs={'rows': 3}),
+            'cliente': forms.Select(attrs={'class': 'form-select select2'}),
+            'pedido': forms.Select(attrs={'class': 'form-select'}),
+            'tipo_documento': forms.Select(attrs={'class': 'form-select'}),
+            'numero_factura': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: 00000001'}),
+            'numero_control': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: 00-000001'}),
+            'fecha_emision': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'fecha_vencimiento': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'monto_igtf': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
         }
 
-class PresupuestoForm(forms.ModelForm):
+class DetalleFacturaVentaForm(forms.ModelForm):
     class Meta:
-        model = Presupuesto
-        fields = ['numero', 'cliente', 'fecha_emision', 'fecha_expiracion', 'notas']
+        model = DetalleFacturaVenta
+        fields = ['producto', 'descripcion', 'cantidad', 'precio_unitario', 'tipo_impuesto']
         widgets = {
-            'fecha_emision': forms.DateInput(attrs={'type': 'date'}),
-            'fecha_expiracion': forms.DateInput(attrs={'type': 'date'}),
-            'notas': forms.Textarea(attrs={'rows': 3}),
+            'producto': forms.Select(attrs={'class': 'form-select'}),
+            'descripcion': forms.TextInput(attrs={'class': 'form-control'}),
+            'cantidad': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'precio_unitario': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'tipo_impuesto': forms.Select(attrs={'class': 'form-select'}),
         }
-
-class ItemPresupuestoForm(forms.ModelForm):
-    class Meta:
-        model = ItemPresupuesto
-        fields = ['descripcion', 'cantidad', 'precio_unitario']

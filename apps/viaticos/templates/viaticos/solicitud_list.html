@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Listado de Viáticos{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-0">Histórico de Solicitudes</h2>
+            <p class="text-muted mb-0">Listado general de viáticos y rendiciones.</p>
+        </div>
+        <a href="{% url 'viaticos:solicitud_create' %}" class="btn btn-warning shadow-sm fw-bold">
+            <i class="bi bi-plus-circle me-1"></i> Nueva Solicitud
+        </a>
+    </div>
+
+    <div class="card border-0 shadow-sm overflow-hidden">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-dark text-white">
+                        <tr class="small text-uppercase">
+                            <th class="ps-4">ID / Fecha</th>
+                            <th>Empleado Solicitante</th>
+                            <th>Destino</th>
+                            <th>Monto Presupuestado</th>
+                            <th class="text-center">Estatus</th>
+                            <th class="text-end pe-4">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in solicitudes %}
+                        <tr>
+                            <td class="ps-4">
+                                <div class="fw-bold">#{{ s.id }}</div>
+                                <small class="text-muted">{{ s.fecha_solicitud|date:"d/m/Y" }}</small>
+                            </td>
+                            <td>
+                                <div class="fw-bold text-dark">{{ s.empleado.nombres }} {{ s.empleado.apellidos }}</div>
+                                <small class="text-muted">{{ s.empleado.cargo|default:"S/C" }}</small>
+                            </td>
+                            <td><i class="bi bi-geo-alt-fill text-danger small"></i> {{ s.destino }}</td>
+                            <td class="fw-bold text-success">${{ s.monto_estimado }}</td>
+                            <td class="text-center">
+                                {% if s.estado == 'pendiente' %}
+                                <span class="badge bg-warning-subtle text-warning border border-warning px-3">PENDIENTE</span>
+                                {% elif s.estado == 'aprobado' %}
+                                <span class="badge bg-success-subtle text-success border border-success px-3">APROBADO</span>
+                                {% elif s.estado == 'rendido' %}
+                                <span class="badge bg-info-subtle text-info border border-info px-3">RENDIDO</span>
+                                {% else %}
+                                <span class="badge bg-danger-subtle text-danger border border-danger px-3">RECHAZADO</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end pe-4">
+                                <a href="{% url 'viaticos:solicitud_detail' s.pk %}" class="btn btn-sm btn-outline-primary shadow-sm">
+                                    <i class="bi bi-eye"></i> Gestionar
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-muted">No se encontraron solicitudes.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% if is_paginated %}
+        <div class="card-footer bg-white border-top-0">
+            {% include "includes/pagination.html" %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

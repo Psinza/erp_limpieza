@@ -5,12 +5,12 @@
     <div class="row mb-4">
         <div class="col-md-8">
             <h2 class="fw-bold"><i class="fas fa-boxes me-2"></i>Control de Inventario Global</h2>
-            <p class="text-muted">Estado actual de existencias basadas en recepciones de compra y salidas.</p>
+            <p class="text-muted">Existencias trazables por recepciones, salidas, documentos fiscales y guias de despacho.</p>
         </div>
         <div class="col-md-4 text-end">
             <div class="input-group">
                 <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
-                <input type="text" id="searchInput" class="form-control border-start-0" placeholder="Buscar producto o código...">
+                <input type="text" id="searchInput" class="form-control border-start-0" placeholder="Buscar producto o codigo...">
             </div>
         </div>
     </div>
@@ -27,7 +27,7 @@
         <div class="col-md-3">
             <div class="card border-0 shadow-sm bg-danger text-white">
                 <div class="card-body">
-                    <h6>Stock Crítico (Bajo Mínimo)</h6>
+                    <h6>Stock Critico</h6>
                     <h3 id="lowStockCount">0</h3>
                 </div>
             </div>
@@ -40,26 +40,27 @@
                 <table class="table table-hover align-middle mb-0" id="inventoryTable">
                     <thead class="bg-light">
                         <tr>
-                            <th class="ps-4">Código</th>
+                            <th class="ps-4">Codigo</th>
                             <th>Producto</th>
-                            <th>Categoría</th>
+                            <th>Categoria</th>
                             <th class="text-center">Stock Actual</th>
-                            <th class="text-center">Mínimo</th>
+                            <th class="text-center">Minimo</th>
+                            <th class="text-center">Entradas</th>
+                            <th class="text-center">Salidas</th>
                             <th>Estado</th>
-                            <th class="text-center">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for producto in productos %}
-                        {% with stock_real=producto.total_entradas|default:0|add:producto.total_salidas|default:0 %}
+                        {% with stock_real=producto.stock_actual|default:0 %}
                         <tr class="product-row">
                             <td class="ps-4 fw-bold text-primary">{{ producto.codigo }}</td>
                             <td>{{ producto.nombre }}</td>
-                            <td><span class="badge bg-outline-secondary text-dark border">{{ producto.categoria.nombre }}</span></td>
-                            <td class="text-center fw-bold fs-5">
-                                {{ stock_real }} <small class="text-muted">{{ producto.unidad_medida }}</small>
-                            </td>
-                            <td class="text-center text-muted">{{ producto.stock_minimo }}</td>
+                            <td><span class="badge bg-outline-secondary text-dark border">{{ producto.categoria.nombre|default:"Sin categoria" }}</span></td>
+                            <td class="text-center fw-bold fs-5">{{ stock_real }}</td>
+                            <td class="text-center text-muted">{{ producto.stock_minimo|default:"0" }}</td>
+                            <td class="text-center text-success">{{ producto.total_entradas|default:"0" }}</td>
+                            <td class="text-center text-danger">{{ producto.total_salidas|default:"0" }}</td>
                             <td>
                                 {% if stock_real <= producto.stock_minimo %}
                                     <span class="badge bg-danger p-2 low-stock-alert">
@@ -67,20 +68,15 @@
                                     </span>
                                 {% else %}
                                     <span class="badge bg-success p-2">
-                                        <i class="fas fa-check-circle me-1"></i> Óptimo
+                                        <i class="fas fa-check-circle me-1"></i> Optimo
                                     </span>
                                 {% endif %}
-                            </td>
-                            <td class="text-center">
-                                <a href="#" class="btn btn-sm btn-light border" title="Ver Historial">
-                                    <i class="fas fa-history text-muted"></i>
-                                </a>
                             </td>
                         </tr>
                         {% endwith %}
                         {% empty %}
                         <tr>
-                            <td colspan="7" class="text-center py-5 text-muted">
+                            <td colspan="8" class="text-center py-5 text-muted">
                                 <i class="fas fa-box-open fa-3x mb-3 d-block"></i>
                                 No hay productos registrados en el inventario.
                             </td>
@@ -103,7 +99,6 @@
         });
     });
 
-    // Contador dinámico de alertas
     document.addEventListener('DOMContentLoaded', function() {
         let lowStock = document.querySelectorAll('.low-stock-alert').length;
         document.getElementById('lowStockCount').innerText = lowStock;

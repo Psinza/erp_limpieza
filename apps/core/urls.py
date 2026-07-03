@@ -4,6 +4,6 @@ from . import views
 app_name = 'core'
 
 urlpatterns = [
-    # Dashboard
-    path('', views.dashboard, name='dashboard'),
+    path('', views.dashboard_principal, name='dashboard'),
+    path('mantenimiento/', views.mantenimiento_empresa, name='mantenimiento'),
 ]

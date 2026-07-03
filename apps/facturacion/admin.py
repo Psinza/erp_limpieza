@@ -1,36 +1,25 @@
 from django.contrib import admin
-from .models import Cliente, Factura, ItemFactura, NotaEntrega, Presupuesto, ItemPresupuesto
 
-@admin.register(Cliente)
-class ClienteAdmin(admin.ModelAdmin):
-    list_display = ['nombre', 'ruc', 'email', 'telefono', 'activo']
-    list_filter = ['activo']
-    search_fields = ['nombre', 'ruc', 'email']
+from .models import Proveedor, RetencionISLR, RetencionIVA
 
-@admin.register(Factura)
-class FacturaAdmin(admin.ModelAdmin):
-    list_display = ['numero', 'cliente', 'fecha_emision', 'total', 'estado']
-    list_filter = ['estado', 'fecha_emision']
-    search_fields = ['numero', 'cliente__nombre']
 
-@admin.register(ItemFactura)
-class ItemFacturaAdmin(admin.ModelAdmin):
-    list_display = ['factura', 'descripcion', 'cantidad', 'precio_unitario', 'subtotal']
-    search_fields = ['descripcion', 'factura__numero']
+@admin.register(Proveedor)
+class ProveedorAdmin(admin.ModelAdmin):
+    list_display = ['rif', 'razon_social']
+    search_fields = ['rif', 'razon_social']
 
-@admin.register(NotaEntrega)
-class NotaEntregaAdmin(admin.ModelAdmin):
-    list_display = ['numero', 'cliente', 'fecha']
-    list_filter = ['fecha']
-    search_fields = ['numero', 'cliente__nombre']
 
-@admin.register(Presupuesto)
-class PresupuestoAdmin(admin.ModelAdmin):
-    list_display = ['numero', 'cliente', 'fecha_emision', 'total', 'estado']
-    list_filter = ['estado', 'fecha_emision']
-    search_fields = ['numero', 'cliente__nombre']
+@admin.register(RetencionIVA)
+class RetencionIVAAdmin(admin.ModelAdmin):
+    list_display = ['nro_comprobante', 'proveedor', 'nro_factura', 'nro_control', 'monto_iva', 'monto_retenido', 'periodo_fiscal']
+    list_filter = ['anulada', 'periodo_fiscal', 'fecha_emision']
+    search_fields = ['nro_comprobante', 'proveedor__rif', 'proveedor__razon_social', 'nro_factura', 'nro_control']
+    readonly_fields = ['monto_retenido']
 
-@admin.register(ItemPresupuesto)
-class ItemPresupuestoAdmin(admin.ModelAdmin):
-    list_display = ['presupuesto', 'descripcion', 'cantidad', 'precio_unitario', 'subtotal']
-    search_fields = ['descripcion', 'presupuesto__numero']
+
+@admin.register(RetencionISLR)
+class RetencionISLRAdmin(admin.ModelAdmin):
+    list_display = ['nro_comprobante', 'proveedor', 'nro_factura', 'codigo_concepto', 'monto_operacion', 'monto_retenido', 'periodo_fiscal']
+    list_filter = ['periodo_fiscal', 'fecha_emision']
+    search_fields = ['nro_comprobante', 'proveedor__rif', 'proveedor__razon_social', 'nro_factura']
+    readonly_fields = ['monto_retenido']

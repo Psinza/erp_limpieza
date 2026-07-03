@@ -1,24 +1,24 @@
 {% extends "core/base.html" %}
 
-{% block page_title %}{{ object.nombre }}{% endblock %}
-{% block breadcrumb %}Comercialización / Listas / {{ object.nombre }}{% endblock %}
+{% block page_title %}{{ lista.nombre }}{% endblock %}
+{% block breadcrumb %}Comercialización / Listas / {{ lista.nombre }}{% endblock %}
 
 {% block content %}
 <div class="d-flex align-items-center justify-content-between mb-4">
   <div class="d-flex align-items-center gap-3">
-    <a href="{% url 'comercializacion:listas_precio_list' %}" class="btn-erp btn-erp-outline">
+    <a href="{% url 'comercializacion:lista_precio_list' %}" class="btn-erp btn-erp-outline">
       <i class="bi bi-arrow-left"></i>
     </a>
     <div>
-      <h1 style="font-family:var(--font-head);font-size:20px;font-weight:700;margin:0;">{{ object.nombre }}</h1>
+      <h1 style="font-family:var(--font-head);font-size:20px;font-weight:700;margin:0;">{{ lista.nombre }}</h1>
       <p class="text-muted small mb-0">
-        Moneda: {{ object.moneda }} &nbsp;·&nbsp;
-        Factor: ×{{ object.factor_ajuste }} &nbsp;·&nbsp;
-        {% if object.activa %}<span class="text-success">Activa</span>{% else %}<span class="text-danger">Inactiva</span>{% endif %}
+        Moneda: {{ lista.moneda }} &nbsp;·&nbsp;
+        Factor: ×{{ lista.factor_ajuste }} &nbsp;·&nbsp;
+        {% if lista.activa %}<span class="text-success">Activa</span>{% else %}<span class="text-danger">Inactiva</span>{% endif %}
       </p>
     </div>
   </div>
-  <a href="{% url 'comercializacion:lista_imprimir' object.pk %}" target="_blank" class="btn-erp btn-erp-outline">
+  <a href="{% url 'comercializacion:lista_imprimir' lista.pk %}" target="_blank" class="btn-erp btn-erp-outline">
     <i class="bi bi-printer"></i> Imprimir lista
   </a>
 </div>
@@ -37,7 +37,7 @@
           <thead>
             <tr>
               <th>Producto</th>
-              <th class="text-end">Precio ({{ object.moneda }})</th>
+              <th class="text-end">Precio ({{ lista.moneda }})</th>
               <th class="text-end">Dto. máx. (%)</th>
             </tr>
           </thead>
@@ -68,7 +68,7 @@
         <span class="erp-card-title"><i class="bi bi-plus-circle me-2"></i>Agregar producto</span>
       </div>
       <div class="erp-card-body">
-        <form method="post" action="{% url 'comercializacion:lista_agregar_item' object.pk %}">
+        <form method="post" action="{% url 'comercializacion:item_precio_create' lista.pk %}">
           {% csrf_token %}
           <div class="mb-3">
             <label class="form-label small">Producto *</label>

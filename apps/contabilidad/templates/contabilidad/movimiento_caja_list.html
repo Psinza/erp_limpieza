@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}Listado de Movimientos de Caja{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="h3 mb-4 text-gray-800">Movimientos de Caja</h1>
+
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <a href="{% url 'tesoreria:movimiento_caja_create' %}"
+            class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+            <i class="bi bi-plus-circle fa-sm text-white-50"></i> Nuevo Movimiento
+        </a>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Listado de Movimientos</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Tipo</th>
+                            <th>Monto</th>
+                            <th>Concepto</th>
+                            <th>Referencia</th>
+                            <th>Banco</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for movimiento in movimientos %}
+                        <tr>
+                            <td>{{ movimiento.fecha|date:"d/m/Y" }}</td>
+                            <td>
+                                {% if movimiento.tipo == 'ingreso' %}
+                                <span class="badge bg-success">Ingreso</span>
+                                {% else %}
+                                <span class="badge bg-danger">Egreso</span>
+                                {% endif %}
+                            </td>
+                            <td>${{ movimiento.monto|floatformat:2 }}</td>
+                            <td>{{ movimiento.concepto }}</td>
+                            <td>{{ movimiento.referencia|default:"N/A" }}</td>
+                            <td>{{ movimiento.banco.nombre|default:"Caja General" }}</td>
+                            <td>
+                                <a href="{% url 'tesoreria:movimiento_caja_edit' movimiento.pk %}"
+                                    class="btn btn-info btn-sm">Editar</a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7">No hay movimientos de caja registrados.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

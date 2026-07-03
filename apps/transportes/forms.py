@@ -1,5 +1,6 @@
 # apps/transportes/forms.py
 from django import forms
+from django.utils import timezone
 from .models import (
     TipoVehiculo, Vehiculo, Conductor,
     Zona, Ruta, PuntoEntrega,
@@ -33,6 +34,7 @@ class VehiculoForm(forms.ModelForm):
             "combustible", "capacidad_carga", "capacidad_volumen",
             "odometro", "estado",
             "soat_vencimiento", "revision_vencimiento", "seguro_vencimiento",
+            "certificado_registro", "poliza_rcv", "permiso_carga", "permiso_carga_vencimiento",
             "foto", "observaciones",
         ]
         widgets = {
@@ -50,6 +52,10 @@ class VehiculoForm(forms.ModelForm):
             "soat_vencimiento":    forms.DateInput(attrs=DATE),
             "revision_vencimiento":forms.DateInput(attrs=DATE),
             "seguro_vencimiento":  forms.DateInput(attrs=DATE),
+            "certificado_registro": forms.TextInput(attrs=CTR),
+            "poliza_rcv":           forms.TextInput(attrs=CTR),
+            "permiso_carga":        forms.TextInput(attrs=CTR),
+            "permiso_carga_vencimiento": forms.DateInput(attrs=DATE),
             "foto":                forms.ClearableFileInput(attrs=CTR),
             "observaciones":       forms.Textarea(attrs=TXT),
         }
@@ -61,6 +67,7 @@ class ConductorForm(forms.ModelForm):
         fields = [
             "cedula", "nombres", "apellidos", "telefono", "email", "direccion",
             "numero_licencia", "categoria_licencia", "licencia_vencimiento",
+            "certificado_medico_vencimiento", "curso_carga_pesada", "curso_materiales_peligrosos",
             "estado", "vehiculo_asignado", "foto", "observaciones",
         ]
         widgets = {
@@ -73,6 +80,9 @@ class ConductorForm(forms.ModelForm):
             "numero_licencia":     forms.TextInput(attrs=CTR),
             "categoria_licencia":  forms.Select(attrs=SEL),
             "licencia_vencimiento":forms.DateInput(attrs=DATE),
+            "certificado_medico_vencimiento": forms.DateInput(attrs=DATE),
+            "curso_carga_pesada": forms.CheckboxInput(attrs=CHK),
+            "curso_materiales_peligrosos": forms.CheckboxInput(attrs=CHK),
             "estado":              forms.Select(attrs=SEL),
             "vehiculo_asignado":   forms.Select(attrs=SEL),
             "foto":                forms.ClearableFileInput(attrs=CTR),
@@ -95,7 +105,7 @@ class RutaForm(forms.ModelForm):
     class Meta:
         model  = Ruta
         fields = [
-            "codigo", "nombre", "zona", "origen", "destino",
+            "codigo", "nombre", "zona", "origen", "latitud_origen", "longitud_origen", "destino",
             "distancia_km", "tiempo_estimado", "descripcion", "estado",
         ]
         widgets = {
@@ -103,6 +113,8 @@ class RutaForm(forms.ModelForm):
             "nombre":          forms.TextInput(attrs=CTR),
             "zona":            forms.Select(attrs=SEL),
             "origen":          forms.TextInput(attrs=CTR),
+            "latitud_origen":  forms.NumberInput(attrs=NUM),
+            "longitud_origen": forms.NumberInput(attrs=NUM),
             "destino":         forms.TextInput(attrs=CTR),
             "distancia_km":    forms.NumberInput(attrs=NUM),
             "tiempo_estimado": forms.NumberInput(attrs=CTR),
@@ -114,11 +126,13 @@ class RutaForm(forms.ModelForm):
 class PuntoEntregaForm(forms.ModelForm):
     class Meta:
         model  = PuntoEntrega
-        fields = ["orden", "nombre", "direccion", "cliente_ref", "tiempo_estimado", "activo"]
+        fields = ["orden", "nombre", "direccion", "latitud", "longitud", "cliente_ref", "tiempo_estimado", "activo"]
         widgets = {
             "orden":           forms.NumberInput(attrs=CTR),
             "nombre":          forms.TextInput(attrs=CTR),
             "direccion":       forms.Textarea(attrs={**TXT, "rows": 2}),
+            "latitud":         forms.NumberInput(attrs=NUM),
+            "longitud":        forms.NumberInput(attrs=NUM),
             "cliente_ref":     forms.TextInput(attrs=CTR),
             "tiempo_estimado": forms.NumberInput(attrs=CTR),
             "activo":          forms.CheckboxInput(attrs=CHK),
@@ -131,6 +145,8 @@ class DespachoForm(forms.ModelForm):
         fields = [
             "ruta", "vehiculo", "conductor",
             "fecha_salida", "fecha_llegada_estimada",
+            "numero_guia_despacho", "numero_control_guia", "rif_transportista",
+            "descripcion_carga", "peso_carga_kg", "declara_material_peligroso",
             "odometro_salida", "notas",
         ]
         widgets = {
@@ -139,6 +155,12 @@ class DespachoForm(forms.ModelForm):
             "conductor":              forms.Select(attrs=SEL),
             "fecha_salida":           forms.DateTimeInput(attrs=DTTM),
             "fecha_llegada_estimada": forms.DateTimeInput(attrs=DTTM),
+            "numero_guia_despacho":   forms.TextInput(attrs=CTR),
+            "numero_control_guia":    forms.TextInput(attrs=CTR),
+            "rif_transportista":      forms.TextInput(attrs=CTR),
+            "descripcion_carga":      forms.TextInput(attrs=CTR),
+            "peso_carga_kg":          forms.NumberInput(attrs=NUM),
+            "declara_material_peligroso": forms.CheckboxInput(attrs=CHK),
             "odometro_salida":        forms.NumberInput(attrs=NUM),
             "notas":                  forms.Textarea(attrs=TXT),
         }
@@ -149,7 +171,8 @@ class DespachoForm(forms.ModelForm):
             estado="disponible"
         )
         self.fields["conductor"].queryset = Conductor.objects.filter(
-            estado="activo"
+            estado="activo",
+            licencia_vencimiento__gte=timezone.now().date()
         )
         self.fields["ruta"].queryset = Ruta.objects.filter(estado="activa")
 
@@ -187,7 +210,7 @@ class MantenimientoForm(forms.ModelForm):
         model  = Mantenimiento
         fields = [
             "vehiculo", "tipo", "descripcion", "fecha_programada",
-            "taller", "km_en_servicio", "costo", "observaciones",
+            "taller", "km_en_servicio", "km_proximo", "costo", "observaciones",
         ]
         widgets = {
             "vehiculo":         forms.Select(attrs=SEL),
@@ -196,6 +219,7 @@ class MantenimientoForm(forms.ModelForm):
             "fecha_programada": forms.DateInput(attrs=DATE),
             "taller":           forms.TextInput(attrs=CTR),
             "km_en_servicio":   forms.NumberInput(attrs=NUM),
+            "km_proximo":       forms.NumberInput(attrs=NUM),
             "costo":            forms.NumberInput(attrs=NUM),
             "observaciones":    forms.Textarea(attrs=TXT),
         }

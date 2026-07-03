@@ -1,202 +1,189 @@
-import io
-from django.shortcuts import render, get_object_or_404, redirect
-from django.http import HttpResponse
-from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
+
+User = get_user_model()
 from django.contrib import messages
-from django.core.mail import EmailMessage
+from django.core.paginator import Paginator
+from django.db.models import Sum
+from .models import Empresa, RegistroRespaldo
+from .utils import realizar_backup, verificar_y_notificar_espacio
+from django.http import HttpResponse, FileResponse
+import os
 from django.conf import settings
-from django.contrib.auth.models import User
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import letter
-from reportlab.lib import colors
-from reportlab.platypus import Table, TableStyle
-from .models import ConfiguracionEmpresa
-from .forms import ConfiguracionEmpresaForm, UserForm
-from .utils import realizar_backup_postgresql
+
+def is_admin(user):
+    return user.is_superuser or user.groups.filter(name='Administradores').exists()
 
 @login_required
-def mantenimiento_sistema(request):
-    """Panel de control para backups y logs."""
-    if not request.user.is_superuser:
-        messages.error(request, "Acceso denegado.")
-        return redirect('core:dashboard')
+@user_passes_test(is_admin)
+def dashboard(request):
+    total_usuarios = User.objects.count()
+    usuarios_activos = User.objects.filter(is_active=True).count()
+    total_grupos = Group.objects.count()
     
-    if 'backup' in request.POST:
-        path, error = realizar_backup_postgresql()
-        if path:
-            messages.success(request, f"Respaldo creado exitosamente: {path}")
-        else:
-            messages.error(request, f"Error en respaldo: {error}")
-
-    logs = LogAuditoria.objects.all().order_by('-fecha')[:50]
-    return render(request, 'administracion/mantenimiento.html', {'logs': logs})
     context = {
-        'ultimas_facturas': Factura.objects.all().order_by('-fecha')[:5],
-        'presupuestos_pendientes': Presupuesto.objects.filter(estado='pendiente').count(),
+        'titulo': 'Administración ERP',
+        'total_usuarios': total_usuarios,
+        'usuarios_activos': usuarios_activos,
+        'total_grupos': total_grupos,
     }
-    return render(request, 'facturacion/dashboard.html', context)
-
-def _generar_factura_pdf_buffer(factura):
-    """Función auxiliar interna para generar el contenido del PDF en un buffer."""
-    detalles = factura.detalles.all()
-    
-    # Intentar obtener configuración de la base de datos
-    config_obj = ConfiguracionEmpresa.objects.first()
-
-    nombre_empresa = config_obj.nombre if config_obj else settings.ERP_CONFIG.get('EMPRESA_NOMBRE')
-    ruc_empresa = config_obj.ruc if config_obj else settings.ERP_CONFIG.get('EMPRESA_RUC')
-    telf_empresa = config_obj.telefono if config_obj else settings.ERP_CONFIG.get('EMPRESA_TELEFONO')
-    ciudad_empresa = config_obj.ciudad if config_obj else settings.ERP_CONFIG.get('EMPRESA_CIUDAD')
-
-    buffer = io.BytesIO()
-    p = canvas.Canvas(buffer, pagesize=letter)
-    width, height = letter
-
-    # Dibujar Logo si existe
-    if config_obj and config_obj.logo:
-        try:
-            p.drawImage(config_obj.logo.path, 50, height - 80, width=60, height=60, preserveAspectRatio=True)
-        except:
-            pass
-
-    # Cabecera - Datos de la Empresa
-    p.setFont("Helvetica-Bold", 16)
-    p.drawString(120 if config_obj and config_obj.logo else 50, height - 50, nombre_empresa)
-    p.setFont("Helvetica", 10)
-    p.drawString(120 if config_obj and config_obj.logo else 50, height - 65, f"RUC: {ruc_empresa}")
-    p.drawString(120 if config_obj and config_obj.logo else 50, height - 78, f"Telf: {telf_empresa} | {ciudad_empresa}")
-
-    # Información de la Factura
-    p.setFont("Helvetica-Bold", 12)
-    p.drawRightString(width - 50, height - 50, f"FACTURA NRO: {factura.nro_factura}")
-    p.setFont("Helvetica", 10)
-    p.drawRightString(width - 50, height - 65, f"Fecha: {factura.fecha.strftime('%d/%m/%Y')}")
-    p.drawRightString(width - 50, height - 78, f"Vencimiento: {factura.fecha_vencimiento.strftime('%d/%m/%Y')}")
-
-    # Datos del Cliente
-    p.line(50, height - 95, width - 50, height - 95)
-    p.setFont("Helvetica-Bold", 11)
-    p.drawString(50, height - 115, "CLIENTE:")
-    p.setFont("Helvetica", 11)
-    p.drawString(120, height - 115, str(factura.cliente.nombre if hasattr(factura.cliente, 'nombre') else factura.cliente))
-    p.drawString(50, height - 130, f"ID/RUC: {factura.cliente.cedula if hasattr(factura.cliente, 'cedula') else ''}")
-
-    # Tabla de Productos
-    data = [["Producto", "Cantidad", "Precio Unit.", "Total"]]
-    for item in detalles:
-        data.append([
-            item.producto.nombre,
-            str(item.cantidad),
-            f"${item.precio_unitario:,.2f}",
-            f"${item.total_linea:,.2f}"
-        ])
-
-    table = Table(data, colWidths=[280, 70, 80, 80])
-    table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-        ('ALIGN', (0, 1), (0, -1), 'LEFT'),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-        ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
-    ]))
-    
-    table.wrapOn(p, width, height)
-    table.drawOn(p, 50, height - 300)
-
-    # Totales
-    y_total = height - 350
-    p.drawString(width - 200, y_total, f"SUBTOTAL:")
-    p.drawRightString(width - 50, y_total, f"${factura.subtotal:,.2f}")
-    p.drawString(width - 200, y_total - 15, f"IVA:")
-    p.drawRightString(width - 50, y_total - 15, f"${factura.iva:,.2f}")
-    p.setFont("Helvetica-Bold", 12)
-    p.drawString(width - 200, y_total - 35, f"TOTAL A PAGAR:")
-    p.drawRightString(width - 50, y_total - 35, f"${factura.total:,.2f}")
-
-    p.showPage()
-    p.save()
-    buffer.seek(0)
-    return buffer
+    return render(request, 'administracion/dashboard.html', context)
 
 @login_required
-def factura_pdf(request, pk):
-    """Genera y descarga el archivo PDF de la factura."""
-    factura = get_object_or_404(Factura, pk=pk)
-    buffer = _generar_factura_pdf_buffer(factura)
+@user_passes_test(is_admin)
+def mantenimiento(request):
+    """Panel de administración, soporte y backups."""
+    respaldos = RegistroRespaldo.objects.all().order_by('-fecha_creacion')[:10]
+    espacio_total = RegistroRespaldo.objects.filter(exitoso=True).aggregate(Sum('tamano_mb'))['tamano_mb__sum'] or 0
+    porcentaje_uso = min(100, (espacio_total / 5120) * 100) # Assuming 5GB limit
     
-    return HttpResponse(buffer, content_type='application/pdf', 
-                        headers={'Content-Disposition': f'attachment; filename="factura_{factura.nro_factura}.pdf"'})
+    stats = {
+        'disco_uso_porcentaje': porcentaje_uso,
+        'disco_libre_gb': round((5120 - espacio_total) / 1024, 2),
+        'respaldos_count': RegistroRespaldo.objects.filter(exitoso=True).count(),
+        'respaldos_total_mb': round(espacio_total, 2)
+    }
+
+    log_path = os.path.join(settings.BASE_DIR, 'erp.log')
+    logs = []
+    if os.path.exists(log_path):
+        with open(log_path, 'r') as f:
+            lines = f.readlines()
+            logs = lines[-100:] if len(lines) > 100 else lines
+
+    context = {
+        'titulo': 'Mantenimiento del Sistema',
+        'respaldos': respaldos,
+        'espacio_total': espacio_total,
+        'porcentaje_uso': porcentaje_uso,
+        'stats': stats,
+        'logs': logs,
+    }
+    return render(request, 'administracion/mantenimiento.html', context)
 
 @login_required
-def enviar_factura_email(request, pk):
-    """Genera el PDF y lo envía automáticamente al correo electrónico del cliente."""
-    factura = get_object_or_404(Factura, pk=pk)
-    cliente = factura.cliente
+@user_passes_test(is_admin)
+def lista_respaldos(request):
+    respaldos_list = RegistroRespaldo.objects.all().order_by('-fecha_creacion')
+    paginator = Paginator(respaldos_list, 15)
+    page_number = request.GET.get('page')
+    respaldos = paginator.get_page(page_number)
     
-    # Se intenta obtener el email del cliente (asumiendo que el campo existe en ventas.Cliente)
-    email_destino = getattr(cliente, 'email', None)
-    
-    if not email_destino:
-        messages.error(request, f"El cliente {cliente} no tiene un correo electrónico registrado.")
-        return redirect('facturacion:dashboard')
-
-    try:
-        buffer = _generar_factura_pdf_buffer(factura)
-        subject = f"Factura {factura.nro_factura} - {settings.ERP_CONFIG.get('EMPRESA_NOMBRE')}"
-        body = f"Estimado cliente,\n\nAdjunto encontrará la factura {factura.nro_factura} correspondiente a su pedido.\n\nAtentamente,\n{settings.ERP_CONFIG.get('EMPRESA_NOMBRE')}"
-        
-        email = EmailMessage(subject, body, settings.DEFAULT_FROM_EMAIL, [email_destino])
-        email.attach(f"factura_{factura.nro_factura}.pdf", buffer.getvalue(), "application/pdf")
-        email.send()
-        
-        messages.success(request, f"Factura enviada exitosamente a {email_destino}")
-    except Exception as e:
-        messages.error(request, f"Error al enviar el correo: {str(e)}")
-        
-    return redirect('facturacion:dashboard')
+    context = {
+        'titulo': 'Archivos de Respaldo',
+        'respaldos': respaldos
+    }
+    return render(request, 'administracion/lista_respaldos.html', context)
 
 @login_required
-def configuracion_empresa(request):
-    """Gestiona los datos básicos y el logo de la empresa."""
-    instancia = ConfiguracionEmpresa.objects.first()
-    if request.method == 'POST':
-        form = ConfiguracionEmpresaForm(request.POST, request.FILES, instance=instancia)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Configuración actualizada correctamente.")
-            return redirect('facturacion:dashboard')
+@user_passes_test(is_admin)
+def ejecutar_backup(request):
+    filepath, error = realizar_backup()
+    
+    registro = RegistroRespaldo(creado_por=request.user)
+    if filepath:
+        registro.nombre_original = os.path.basename(filepath)
+        registro.archivo.name = f"backups/{registro.nombre_original}"
+        registro.tamano_mb = os.path.getsize(filepath) / (1024 * 1024)
+        registro.exitoso = True
+        messages.success(request, 'Respaldo generado exitosamente.')
     else:
-        form = ConfiguracionEmpresaForm(instance=instancia)
+        registro.exitoso = False
+        registro.error_log = error
+        registro.nombre_original = "FALLIDO"
+        registro.tamano_mb = 0
+        messages.error(request, f'Error al generar respaldo: {error}')
     
-    return render(request, 'administracion/configuracion_empresa.html', {'form': form})
+    registro.save()
+    if registro.exitoso:
+        verificar_y_notificar_espacio()
+        
+    return redirect('administracion:lista_respaldos')
 
 @login_required
-def lista_usuarios(request):
-    """Lista todos los usuarios del sistema."""
-    if not request.user.is_superuser:
-        messages.error(request, "Acceso denegado.")
-        return redirect('core:dashboard')
-    
-    usuarios = User.objects.all()
-    return render(request, 'administracion/usuarios/usuario_list.html', {'usuarios': usuarios})
+@user_passes_test(is_admin)
+def download_logs(request):
+    log_path = os.path.join(settings.BASE_DIR, 'erp.log')
+    if os.path.exists(log_path):
+        return FileResponse(open(log_path, 'rb'), as_attachment=True, filename='erp.log')
+    messages.error(request, 'El archivo de log no existe.')
+    return redirect('administracion:mantenimiento')
 
 @login_required
-def editar_usuario(request, user_id=None):
-    """Crea o edita un usuario."""
-    if not request.user.is_superuser:
-        messages.error(request, "Acceso denegado.")
-        return redirect('core:dashboard')
-    
-    usuario = get_object_or_404(User, id=user_id) if user_id else None
+@user_passes_test(is_admin)
+def usuario_list(request):
+    usuarios = User.objects.all().order_by('username')
+    return render(request, 'administracion/usuario_list.html', {'usuarios': usuarios})
+
+from django.shortcuts import render, redirect, get_object_or_404
+
+@login_required
+@user_passes_test(is_admin)
+def rol_list(request):
     if request.method == 'POST':
-        form = UserForm(request.POST, instance=usuario)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Usuario guardado correctamente.")
-            return redirect('administracion:lista_usuarios')
+        nombre = request.POST.get('nombre')
+        if nombre:
+            Group.objects.get_or_create(name=nombre)
+            messages.success(request, f"Rol '{nombre}' creado exitosamente.")
+        return redirect('administracion:rol_list')
+    roles = Group.objects.all().order_by('name')
+    return render(request, 'administracion/rol_list.html', {'roles': roles, 'titulo': 'Roles del Sistema'})
+
+@login_required
+@user_passes_test(is_admin)
+def usuario_roles(request, pk):
+    usuario = get_object_or_404(User, pk=pk)
+    if request.method == 'POST':
+        roles_ids = request.POST.getlist('roles')
+        usuario.groups.set(roles_ids)
+        messages.success(request, f"Roles actualizados para {usuario.username}.")
+        return redirect('administracion:usuario_list')
+    roles = Group.objects.all().order_by('name')
+    return render(request, 'administracion/usuario_roles.html', {'usuario': usuario, 'roles': roles, 'titulo': f'Asignar Roles: {usuario.username}'})
+
+@login_required
+@user_passes_test(is_admin)
+def usuario_toggle(request, pk):
+    usuario = get_object_or_404(User, pk=pk)
+    if usuario != request.user:
+        usuario.is_active = not usuario.is_active
+        usuario.save()
+        estado = "activado" if usuario.is_active else "desactivado"
+        messages.success(request, f"Usuario {usuario.username} {estado} correctamente.")
     else:
-        form = UserForm(instance=usuario)
-    
-    return render(request, 'administracion/editar_usuario.html', {'form': form, 'usuario': usuario})
+        messages.error(request, "No puedes desactivar tu propio usuario.")
+    return redirect('administracion:usuario_list')
+
+@login_required
+@user_passes_test(is_admin)
+def usuario_create(request):
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        email = request.POST.get('email')
+        first_name = request.POST.get('first_name')
+        last_name = request.POST.get('last_name')
+        password = request.POST.get('password')
+        if User.objects.filter(username=username).exists():
+            messages.error(request, 'El nombre de usuario ya existe.')
+        else:
+            user = User.objects.create_user(username=username, email=email, password=password)
+            user.first_name = first_name
+            user.last_name = last_name
+            user.save()
+            messages.success(request, f'Usuario {username} creado exitosamente.')
+            return redirect('administracion:usuario_list')
+    return render(request, 'administracion/usuario_form.html', {'titulo': 'Nuevo Usuario'})
+
+@login_required
+@user_passes_test(is_admin)
+def usuario_delete(request, pk):
+    usuario = get_object_or_404(User, pk=pk)
+    if usuario == request.user:
+        messages.error(request, "No puedes eliminar tu propia cuenta.")
+    else:
+        username = usuario.username
+        usuario.delete()
+        messages.success(request, f"Usuario {username} eliminado exitosamente.")
+    return redirect('administracion:usuario_list')

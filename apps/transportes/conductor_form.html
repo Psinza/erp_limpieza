@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">{{ titulo }}</h1>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Información del Conductor</h6>
+        </div>
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-md-4 mb-3">{{ form.cedula.label_tag }}{{ form.cedula }}</div>
+                    <div class="col-md-4 mb-3">{{ form.nombres.label_tag }}{{ form.nombres }}</div>
+                    <div class="col-md-4 mb-3">{{ form.apellidos.label_tag }}{{ form.apellidos }}</div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">{{ form.telefono.label_tag }}{{ form.telefono }}</div>
+                    <div class="col-md-6 mb-3">{{ form.email.label_tag }}{{ form.email }}</div>
+                </div>
+                <div class="mb-3">{{ form.direccion.label_tag }}{{ form.direccion }}</div>
+
+                <div class="bg-light p-3 rounded mb-3">
+                    <h6 class="font-weight-bold">Información de Tránsito</h6>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">{{ form.numero_licencia.label_tag }}{{ form.numero_licencia }}</div>
+                        <div class="col-md-4 mb-3">{{ form.categoria_licencia.label_tag }}{{ form.categoria_licencia }}
+                        </div>
+                        <div class="col-md-4 mb-3">{{ form.licencia_vencimiento.label_tag }}{{ form.licencia_vencimiento
+                            }}</div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">{{ form.estado.label_tag }}{{ form.estado }}</div>
+                    <div class="col-md-6 mb-3">{{ form.vehiculo_asignado.label_tag }}{{ form.vehiculo_asignado }}</div>
+                </div>
+                <div class="mb-3">{{ form.foto.label_tag }}{{ form.foto }}</div>
+                <div class="mb-3">{{ form.observaciones.label_tag }}{{ form.observaciones }}</div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-check"></i> Finalizar Registro
+                    </button>
+                    <a href="{% url 'transportes:conductor_list' %}" class="btn btn-secondary">
+                        Cancelar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

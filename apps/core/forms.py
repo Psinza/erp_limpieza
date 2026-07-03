@@ -1,106 +1,48 @@
 from django import forms
-from .models import EjercicioContable, CuentaContable, AsientoContable, LineaAsiento, PeriodoContable, ConfiguracionContable
+from django.contrib.auth.models import Group
+from django.contrib.auth.forms import UserCreationForm
+from .models import Empresa, Usuario
 
-class EjercicioContableForm(forms.ModelForm):
+class UserRegistrationForm(UserCreationForm):
+    role = forms.ModelChoiceField(
+        queryset=Group.objects.all(),
+        required=True,
+        label="Rol en la Compañía",
+        help_text="Seleccione el departamento o función del usuario.",
+        widget=forms.Select(attrs={"class": "form-select"})
+    )
+    first_name = forms.CharField(max_length=100, required=True, widget=forms.TextInput(attrs={"class": "form-control"}))
+    last_name = forms.CharField(max_length=100, required=True, widget=forms.TextInput(attrs={"class": "form-control"}))
+    email = forms.EmailField(required=True, widget=forms.EmailInput(attrs={"class": "form-control"}))
+
+    class Meta(UserCreationForm.Meta):
+        model = Usuario
+        fields = UserCreationForm.Meta.fields + ("nombres", "apellidos", "email", "area", "rol") # Añadido rol
+        widgets = {
+            "username": forms.TextInput(attrs={"class": "form-control"}),
+        }
+
+class EmpresaForm(forms.ModelForm):
     class Meta:
-        model = EjercicioContable
-        fields = ['nombre', 'fecha_inicio', 'fecha_fin', 'cerrado']
+        model = Empresa
+        fields = '__all__'
         widgets = {
             'nombre': forms.TextInput(attrs={'class': 'form-control'}),
-            'fecha_inicio': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'fecha_fin': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'cerrado': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'rif': forms.TextInput(attrs={
+                'class': 'form-control', 
+                'placeholder': 'J-12345678-0',
+                'oninput': 'this.value = this.value.toUpperCase()'
+            }),
+            'direccion': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'telefono': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'logo': forms.FileInput(attrs={'class': 'form-control'}),
+            'contador_nombre': forms.TextInput(attrs={'class': 'form-control'}),
+            'contador_cpc': forms.TextInput(attrs={'class': 'form-control'}),
+            'contador_rif': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'V-12345678-0',
+                'oninput': 'this.value = this.value.toUpperCase()'
+            }),
+            'gerente_nombre': forms.TextInput(attrs={'class': 'form-control'}),
         }
-
-class CuentaContableForm(forms.ModelForm):
-    class Meta:
-        model = CuentaContable
-        fields = ['codigo', 'nombre', 'tipo', 'naturaleza', 'padre', 'saldo_inicial', 'activo']
-        widgets = {
-            'codigo': forms.TextInput(attrs={'class': 'form-control'}),
-            'nombre': forms.TextInput(attrs={'class': 'form-control'}),
-            'tipo': forms.Select(attrs={'class': 'form-select'}),
-            'naturaleza': forms.Select(attrs={'class': 'form-select'}),
-            'padre': forms.Select(attrs={'class': 'form-select'}),
-            'saldo_inicial': forms.NumberInput(attrs={'class': 'form-control'}),
-            'activo': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-        }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Filter parent accounts to only show major accounts or accounts that can be parents
-        self.fields['padre'].queryset = CuentaContable.objects.filter(es_cuenta_mayor=True, activo=True)
-        self.fields['padre'].empty_label = "--- Sin Padre (Cuenta Principal) ---"
-
-
-class AsientoContableForm(forms.ModelForm):
-    class Meta:
-        model = AsientoContable
-        fields = ['fecha', 'descripcion', 'ejercicio', 'creado_por']
-        widgets = {
-            'fecha': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'descripcion': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-            'ejercicio': forms.Select(attrs={'class': 'form-select'}),
-            'creado_por': forms.Select(attrs={'class': 'form-select'}),
-        }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Make creado_por optional or set a default if not provided
-        self.fields['creado_por'].required = False
-        # Filter exercises to only show active ones
-        self.fields['ejercicio'].queryset = EjercicioContable.objects.filter(cerrado=False)
-
-
-class LineaAsientoForm(forms.ModelForm):
-    class Meta:
-        model = LineaAsiento
-        fields = ['cuenta', 'debe', 'haber', 'descripcion']
-        widgets = {
-            'cuenta': forms.Select(attrs={'class': 'form-select'}),
-            'debe': forms.NumberInput(attrs={'class': 'form-control'}),
-            'haber': forms.NumberInput(attrs={'class': 'form-control'}),
-            'descripcion': forms.TextInput(attrs={'class': 'form-control'}),
-        }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Only allow detail accounts for lines
-        self.fields['cuenta'].queryset = CuentaContable.objects.filter(es_cuenta_mayor=False, activo=True)
-
-
-LineaAsientoFormSet = forms.inlineformset_factory(
-    AsientoContable, LineaAsiento,
-    form=LineaAsientoForm,
-    extra=1,
-    can_delete=True
-)
-
-
-class PeriodoContableForm(forms.ModelForm):
-    class Meta:
-        model = PeriodoContable
-        fields = ['ejercicio', 'mes', 'anio', 'fecha_inicio', 'fecha_fin', 'cerrado']
-        widgets = {
-            'ejercicio': forms.Select(attrs={'class': 'form-select'}),
-            'mes': forms.NumberInput(attrs={'class': 'form-control'}),
-            'anio': forms.NumberInput(attrs={'class': 'form-control'}),
-            'fecha_inicio': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'fecha_fin': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'cerrado': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-        }
-
-class ConfiguracionContableForm(forms.ModelForm):
-    class Meta:
-        model = ConfiguracionContable
-        fields = ['clave', 'cuenta', 'descripcion']
-        widgets = {
-            'clave': forms.TextInput(attrs={'class': 'form-control'}),
-            'cuenta': forms.Select(attrs={'class': 'form-select'}),
-            'descripcion': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-        }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Only allow detail accounts for configuration
-        self.fields['cuenta'].queryset = CuentaContable.objects.filter(es_cuenta_mayor=False, activo=True)

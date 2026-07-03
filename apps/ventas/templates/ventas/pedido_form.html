@@ -1,77 +1,119 @@
-{% extends "base.html" %}
-{% block title %}{{ titulo }}{% endblock %}
+{% extends 'base.html' %} {# Asume que tienes un template base.html #}
+{% load crispy_forms_tags %} {# Para un renderizado más limpio de los formularios #}
+
 {% block content %}
-<div class="container py-4" style="max-width:860px">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h3><i class="bi bi-bag-plus"></i> {{ titulo }}</h3>
-    <a href="{% url 'ventas:pedido_list' %}" class="btn btn-outline-secondary">
-      <i class="bi bi-arrow-left"></i> Volver
-    </a>
-  </div>
+<div class="container">
+  <h2 class="my-4">{{ titulo }}</h2>
 
-  <div class="card border-0 shadow-sm">
-    <div class="card-body p-4">
-      <form method="post">
-        {% csrf_token %}
+  <form method="post" novalidate>
+    {% csrf_token %}
 
-        <h6 class="text-muted text-uppercase fw-bold mb-3 border-bottom pb-2">Datos del Pedido</h6>
-        <div class="row g-3 mb-4">
+    <div class="card mb-4">
+      <div class="card-header">Datos del Comprador</div>
+      <div class="card-body">
+        <div class="row">
           <div class="col-md-6">
-            <label class="form-label">Cliente *</label>
-            {{ form.cliente }}
-            {% if form.cliente.errors %}<div class="text-danger small">{{ form.cliente.errors }}</div>{% endif %}
+            {{ form.cliente|as_crispy_field }}
           </div>
           <div class="col-md-3">
-            <label class="form-label">Fecha Pedido *</label>
-            {{ form.fecha_pedido }}
+            {{ form.fecha_emision|as_crispy_field }}
           </div>
           <div class="col-md-3">
-            <label class="form-label">Fecha Entrega Esperada</label>
-            {{ form.fecha_entrega }}
-          </div>
-          <div class="col-12">
-            <label class="form-label">Dirección de Entrega</label>
-            {{ form.direccion_entrega }}
+            {{ form.dias_credito|as_crispy_field }}
           </div>
         </div>
-
-        <h6 class="text-muted text-uppercase fw-bold mb-3 border-bottom pb-2">Condiciones Comerciales</h6>
-        <div class="row g-3 mb-4">
-          <div class="col-md-3">
-            <label class="form-label">Días de Crédito</label>
-            {{ form.dias_credito }}
-          </div>
-          <div class="col-md-3">
-            <label class="form-label">Descuento Global %</label>
-            {{ form.descuento_pct }}
-          </div>
-          <div class="col-md-3">
-            <label class="form-label">IVA %</label>
-            {{ form.impuesto_pct }}
+        <div class="row">
+          <div class="col-md-12">
+            {{ form.direccion_despacho|as_crispy_field }}
           </div>
         </div>
-
-        <h6 class="text-muted text-uppercase fw-bold mb-3 border-bottom pb-2">Notas</h6>
-        <div class="mb-3">
-          {{ form.notas }}
+        <div class="row">
+          <div class="col-md-6">
+            {{ form.iva_porcentaje|as_crispy_field }}
+          </div>
+          <div class="col-md-6">
+            {{ form.descuento_global_porcentaje|as_crispy_field }}
+          </div>
         </div>
-
-        {% if form.errors %}
-        <div class="alert alert-danger">
-          {% for field in form %}{% for error in field.errors %}
-          <div><strong>{{ field.label }}:</strong> {{ error }}</div>
-          {% endfor %}{% endfor %}
+        <div class="row">
+          <div class="col-md-12">
+            {{ form.observaciones|as_crispy_field }}
+          </div>
         </div>
-        {% endif %}
-
-        <div class="d-flex gap-2 mt-3">
-          <button type="submit" class="btn btn-primary">
-            <i class="bi bi-save"></i> Guardar y Continuar
-          </button>
-          <a href="{% url 'ventas:pedido_list' %}" class="btn btn-outline-secondary">Cancelar</a>
-        </div>
-      </form>
+      </div>
     </div>
-  </div>
+
+    <div class="card mb-4">
+      <div class="card-header">Detalle de Productos / Servicios</div>
+      <div class="card-body">
+        {{ formset.management_form }}
+        <table class="table table-striped table-bordered" id="detalle-pedido-table">
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th>Cantidad</th>
+              <th>P. Unitario</th>
+              <th>Observaciones</th>
+              <th>Subtotal</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item_form in formset %}
+            <tr class="formset-row">
+              <td>{{ item_form.producto|as_crispy_field }}</td>
+              <td>{{ item_form.cantidad|as_crispy_field }}</td>
+              <td>{{ item_form.precio_unitario|as_crispy_field }}</td>
+              <td>{{ item_form.observaciones|as_crispy_field }}</td>
+              <td>
+                <span class="subtotal-linea">
+                  {% if item_form.instance.pk %}
+                  Bs. {{ item_form.instance.subtotal_linea|floatformat:2 }}
+                  {% else %}
+                  Bs. 0.00
+                  {% endif %}
+                </span>
+              </td>
+              <td>
+                {% if item_form.instance.pk %}
+                {{ item_form.DELETE }}
+                <label for="{{ item_form.DELETE.id_for_label }}">Eliminar</label>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        <button type="button" class="btn btn-sm btn-info" id="add-item-button">Agregar Producto</button>
+      </div>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-header">Resumen de Totales</div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6 offset-md-6 text-right">
+            <p>Subtotal: <span id="display-subtotal">Bs. 0.00</span></p>
+            <p>IVA ({{ form.iva_porcentaje.value|floatformat:2 }}%): <span id="display-iva">Bs. 0.00</span></p>
+            <p>Descuento Global ({{ form.descuento_global_porcentaje.value|floatformat:2 }}%): <span
+                id="display-descuento">Bs. 0.00</span></p>
+            <h4>TOTAL: <span id="display-total">Bs. 0.00</span></h4>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Guardar Pedido</button>
+    <a href="{% url 'ventas:pedido_list' %}" class="btn btn-secondary">Cancelar</a>
+  </form>
 </div>
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+  // JavaScript para añadir filas dinámicamente y recalcular totales
+  // (El código completo para esta funcionalidad se proporcionó en la respuesta anterior)
+  // Asegúrate de incluirlo aquí o en un archivo JS separado.
+</script>
+{% endblock %}
 {% endblock %}

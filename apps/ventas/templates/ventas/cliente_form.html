@@ -1,58 +1,98 @@
 {% extends "base.html" %}
 {% block title %}{{ titulo }}{% endblock %}
 {% block content %}
-<div class="container py-4" style="max-width:900px">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h3><i class="bi bi-person-vcard"></i> {{ titulo }}</h3>
-    <a href="{% url 'ventas:cliente_list' %}" class="btn btn-outline-secondary">
-      <i class="bi bi-arrow-left"></i> Volver
-    </a>
-  </div>
-  <div class="card border-0 shadow-sm">
-    <div class="card-body p-4">
-      <form method="post">
-        {% csrf_token %}
-        <h6 class="text-muted text-uppercase fw-bold mb-3 border-bottom pb-2">Identificación</h6>
-        <div class="row g-3 mb-4">
-          <div class="col-md-3"><label class="form-label">RUC / Cédula *</label>{{ form.ruc }}{% if form.ruc.errors %}<div class="text-danger small">{{ form.ruc.errors }}</div>{% endif %}</div>
-          <div class="col-md-5"><label class="form-label">Razón Social *</label>{{ form.razon_social }}</div>
-          <div class="col-md-4"><label class="form-label">Nombre Comercial</label>{{ form.nombre_comercial }}</div>
-          <div class="col-md-3"><label class="form-label">Tipo</label>{{ form.tipo }}</div>
-          <div class="col-md-3"><label class="form-label">Categoría</label>{{ form.categoria }}</div>
-          <div class="col-md-3"><label class="form-label">Vendedor Asignado</label>{{ form.vendedor }}</div>
-          <div class="col-md-3"><label class="form-label">Estado</label>{{ form.estado }}</div>
-        </div>
-
-        <h6 class="text-muted text-uppercase fw-bold mb-3 border-bottom pb-2">Contacto</h6>
-        <div class="row g-3 mb-4">
-          <div class="col-md-3"><label class="form-label">Teléfono</label>{{ form.telefono }}</div>
-          <div class="col-md-3"><label class="form-label">Teléfono 2</label>{{ form.telefono2 }}</div>
-          <div class="col-md-3"><label class="form-label">Email</label>{{ form.email }}</div>
-          <div class="col-md-3"><label class="form-label">Sitio Web</label>{{ form.sitio_web }}</div>
-          <div class="col-md-8"><label class="form-label">Dirección</label>{{ form.direccion }}</div>
-          <div class="col-md-2"><label class="form-label">Ciudad</label>{{ form.ciudad }}</div>
-          <div class="col-md-2"><label class="form-label">País</label>{{ form.pais }}</div>
-        </div>
-
-        <h6 class="text-muted text-uppercase fw-bold mb-3 border-bottom pb-2">Condiciones Comerciales</h6>
-        <div class="row g-3 mb-4">
-          <div class="col-md-3"><label class="form-label">Días de Crédito</label>{{ form.dias_credito }}</div>
-          <div class="col-md-3"><label class="form-label">Límite de Crédito</label>{{ form.limite_credito }}</div>
-          <div class="col-md-3"><label class="form-label">Descuento %</label>{{ form.descuento_pct }}</div>
-          <div class="col-12"><label class="form-label">Observaciones</label>{{ form.observaciones }}</div>
-        </div>
-
-        {% if form.errors %}
-        <div class="alert alert-danger">
-          {% for field in form %}{% for error in field.errors %}<div><strong>{{ field.label }}:</strong> {{ error }}</div>{% endfor %}{% endfor %}
-        </div>
-        {% endif %}
-        <div class="d-flex gap-2 mt-3">
-          <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Guardar</button>
-          <a href="{% url 'ventas:cliente_list' %}" class="btn btn-outline-secondary">Cancelar</a>
-        </div>
-      </form>
+<div class="container-fluid py-4">
+    <div class="mb-4">
+        <a href="{% url 'ventas:cliente_list' %}" class="btn btn-sm btn-erp-outline mb-3">
+            <i class="bi bi-arrow-left"></i> Volver al listado
+        </a>
+        <h2 class="topbar-title fs-3 mb-0">{{ titulo }}</h2>
     </div>
-  </div>
+
+    <div class="row justify-content-center">
+        <div class="col-xl-10">
+            <form method="post" class="erp-card shadow-sm">
+                {% csrf_token %}
+                <div class="erp-card-header">
+                    <h5 class="erp-card-title mb-0">Información del Cliente</h5>
+                </div>
+                <div class="erp-card-body">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">{{ form.tipo_documento.label }}</label>
+                            {{ form.tipo_documento }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">{{ form.rif.label }}</label>
+                            {{ form.rif }}
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label">{{ form.tipo_contribuyente.label }}</label>
+                            {{ form.tipo_contribuyente }}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.razon_social.label }}</label>
+                            {{ form.razon_social }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.nombre_comercial.label }}</label>
+                            {{ form.nombre_comercial }}
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">{{ form.tipo.label }}</label>
+                            {{ form.tipo }}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">{{ form.categoria.label }}</label>
+                            {{ form.categoria }}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">{{ form.telefono.label }}</label>
+                            {{ form.telefono }}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">{{ form.email.label }}</label>
+                            {{ form.email }}
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">{{ form.direccion.label }}</label>
+                            {{ form.direccion }}
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">{{ form.ciudad.label }}</label>
+                            {{ form.ciudad }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">{{ form.dias_credito.label }}</label>
+                            {{ form.dias_credito }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">{{ form.limite_credito.label }}</label>
+                            {{ form.limite_credito }}
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">{{ form.vendedor.label }}</label>
+                            {{ form.vendedor }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">{{ form.estado.label }}</label>
+                            {{ form.estado }}
+                        </div>
+                    </div>
+                </div>
+                <div class="erp-card-footer bg-light p-3 border-top d-flex justify-content-end gap-2">
+                    <a href="{% url 'ventas:cliente_list' %}" class="btn btn-erp btn-erp-outline">Cancelar</a>
+                    <button type="submit" class="btn btn-erp btn-erp-primary">
+                        <i class="bi bi-check-lg"></i> Guardar Cliente
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 {% endblock %}

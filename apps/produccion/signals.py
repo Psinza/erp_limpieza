@@ -1,37 +1,49 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
-from django.db.models import F
-from .models import OrdenProduccion, LoteProduccion, ProductoTerminado
+from .models import OrdenProduccion
+from apps.logistica.models import MovimientoInventario, Almacen
 
 @receiver(post_save, sender=OrdenProduccion)
-def crear_lote_automatico(sender, instance, created, **kwargs):
+def actualizar_stock_produccion_completada(sender, instance, created, **kwargs):
     """
-    Crea automáticamente un LoteProduccion cuando una orden pasa al estado 'en_proceso'
-    y no tiene lotes previos asignados.
+    Actualiza el stock del ProductoTerminado cuando la OrdenProduccion es 'completada'
+    y descuenta las materias primas utilizadas.
     """
-    if instance.estado == 'en_proceso' and not instance.lotes.exists():
-        timestamp = timezone.now().strftime('%Y%m%d%H%M')
-        # Añadimos segundos para mayor unicidad en el número de lote
-        timestamp = timezone.now().strftime('%Y%m%d%H%M%S')
-        LoteProduccion.objects.create(
-            orden=instance,
-            numero_lote=f"LOT-{instance.id:04d}-{timestamp}",
-            estado='en_produccion'
-        )
+    if instance.estado == 'completada':
+        referencia_lote = f"Producción Lote: {instance.lote_numero}"
+        
+        # Evitar duplicados
+        if not MovimientoInventario.objects.filter(referencia=referencia_lote).exists():
+            
+            # Buscar almacén principal (o el primero que exista)
+            almacen_defecto = Almacen.objects.filter(es_principal=True).first() or Almacen.objects.first()
+            
+            if not almacen_defecto:
+                print("Advertencia: No hay almacenes configurados para procesar la producción.")
+                return
 
-@receiver(post_save, sender=LoteProduccion)
-def actualizar_stock_producto_terminado(sender, instance, created, **kwargs):
-    """
-    Actualiza el stock del ProductoTerminado cuando un LoteProduccion es 'liberado'.
-    """
-    # Solo si el lote está siendo actualizado (no creado) y su estado es 'liberado'
-    if not created and instance.estado == 'liberado':
-        # Asegurarse de que la transición fue *hacia* 'liberado'
-        # Esto evita que se actualice el stock si el lote ya estaba liberado y se guarda de nuevo.
-        old_instance = sender.objects.get(pk=instance.pk)
-        if old_instance.estado != 'liberado':
-            producto = instance.orden.formula.producto
-            # Usar F() para una actualización atómica y evitar condiciones de carrera
-            producto.stock_actual = F('stock_actual') + instance.cantidad_final
-            producto.save(update_fields=['stock_actual']) # Solo actualiza el campo stock_actual
+            # 1. Entrada de Producto Terminado
+            MovimientoInventario.objects.create(
+                producto_pt=instance.formula.producto,
+                tipo='E', # Entrada
+                motivo='produccion',
+                almacen_destino=almacen_defecto,
+                cantidad=instance.cantidad_a_producir * instance.formula.rendimiento,
+                referencia=referencia_lote,
+                fecha=timezone.now()
+            )
+
+            # 2. Salida Automática de Materias Primas según la fórmula
+            for ingrediente in instance.formula.ingredientes.all():
+                cantidad_total = ingrediente.cantidad * instance.cantidad_a_producir
+                
+                MovimientoInventario.objects.create(
+                    materia_prima=ingrediente.materia_prima,
+                    tipo='S', # Salida
+                    motivo='consumo',
+                    almacen_origen=almacen_defecto,
+                    cantidad=cantidad_total,
+                    referencia=f"Consumo Lote: {instance.lote_numero}",
+                    fecha=timezone.now()
+                )

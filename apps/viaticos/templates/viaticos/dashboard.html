@@ -1,0 +1,115 @@
+{% extends 'core/base.html' %}
+{% block title %}Viáticos | ERP{% endblock %}
+{% block page_title %}Gestión de Viáticos{% endblock %}
+{% block breadcrumb %}Módulos / Viáticos{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#fef7e0;color:#f9a825;">
+        <i class="bi bi-hourglass-split"></i>
+      </div>
+      <div>
+        <div class="stat-value">{{ solicitudes.count }}</div>
+        <div class="stat-label">Total Solicitudes</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#e6f4ea;color:#1e8e3e;">
+        <i class="bi bi-wallet2"></i>
+      </div>
+      <div>
+        <div class="stat-value" style="font-size:20px;">Bs. 0,00</div>
+        <div class="stat-label">Monto Ejecutado</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#e8f0fe;color:#1a73e8;">
+        <i class="bi bi-person-check"></i>
+      </div>
+      <div>
+        <div class="stat-value">Activo</div>
+        <div class="stat-label">Estado del Módulo</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="erp-card">
+  <div class="erp-card-header d-flex justify-content-between align-items-center">
+    <span class="erp-card-title"><i class="bi bi-briefcase me-2"></i>Solicitudes de Viáticos y Bonos</span>
+    <a href="{% url 'viaticos:solicitud_create' %}" class="btn-erp btn-erp-primary btn-sm">
+        <i class="bi bi-plus-lg"></i> Nueva Solicitud
+    </a>
+  </div>
+  <div class="erp-card-body p-0">
+    <div class="table-responsive">
+        <table class="erp-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Beneficiario / Empleado</th>
+                    <th>Cargo / Dpto</th>
+                    <th>Destino</th>
+                    <th>Fecha Viaje</th>
+                    <th>Monto Est.</th>
+                    <th>Estado</th>
+                    <th class="text-center">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in solicitudes %}
+                <tr>
+                    <td>#{{ s.id }}</td>
+                    <td>
+                        {% if s.empleado %}
+                            <strong>{{ s.empleado.nombres }} {{ s.empleado.apellidos }}</strong>
+                            <div class="text-muted small">ID: {{ s.empleado.cedula }}</div>
+                        {% else %}
+                            <strong>{{ s.beneficiario_nombre }}</strong>
+                            <div class="text-muted small">Externo / Manual</div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if s.empleado %}
+                            {{ s.empleado.cargo.nombre }}
+                            <div class="text-muted small">{{ s.empleado.departamento.nombre }}</div>
+                        {% else %}
+                            {{ s.beneficiario_cargo }}
+                            <div class="text-muted small">{{ s.beneficiario_departamento }}</div>
+                        {% endif %}
+                    </td>
+                    <td>{{ s.destino }}</td>
+                    <td>{{ s.fecha_viaje|date:"d/m/Y" }}</td>
+                    <td>{{ s.moneda }} {{ s.monto_estimado }}</td>
+                    <td>
+                        <span class="badge bg-{% if s.estado == 'pendiente' %}warning text-dark{% elif s.estado == 'aprobado' %}success{% else %}secondary{% endif %}">
+                            {{ s.get_estado_display }}
+                        </span>
+                    </td>
+                    <td class="text-center">
+                        <div class="btn-group">
+                            <a href="{% url 'viaticos:solicitud_update' s.pk %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
+                            <a href="{% url 'viaticos:solicitud_delete' s.pk %}" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="text-center py-5">
+                        <i class="bi bi-inbox text-muted" style="font-size: 2rem;"></i>
+                        <p class="mt-2 text-muted">No hay solicitudes registradas.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

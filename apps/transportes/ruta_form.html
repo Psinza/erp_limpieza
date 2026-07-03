@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid">
+    <h1 class="h3 mb-4 text-gray-800">{{ titulo }}</h1>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Definición de Ruta Logística</h6>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-md-3 mb-3">{{ form.codigo.label_tag }}{{ form.codigo }}</div>
+                    <div class="col-md-6 mb-3">{{ form.nombre.label_tag }}{{ form.nombre }}</div>
+                    <div class="col-md-3 mb-3">{{ form.zona.label_tag }}{{ form.zona }}</div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="p-3 bg-light rounded mb-3">
+                            <label class="font-weight-bold text-dark">Punto de Origen</label>
+                            {{ form.origen }}
+                            <div class="row mt-2">
+                                <div class="col-6">{{ form.latitud_origen.label_tag }}{{ form.latitud_origen }}</div>
+                                <div class="col-6">{{ form.longitud_origen.label_tag }}{{ form.longitud_origen }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-3 bg-light rounded mb-3">
+                            <label class="font-weight-bold text-dark">Destino Final</label>
+                            {{ form.destino }}
+                            <div class="row mt-2">
+                                <div class="col-6">{{ form.distancia_km.label_tag }}{{ form.distancia_km }}</div>
+                                <div class="col-6">{{ form.tiempo_estimado.label_tag }}{{ form.tiempo_estimado }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">{{ form.descripcion.label_tag }}{{ form.descripcion }}</div>
+                <div class="mb-3">{{ form.estado.label_tag }}{{ form.estado }}</div>
+
+                <button type="submit" class="btn btn-primary">Crear Ruta</button>
+                <a href="{% url 'transportes:ruta_list' %}" class="btn btn-link">Volver</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,10 +1,10 @@
 from django import forms
 from django.contrib.auth.models import User
-from .models import ConfiguracionEmpresa
+from .models import Empresa
 
-class ConfiguracionEmpresaForm(forms.ModelForm):
+class EmpresaForm(forms.ModelForm):
     class Meta:
-        model = ConfiguracionEmpresa
+        model = Empresa
         fields = '__all__'
         widgets = {
             'direccion': forms.Textarea(attrs={'rows': 3}),

@@ -1,0 +1,82 @@
+{% extends 'core/base.html' %}
+{% block title %}{{ titulo }} | ERP{% endblock %}
+{% block page_title %}{{ titulo }}{% endblock %}
+{% block breadcrumb %}Facturación / Emisión{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="erp-card shadow-sm border-0">
+            <div class="erp-card-header bg-white border-bottom py-3">
+                <span class="erp-card-title text-primary"><i class="bi bi-receipt-cutoff me-2"></i>Nueva Factura Fiscal</span>
+            </div>
+            <div class="erp-card-body p-4">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="alert alert-info border-0 shadow-sm small mb-4">
+                        <i class="bi bi-info-circle-fill me-2"></i>
+                        Asegúrese de que el <strong>Correlativo</strong> sea el siguiente según el talonario fiscal autorizado por el SENIAT.
+                    </div>
+
+                    <h6 class="text-secondary fw-bold border-bottom pb-2 mb-3"><i class="bi bi-person-badge me-2"></i>Datos del Cliente y Referencia</h6>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-dark small">Cliente</label>
+                            {{ form.cliente }}
+                            {% if form.cliente.errors %}<div class="text-danger small mt-1">{{ form.cliente.errors }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-dark small">Pedido / Orden Relacionada (Opcional)</label>
+                            {{ form.pedido }}
+                            {% if form.pedido.errors %}<div class="text-danger small mt-1">{{ form.pedido.errors }}</div>{% endif %}
+                        </div>
+                    </div>
+
+                    <h6 class="text-secondary fw-bold border-bottom pb-2 mb-3 mt-4"><i class="bi bi-hash me-2"></i>Información Fiscal</h6>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold text-dark small">Tipo Documento</label>
+                            {{ form.tipo_documento }}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold text-dark small">Nro. Factura</label>
+                            {{ form.numero_factura }}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold text-dark small">Nro. Control</label>
+                            {{ form.numero_control }}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold text-dark small">Monto IGTF (Si aplica)</label>
+                            {{ form.monto_igtf }}
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-dark small">Fecha de Emisión</label>
+                            {{ form.fecha_emision }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-dark small">Fecha de Vencimiento</label>
+                            {{ form.fecha_vencimiento }}
+                        </div>
+                    </div>
+
+                    <hr class="mt-5 mb-4 text-muted">
+                    
+                    <div class="d-flex justify-content-end gap-2">
+                        <a href="{% url 'facturacion:factura_list' %}" class="btn-erp btn-erp-outline">
+                            <i class="bi bi-x-circle me-1"></i>Cancelar
+                        </a>
+                        <button type="submit" class="btn-erp btn-erp-primary px-4">
+                            <i class="bi bi-save2 me-1"></i>Generar Factura
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

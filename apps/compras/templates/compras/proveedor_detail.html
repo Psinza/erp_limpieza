@@ -4,17 +4,17 @@
 <div class="container-fluid py-4">
   <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-      <h3 class="mb-0"><i class="bi bi-building"></i> {{ prov.razon_social }}</h3>
-      {% if prov.nombre_comercial %}<small class="text-muted">{{ prov.nombre_comercial }}</small>{% endif %}
+      <h3 class="mb-0 fw-bold"><i class="bi bi-building text-primary"></i> {{ prov.razon_social }}</h3>
+      {% if prov.nombre_comercial %}<p class="text-muted mb-0">{{ prov.nombre_comercial }}</p>{% endif %}
     </div>
     <div class="d-flex gap-2">
-      <a href="{% url 'compras:orden_create' %}" class="btn btn-primary btn-sm">
-        <i class="bi bi-plus-circle"></i> Nueva OC
+      <a href="{% url 'compras:orden_create' %}?proveedor={{ prov.id }}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Nueva Orden
       </a>
-      <a href="{% url 'compras:proveedor_edit' prov.pk %}" class="btn btn-outline-primary btn-sm">
+      <a href="{% url 'compras:proveedor_edit' prov.pk %}" class="btn btn-outline-primary">
         <i class="bi bi-pencil"></i> Editar
       </a>
-      <a href="{% url 'compras:proveedor_list' %}" class="btn btn-outline-secondary btn-sm">
+      <a href="{% url 'compras:proveedor_list' %}" class="btn btn-outline-secondary">
         <i class="bi bi-arrow-left"></i> Volver
       </a>
     </div>
@@ -23,81 +23,94 @@
   <div class="row g-4">
     <!-- Info general -->
     <div class="col-md-4">
-      <div class="card border-0 shadow-sm">
-        <div class="card-header bg-primary text-white"><i class="bi bi-info-circle me-1"></i> Datos Generales</div>
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-dark text-white"><i class="bi bi-info-circle me-1"></i> Información Fiscal (SENIAT)</div>
         <div class="card-body">
-          <dl class="row mb-0 small">
-            <dt class="col-5">RUC/NIT</dt><dd class="col-7"><code>{{ prov.ruc }}</code></dd>
-            <dt class="col-5">Tipo</dt><dd class="col-7">{{ prov.get_tipo_display }}</dd>
-            <dt class="col-5">Categoría</dt><dd class="col-7">{{ prov.categoria|default:"—" }}</dd>
-            <dt class="col-5">Teléfono</dt><dd class="col-7">{{ prov.telefono|default:"—" }}</dd>
-            <dt class="col-5">Email</dt><dd class="col-7">{{ prov.email|default:"—" }}</dd>
-            <dt class="col-5">Ciudad</dt><dd class="col-7">{{ prov.ciudad|default:"—" }}, {{ prov.pais }}</dd>
-            <dt class="col-5">Dirección</dt><dd class="col-7">{{ prov.direccion|default:"—" }}</dd>
-            <dt class="col-5">Estado</dt>
+          <dl class="row mb-0">
+            <dt class="col-5 small text-muted text-uppercase">RIF</dt>
+            <dd class="col-7 fw-bold"><code>{{ prov.rif }}</code></dd>
+            
+            <dt class="col-5 small text-muted text-uppercase">Contribuyente</dt>
+            <dd class="col-7">{{ prov.get_tipo_contribuyente_display }}</dd>
+            
+            <dt class="col-5 small text-muted text-uppercase">% Retención IVA</dt>
+            <dd class="col-7 fw-bold text-danger">{{ prov.porcentaje_retencion_iva }}%</dd>
+            
+            <dt class="col-5 small text-muted text-uppercase">Categoría</dt>
+            <dd class="col-7"><span class="badge bg-light text-dark">{{ prov.categoria|default:"—" }}</span></dd>
+            
+            <dt class="col-5 small text-muted text-uppercase">Estado</dt>
             <dd class="col-7">
-              <span class="badge {% if prov.estado == 'activo' %}bg-success{% elif prov.estado == 'inactivo' %}bg-secondary{% else %}bg-danger{% endif %}">
-                {{ prov.get_estado_display }}
+              <span class="badge {% if prov.estado == 'activo' %}bg-success{% else %}bg-secondary{% endif %}">
+                {{ prov.estado|upper }}
               </span>
             </dd>
-          </dl>
-        </div>
-      </div>
 
-      <div class="card border-0 shadow-sm mt-3">
-        <div class="card-header bg-success text-white"><i class="bi bi-cash me-1"></i> Condiciones</div>
-        <div class="card-body">
-          <dl class="row mb-0 small">
-            <dt class="col-6">Días de crédito</dt><dd class="col-6">{{ prov.dias_credito }}</dd>
-            <dt class="col-6">Descuento %</dt><dd class="col-6">{{ prov.descuento_pct }}%</dd>
-            <dt class="col-6">Banco</dt><dd class="col-6">{{ prov.banco|default:"—" }}</dd>
-            <dt class="col-6">Cuenta</dt><dd class="col-6">{{ prov.cuenta_bancaria|default:"—" }}</dd>
-          </dl>
-        </div>
-      </div>
+            <hr class="my-3">
 
-      <!-- Estadísticas -->
-      <div class="card border-0 shadow-sm mt-3">
-        <div class="card-header bg-dark text-white"><i class="bi bi-bar-chart me-1"></i> Estadísticas</div>
-        <div class="card-body small">
-          <dl class="row mb-0">
-            <dt class="col-6">Total órdenes</dt><dd class="col-6 fw-bold">{{ totales.num_ordenes|default:0 }}</dd>
-            <dt class="col-6">Total comprado</dt><dd class="col-6 fw-bold text-success">${{ totales.total_comprado|floatformat:2|default:"0.00" }}</dd>
+            <dt class="col-5 small text-muted text-uppercase">Teléfono</dt>
+            <dd class="col-7">{{ prov.telefono|default:"—" }}</dd>
+            
+            <dt class="col-5 small text-muted text-uppercase">Email</dt>
+            <dd class="col-7 small">{{ prov.email|default:"—" }}</dd>
+            
+            <dt class="col-5 small text-muted text-uppercase">Ubicación</dt>
+            <dd class="col-7 small">{{ prov.ciudad|default:"" }}, {{ prov.pais }}</dd>
+            
+            <dt class="col-12 small text-muted text-uppercase mt-2">Dirección Fiscal</dt>
+            <dd class="col-12 small">{{ prov.direccion|default:"—" }}</dd>
           </dl>
         </div>
       </div>
     </div>
 
-    <!-- Contactos -->
+    <!-- Contactos y Pagos -->
     <div class="col-md-4">
-      <div class="card border-0 shadow-sm">
-        <div class="card-header bg-white fw-semibold d-flex justify-content-between">
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+          <span><i class="bi bi-cash me-1"></i> Datos Bancarios y Crédito</span>
+        </div>
+        <div class="card-body">
+          <dl class="row mb-0">
+            <dt class="col-6 small text-muted text-uppercase">Días Crédito</dt>
+            <dd class="col-6 fw-bold">{{ prov.dias_credito }} días</dd>
+            
+            <dt class="col-6 small text-muted text-uppercase">Banco</dt>
+            <dd class="col-6">{{ prov.banco|default:"—" }}</dd>
+            
+            <dt class="col-12 small text-muted text-uppercase mt-2">Nro de Cuenta</dt>
+            <dd class="col-12"><code>{{ prov.cuenta_bancaria|default:"—" }}</code></dd>
+          </dl>
+        </div>
+      </div>
+
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-white fw-semibold d-flex justify-content-between align-items-center">
           <span><i class="bi bi-person-lines-fill text-info me-1"></i> Contactos</span>
           <a href="{% url 'compras:proveedor_contacto_add' prov.pk %}" class="btn btn-sm btn-outline-info">+ Agregar</a>
         </div>
         <div class="card-body p-0">
-          <table class="table table-sm mb-0">
-            <thead class="table-light"><tr><th>Nombre</th><th>Cargo</th><th>Email</th><th></th></tr></thead>
+          <table class="table table-sm table-hover mb-0">
+            <thead class="table-light"><tr><th>Nombre</th><th>Email</th><th></th></tr></thead>
             <tbody>
               {% for c in contactos %}
               <tr>
                 <td>
-                  {{ c.nombre }}
-                  {% if c.principal %}<span class="badge bg-warning text-dark ms-1">Principal</span>{% endif %}
+                  <div class="fw-bold">{{ c.nombre }}</div>
+                  <small class="text-muted">{{ c.cargo|default:"" }}</small>
                 </td>
-                <td class="small text-muted">{{ c.cargo|default:"—" }}</td>
                 <td class="small">{{ c.email|default:"—" }}</td>
-                <td>
+                <td class="text-end">
                   <form method="post" action="{% url 'compras:proveedor_contacto_delete' prov.pk c.pk %}" class="d-inline">
                     {% csrf_token %}
-                    <button class="btn btn-sm btn-link text-danger p-0" onclick="return confirm('¿Eliminar contacto?')">
+                    <button class="btn btn-sm text-danger" onclick="return confirm('¿Eliminar contacto?')">
                       <i class="bi bi-trash"></i>
                     </button>
                   </form>
                 </td>
               </tr>
               {% empty %}
-              <tr><td colspan="4" class="text-muted text-center py-2">Sin contactos.</td></tr>
+              <tr><td colspan="3" class="text-muted text-center py-3">Sin contactos registrados.</td></tr>
               {% endfor %}
             </tbody>
           </table>
@@ -105,36 +118,51 @@
       </div>
     </div>
 
-    <!-- Últimas órdenes -->
+    <!-- Estadísticas y Historial -->
     <div class="col-md-4">
+      <div class="card border-0 shadow-sm bg-light mb-4">
+        <div class="card-body py-3 d-flex justify-content-between align-items-center">
+          <div>
+            <h6 class="text-uppercase text-muted small fw-bold mb-1">Total Comprado</h6>
+            <h4 class="mb-0 text-success fw-bold">{{ totales.total_comprado|floatformat:2|default:"0.00" }} <small>VES</small></h4>
+          </div>
+          <div class="text-end">
+            <h6 class="text-uppercase text-muted small fw-bold mb-1">Órdenes</h6>
+            <h4 class="mb-0 fw-bold">{{ totales.num_ordenes|default:0 }}</h4>
+          </div>
+        </div>
+      </div>
+
       <div class="card border-0 shadow-sm">
         <div class="card-header bg-white fw-semibold">
           <i class="bi bi-file-earmark-text text-warning me-1"></i> Últimas Órdenes
         </div>
         <div class="card-body p-0">
-          <table class="table table-sm mb-0">
-            <thead class="table-light"><tr><th>N° OC</th><th>Fecha</th><th>Total</th><th>Estado</th></tr></thead>
+          <table class="table table-sm table-hover mb-0">
+            <thead class="table-light"><tr><th>N° OC</th><th>Fecha</th><th>Total</th><th></th></tr></thead>
             <tbody>
               {% for o in ordenes %}
               <tr>
-                <td><a href="{% url 'compras:orden_detail' o.pk %}">{{ o.numero }}</a></td>
+                <td><a href="{% url 'compras:orden_detail' o.pk %}" class="fw-bold">#{{ o.numero|default:o.id }}</a></td>
                 <td class="small">{{ o.fecha_emision|date:"d/m/Y" }}</td>
-                <td class="small fw-bold">${{ o.total|floatformat:2 }}</td>
+                <td class="small fw-bold">{{ o.total|floatformat:2 }}</td>
                 <td>
-                  <span class="badge
+                  <span class="badge 
                     {% if o.estado == 'completada' %}bg-success
                     {% elif o.estado == 'anulada' %}bg-danger
-                    {% elif o.estado == 'confirmada' %}bg-primary
-                    {% else %}bg-secondary{% endif %}" style="font-size:.7rem">
-                    {{ o.get_estado_display }}
+                    {% else %}bg-secondary{% endif %}" style="font-size:0.65rem">
+                    {{ o.estado|upper }}
                   </span>
                 </td>
               </tr>
               {% empty %}
-              <tr><td colspan="4" class="text-muted text-center py-2">Sin órdenes.</td></tr>
+              <tr><td colspan="4" class="text-muted text-center py-3">Sin órdenes.</td></tr>
               {% endfor %}
             </tbody>
           </table>
+        </div>
+        <div class="card-footer bg-white border-0 text-center">
+          <a href="{% url 'compras:orden_list' %}?proveedor={{ prov.id }}" class="small text-decoration-none">Ver todo el historial</a>
         </div>
       </div>
     </div>

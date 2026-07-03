@@ -65,7 +65,7 @@
             </td>
             <td>{{ e.cargo.nombre }}</td>
             <td>{{ e.departamento }}</td>
-            <td>${{ e.salario|floatformat:2 }}</td>
+            <td>${{ e.salario_base|floatformat:2 }}</td>
             <td>
               <span class="badge
                 {% if e.estado == 'activo' %}bg-success

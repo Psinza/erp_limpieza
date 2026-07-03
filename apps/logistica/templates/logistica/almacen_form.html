@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}{{ titulo }}{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="mb-4">
+        <a href="{% url 'logistica:almacen_list' %}" class="btn btn-sm btn-erp-outline mb-3">
+            <i class="bi bi-arrow-left"></i> Volver al listado
+        </a>
+        <h2 class="topbar-title fs-3 mb-0">{{ titulo }}</h2>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-xl-6">
+            <form method="post" class="erp-card shadow-sm">
+                {% csrf_token %}
+                <div class="erp-card-header">
+                    <h5 class="erp-card-title mb-0">Configuración de Almacén</h5>
+                </div>
+                <div class="erp-card-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label">Nombre del Almacén</label>
+                            {{ form.nombre }}
+                            <div class="small text-muted">Ejemplo: Almacén Central, Depósito de Materia Prima.</div>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">Ubicación Física</label>
+                            {{ form.ubicacion }}
+                        </div>
+
+                        <div class="col-md-6 d-flex align-items-center">
+                            <div class="form-check form-switch">
+                                {{ form.es_principal }}
+                                <label class="form-check-label ms-2">¿Es Almacén Principal?</label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 d-flex align-items-center">
+                            <div class="form-check form-switch">
+                                {{ form.activo }}
+                                <label class="form-check-label ms-2">Estado Activo</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="erp-card-footer bg-light p-3 border-top d-flex justify-content-end gap-2">
+                    <a href="{% url 'logistica:almacen_list' %}" class="btn btn-erp btn-erp-outline">Cancelar</a>
+                    <button type="submit" class="btn btn-erp btn-erp-primary">
+                        <i class="bi bi-save"></i> Guardar Almacén
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

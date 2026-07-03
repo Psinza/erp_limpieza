@@ -1,3 +1,10 @@
-# apps/inventarios/apps.py
-def ready(self):
-    import apps.inventarios.signals
+from django.apps import AppConfig
+
+
+class InventariosConfig(AppConfig):
+    default_auto_field = 'django.db.models.BigAutoField'
+    name = 'apps.inventarios'
+    verbose_name = 'Inventarios y control logistico'
+
+    def ready(self):
+        import apps.inventarios.signals

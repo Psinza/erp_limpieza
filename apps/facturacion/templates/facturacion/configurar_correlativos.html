@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Configurar Correlativos Fiscales{% endblock %}
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white py-3">
+                    <h5 class="mb-0"><i class="bi bi-gear-fill me-2"></i> Configuración de Correlativos Fiscales</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small">Establezca los números iniciales para sus documentos. El sistema incrementará estos valores automáticamente al generar cada documento.</p>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Documento</th>
+                                        <th>Prefijo</th>
+                                        <th>Próximo Número</th>
+                                        <th>Ejemplo</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for c in correlativos %}
+                                    <tr>
+                                        <td class="fw-bold">{{ c.get_tipo_display }}</td>
+                                        <td>
+                                            <input type="text" name="prefijo_{{ c.id }}" value="{{ c.prefijo }}" class="form-control form-control-sm" style="width: 80px;">
+                                        </td>
+                                        <td>
+                                            <input type="number" name="proximo_{{ c.id }}" value="{{ c.proximo_numero }}" class="form-control form-control-sm">
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-secondary font-monospace">{{ c.generar_siguiente }}</span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save"></i> Guardar Configuración
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="alert alert-info mt-4">
+                <i class="bi bi-info-circle-fill me-2"></i>
+                <strong>Nota:</strong> Los cambios realizados aquí afectarán a los nuevos documentos creados a partir de este momento.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -16,6 +16,11 @@ def dashboard_comercializacion(request):
         'categorias': categorias,
         'productos': productos,
         'listas': listas,
+        'total_productos_catalogo': productos.count(),
+        'listas_activas': listas.count(),
+        'productos_en_oferta': productos.filter(en_oferta=True).count(),
+        'productos_destacados': productos.filter(destacado=True).count(),
+        'ultimos_productos': productos.order_by('-id')[:5],
     }
     return render(request, 'comercializacion/dashboard.html', context)
 
@@ -62,8 +67,24 @@ def categoria_delete(request, pk):
 # Información Comercial
 @login_required
 def producto_comercial_list(request):
+    q = request.GET.get('q', '')
+    cat_id = request.GET.get('categoria', '')
     productos = InformacionComercial.objects.select_related('producto', 'categoria').all()
-    return render(request, 'comercializacion/producto_comercial_list.html', {'productos': productos})
+    
+    if q:
+        productos = productos.filter(Q(nombre_comercial__icontains=q) | Q(producto__nombre__icontains=q))
+    if cat_id:
+        productos = productos.filter(categoria_id=cat_id)
+        
+    categorias = CategoriaComercial.objects.all()
+    
+    context = {
+        'items_catalogo': productos,
+        'categorias': categorias,
+        'q': q,
+        'cat_sel': cat_id,
+    }
+    return render(request, 'comercializacion/catalogo_list.html', context)
 
 @login_required
 def producto_comercial_create(request):
@@ -72,10 +93,10 @@ def producto_comercial_create(request):
         if form.is_valid():
             form.save()
             messages.success(request, 'Información comercial creada exitosamente.')
-            return redirect('comercializacion:producto_comercial_list')
+            return redirect('comercializacion:catalogo_list')
     else:
         form = InformacionComercialForm()
-    return render(request, 'comercializacion/producto_comercial_form.html', {'form': form, 'title': 'Crear Información Comercial'})
+    return render(request, 'comercializacion/catalogo_form.html', {'form': form, 'title': 'Crear Información Comercial'})
 
 @login_required
 def producto_comercial_update(request, pk):
@@ -85,10 +106,10 @@ def producto_comercial_update(request, pk):
         if form.is_valid():
             form.save()
             messages.success(request, 'Información comercial actualizada exitosamente.')
-            return redirect('comercializacion:producto_comercial_list')
+            return redirect('comercializacion:catalogo_list')
     else:
         form = InformacionComercialForm(instance=info)
-    return render(request, 'comercializacion/producto_comercial_form.html', {'form': form, 'title': 'Editar Información Comercial'})
+    return render(request, 'comercializacion/catalogo_form.html', {'form': form, 'title': 'Editar Información Comercial'})
 
 @login_required
 def producto_comercial_delete(request, pk):
@@ -96,14 +117,14 @@ def producto_comercial_delete(request, pk):
     if request.method == 'POST':
         info.delete()
         messages.success(request, 'Información comercial eliminada exitosamente.')
-        return redirect('comercializacion:producto_comercial_list')
+        return redirect('comercializacion:catalogo_list')
     return render(request, 'comercializacion/producto_comercial_confirm_delete.html', {'info': info})
 
 # Listas de Precio
 @login_required
 def lista_precio_list(request):
     listas = ListaPrecio.objects.all()
-    return render(request, 'comercializacion/lista_precio_list.html', {'listas': listas})
+    return render(request, 'comercializacion/listas_precio_list.html', {'listas': listas})
 
 @login_required
 def lista_precio_create(request):
@@ -144,7 +165,11 @@ def lista_precio_delete(request, pk):
 def item_precio_list(request, lista_id):
     lista = get_object_or_404(ListaPrecio, pk=lista_id)
     items = ItemPrecio.objects.filter(lista=lista).select_related('producto')
-    return render(request, 'comercializacion/item_precio_list.html', {'lista': lista, 'items': items})
+    return render(request, 'comercializacion/lista_precio_detail.html', {
+        'lista': lista, 
+        'items': items,
+        'form_item': ItemPrecioForm()
+    })
 
 @login_required
 def item_precio_create(request, lista_id):
@@ -183,3 +208,24 @@ def item_precio_delete(request, pk):
         messages.success(request, 'Precio eliminado exitosamente.')
         return redirect('comercializacion:item_precio_list', lista_id=lista_id)
     return render(request, 'comercializacion/item_precio_confirm_delete.html', {'item': item})
+
+@login_required
+def lista_imprimir(request, pk):
+    lista = get_object_or_404(ListaPrecio, pk=pk)
+    items = ItemPrecio.objects.filter(lista=lista).select_related('producto')
+    return render(request, 'comercializacion/lista_precio_print.html', {'lista': lista, 'items': items})
+
+@login_required
+def promocion_create(request):
+    from .forms import PromocionForm
+    if request.method == 'POST':
+        form = PromocionForm(request.POST)
+        if form.is_valid():
+            productos = form.cleaned_data['productos']
+            # Lógica para aplicar la promoción (ej. marcar como oferta)
+            productos.update(en_oferta=True)
+            messages.success(request, 'Promoción aplicada a los productos seleccionados.')
+            return redirect('comercializacion:dashboard')
+    else:
+        form = PromocionForm()
+    return render(request, 'comercializacion/promocion_form.html', {'form': form, 'titulo': 'Crear Promoción'})

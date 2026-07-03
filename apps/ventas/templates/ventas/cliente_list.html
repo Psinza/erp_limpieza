@@ -1,87 +1,73 @@
 {% extends "base.html" %}
-{% block title %}Clientes{% endblock %}
+{% block title %}{{ titulo }}{% endblock %}
 {% block content %}
 <div class="container-fluid py-4">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h3><i class="bi bi-people"></i> Clientes</h3>
-    <a href="{% url 'ventas:cliente_create' %}" class="btn btn-primary">
-      <i class="bi bi-person-plus"></i> Nuevo Cliente
-    </a>
-  </div>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="topbar-title fs-3 mb-0">{{ titulo }}</h2>
+            <p class="text-muted small mb-0">Gestión de base de datos de clientes y prospectos</p>
+        </div>
+        <a href="{% url 'ventas:cliente_create' %}" class="btn btn-erp btn-erp-primary">
+            <i class="bi bi-person-plus"></i> Nuevo Cliente
+        </a>
+    </div>
 
-  <form method="get" class="row g-2 mb-3">
-    <div class="col-md-4">
-      <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Buscar por nombre o RUC…">
+    <div class="erp-card">
+        <div class="erp-card-body p-0">
+            <div class="table-responsive">
+                <table class="erp-table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Identificación</th>
+                            <th>Razón Social / Nombre</th>
+                            <th>Tipo</th>
+                            <th>Contacto</th>
+                            <th>Estado</th>
+                            <th class="text-end">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for c in clientes %}
+                        <tr>
+                            <td>
+                                <span class="fw-medium text-primary">{{ c.identificacion_completa }}</span>
+                                <div class="small text-muted">{{ c.get_tipo_contribuyente_display }}</div>
+                            </td>
+                            <td>
+                                <div class="fw-semibold">{{ c.razon_social }}</div>
+                                <div class="small text-muted">{{ c.nombre_comercial|default:"" }}</div>
+                            </td>
+                            <td>
+                                <span class="badge-rol">{{ c.get_tipo_display }}</span>
+                            </td>
+                            <td>
+                                <div class="small"><i class="bi bi-telephone me-1"></i> {{ c.telefono }}</div>
+                                <div class="small"><i class="bi bi-envelope me-1"></i> {{ c.email }}</div>
+                            </td>
+                            <td>
+                                <span class="badge-area {% if c.estado == 'activo' %}badge-activo{% elif c.estado == 'inactivo' %}badge-inactivo{% else %}badge-bloqueado{% endif %}">
+                                    {{ c.get_estado_display }}
+                                </span>
+                            </td>
+                            <td class="text-end">
+                                <a href="{% url 'ventas:cliente_update' c.pk %}" class="btn-erp btn-erp-outline btn-sm">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5">
+                                <i class="bi bi-people fs-1 text-muted d-block mb-2"></i>
+                                <p class="text-muted">No hay clientes registrados.</p>
+                                <a href="{% url 'ventas:cliente_create' %}" class="btn btn-sm btn-erp-primary">Registrar el primero</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
-    <div class="col-md-3">
-      <select name="categoria" class="form-select">
-        <option value="">— Categoría —</option>
-        {% for c in categorias %}
-        <option value="{{ c.id }}" {% if cat == c.id|stringformat:"s" %}selected{% endif %}>{{ c.nombre }}</option>
-        {% endfor %}
-      </select>
-    </div>
-    <div class="col-md-2">
-      <select name="estado" class="form-select">
-        <option value="">— Estado —</option>
-        <option value="activo"    {% if estado == "activo"    %}selected{% endif %}>Activo</option>
-        <option value="inactivo"  {% if estado == "inactivo"  %}selected{% endif %}>Inactivo</option>
-        <option value="bloqueado" {% if estado == "bloqueado" %}selected{% endif %}>Bloqueado</option>
-      </select>
-    </div>
-    <div class="col-md-2">
-      <button type="submit" class="btn btn-outline-secondary w-100"><i class="bi bi-search"></i> Filtrar</button>
-    </div>
-    <div class="col-md-1">
-      <a href="{% url 'ventas:cliente_list' %}" class="btn btn-outline-danger w-100">✕</a>
-    </div>
-  </form>
-
-  <div class="card border-0 shadow-sm">
-    <div class="card-body p-0">
-      <table class="table table-hover align-middle mb-0">
-        <thead class="table-dark">
-          <tr><th>RUC</th><th>Razón Social</th><th>Categoría</th><th>Teléfono</th>
-              <th>Días Crédito</th><th>Vendedor</th><th>Estado</th><th>Acciones</th></tr>
-        </thead>
-        <tbody>
-          {% for c in clientes %}
-          <tr>
-            <td><code>{{ c.ruc }}</code></td>
-            <td>
-              <a href="{% url 'ventas:cliente_detail' c.pk %}" class="fw-semibold text-decoration-none">
-                {{ c.razon_social }}
-              </a>
-              {% if c.nombre_comercial %}<br><small class="text-muted">{{ c.nombre_comercial }}</small>{% endif %}
-            </td>
-            <td>{{ c.categoria|default:"—" }}</td>
-            <td>{{ c.telefono|default:"—" }}</td>
-            <td>{{ c.dias_credito }} días</td>
-            <td>{{ c.vendedor|default:"—" }}</td>
-            <td>
-              <span class="badge
-                {% if c.estado == 'activo' %}bg-success
-                {% elif c.estado == 'inactivo' %}bg-secondary
-                {% else %}bg-danger{% endif %}">
-                {{ c.get_estado_display }}
-              </span>
-            </td>
-            <td>
-              <a href="{% url 'ventas:cliente_edit' c.pk %}" class="btn btn-sm btn-outline-primary me-1">
-                <i class="bi bi-pencil"></i>
-              </a>
-              <a href="{% url 'ventas:cliente_detail' c.pk %}" class="btn btn-sm btn-outline-secondary">
-                <i class="bi bi-eye"></i>
-              </a>
-            </td>
-          </tr>
-          {% empty %}
-          <tr><td colspan="8" class="text-center text-muted py-4">No se encontraron clientes.</td></tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-    <div class="card-footer text-muted small">Total: {{ clientes.count }} cliente(s)</div>
-  </div>
 </div>
 {% endblock %}

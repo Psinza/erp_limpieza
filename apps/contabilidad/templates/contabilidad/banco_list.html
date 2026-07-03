@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Listado de Bancos{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="h3 mb-4 text-gray-800">Bancos</h1>
+
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <a href="{% url 'tesoreria:banco_create' %}" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+            <i class="bi bi-plus-circle fa-sm text-white-50"></i> Nuevo Banco
+        </a>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Listado de Cuentas Bancarias</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Número de Cuenta</th>
+                            <th>Tipo de Cuenta</th>
+                            <th>Saldo Actual</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for banco in bancos %}
+                        <tr>
+                            <td>{{ banco.nombre }}</td>
+                            <td>{{ banco.numero_cuenta }}</td>
+                            <td>{{ banco.get_tipo_cuenta_display }}</td>
+                            <td>${{ banco.saldo|floatformat:2 }}</td>
+                            <td>
+                                <a href="{% url 'tesoreria:banco_edit' banco.pk %}"
+                                    class="btn btn-info btn-sm">Editar</a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5">No hay bancos registrados.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard Contable{% endblock %}
+
+{% block content %}
+<style>
+    .header-gradient {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+    }
+
+    .card-stat {
+        border: none;
+        border-radius: 15px;
+        transition: transform 0.3s;
+    }
+
+    .card-stat:hover {
+        transform: translateY(-5px);
+    }
+</style>
+
+<div class="container-fluid py-4">
+    <div class="header-gradient shadow">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="display-5 fw-bold">Contabilidad (VEN-NIF)</h1>
+                <p class="lead">Gestión fiscal y libros reglamentarios — IVA 16%</p>
+            </div>
+            <div class="text-end">
+                <span class="badge bg-light text-dark p-2">Ejercicio: {{ ejercicio_activo.nombre|default:"2024"
+                    }}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card card-stat shadow-sm border-start border-primary border-4">
+                <div class="card-body">
+                    <h6>Asientos Registrados</h6>
+                    <h3 class="fw-bold">{{ total_asientos|default:"0" }}</h3>
+                    <small class="text-muted">En el ejercicio actual</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card card-stat shadow-sm border-start border-warning border-4">
+                <div class="card-body">
+                    <h6>Asientos en Borrador</h6>
+                    <h3 class="fw-bold">{{ asientos_pend|default:"0" }}</h3>
+                    <small class="text-muted">Pendientes por aprobar</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card card-stat shadow-sm border-start border-success border-4">
+                <div class="card-body">
+                    <h6>Utilidad Neta</h6>
+                    <h3 class="fw-bold text-success">${{ stats.utilidad_neta|default:"0.00" }}</h3>
+                    <small class="text-muted">Corte mensual</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card card-stat shadow-sm border-start border-danger border-4">
+                <div class="card-body">
+                    <h6>IVA por Pagar</h6>
+                    <h3 class="fw-bold text-danger">${{ stats.iva_por_pagar|default:"0.00" }}</h3>
+                    <small class="text-muted">Basado en Débitos/Créditos</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Aquí se integrarían los gráficos y la lista de últimos asientos -->
+    </div>
+</div>
+{% endblock %}

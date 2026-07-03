@@ -8,31 +8,56 @@
       <i class="bi bi-arrow-left"></i> Volver
     </a>
   </div>
+
   <div class="card border-0 shadow-sm">
     <div class="card-body p-4">
       <form method="post">
         {% csrf_token %}
         <div class="row g-3">
-          <div class="col-md-3"><label class="form-label">Código *</label>{{ form.codigo }}{% if form.codigo.errors %}<div class="text-danger small">{{ form.codigo.errors }}</div>{% endif %}</div>
-          <div class="col-md-9"><label class="form-label">Nombre *</label>{{ form.nombre }}</div>
-          <div class="col-md-12"><label class="form-label">Descripción</label>{{ form.descripcion }}</div>
-          <div class="col-md-4"><label class="form-label">Categoría</label>{{ form.categoria }}</div>
-          <div class="col-md-4"><label class="form-label">Unidad de Medida</label>{{ form.unidad_medida }}</div>
-          <div class="col-md-4"><label class="form-label">Precio de Referencia</label>{{ form.precio_referencia }}</div>
-          <div class="col-md-4"><label class="form-label">Stock Mínimo</label>{{ form.stock_minimo }}</div>
-          <div class="col-md-4 d-flex align-items-end">
-            <div class="form-check">
-              {{ form.activo }}<label class="form-check-label ms-2">Activo</label>
+          <div class="col-md-4">
+            <label class="form-label fw-bold">Código</label>
+            {{ form.codigo }}
+          </div>
+          <div class="col-md-8">
+            <label class="form-label fw-bold">Nombre del Producto *</label>
+            {{ form.nombre }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-bold">Categoría</label>
+            {{ form.categoria }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-bold">Precio Unitario Ref.</label>
+            {{ form.precio_unitario }}
+          </div>
+          
+          <div class="col-md-12 mt-3">
+            <div class="card bg-light border-0">
+              <div class="card-body py-2">
+                <div class="form-check">
+                  {{ form.es_exento }}
+                  <label class="form-check-label fw-bold ms-2" for="{{ form.es_exento.id_for_label }}">
+                    ¿Es Exento de IVA?
+                  </label>
+                  <div class="small text-muted ms-4">Marque esta casilla si el producto no genera IVA según la ley venezolana.</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
+
         {% if form.errors %}
-        <div class="alert alert-danger mt-3">
-          {% for field in form %}{% for error in field.errors %}<div><strong>{{ field.label }}:</strong> {{ error }}</div>{% endfor %}{% endfor %}
+        <div class="alert alert-danger mt-3 shadow-sm">
+          <ul class="mb-0">
+            {% for field in form %}{% for error in field.errors %}
+            <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+            {% endfor %}{% endfor %}
+          </ul>
         </div>
         {% endif %}
-        <div class="d-flex gap-2 mt-4">
-          <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Guardar</button>
+
+        <div class="d-flex gap-2 mt-4 pt-3 border-top">
+          <button type="submit" class="btn btn-primary px-4"><i class="bi bi-save"></i> Guardar Producto</button>
           <a href="{% url 'compras:producto_list' %}" class="btn btn-outline-secondary">Cancelar</a>
         </div>
       </form>

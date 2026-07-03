@@ -1,39 +1,66 @@
 {% extends "base.html" %}
 {% block title %}{{ titulo }}{% endblock %}
 {% block content %}
-<div class="container py-4">
-  <div class="row justify-content-center">
-    <div class="col-md-8">
-      <div class="card border-0 shadow-sm">
-        <div class="card-header bg-white py-3">
-          <h4 class="mb-0 fw-bold text-primary"><i class="bi bi-clipboard2-plus"></i> {{ titulo }}</h4>
-        </div>
-        <div class="card-body p-4">
-          <form method="post">
-            {% csrf_token %}
-            <div class="row g-3">
-              {% for field in form %}
-              <div class="col-md-{% if field.name == 'observaciones' or field.name == 'instrucciones' %}12{% else %}6{% endif %}">
-                <label class="form-label fw-semibold small text-uppercase">{{ field.label }}</label>
-                {{ field }}
-                {% if field.help_text %}<div class="form-text small">{{ field.help_text }}</div>{% endif %}
-                {% if field.errors %}<div class="text-danger small">{{ field.errors }}</div>{% endif %}
-              </div>
-              {% endfor %}
-            </div>
-            <hr class="my-4">
-            <div class="d-flex justify-content-between">
-              <a href="javascript:history.back()" class="btn btn-outline-secondary px-4">
-                <i class="bi bi-arrow-left"></i> Volver
-              </a>
-              <button type="submit" class="btn btn-primary px-5">
-                <i class="bi bi-check-circle"></i> Guardar Registro
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
+<div class="container-fluid py-4">
+    <div class="mb-4">
+        <a href="{% url 'produccion:formula_list' %}" class="btn btn-sm btn-erp-outline mb-3">
+            <i class="bi bi-arrow-left"></i> Volver al listado
+        </a>
+        <h2 class="topbar-title fs-3 mb-0">{{ titulo }}</h2>
     </div>
-  </div>
+
+    <div class="row justify-content-center">
+        <div class="col-xl-10">
+            <form method="post" class="erp-card shadow-sm">
+                {% csrf_token %}
+                <div class="erp-card-header">
+                    <h5 class="erp-card-title mb-0">Especificaciones de Fórmula Maestra</h5>
+                </div>
+                <div class="erp-card-body">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Código</label>
+                            {{ form.codigo }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Nombre de la Fórmula</label>
+                            {{ form.nombre }}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Estado</label>
+                            {{ form.estado }}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Producto Asociado</label>
+                            {{ form.producto }}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Versión</label>
+                            {{ form.version }}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Rendimiento Estimado</label>
+                            <div class="input-group">
+                                {{ form.rendimiento }}
+                                <span class="input-group-text">{{ form.instance.unidad_rendimiento|default:"Lts" }}</span>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">Procedimiento de Elaboración / Notas</label>
+                            {{ form.procedimiento }}
+                        </div>
+                    </div>
+                </div>
+                <div class="erp-card-footer bg-light p-3 border-top d-flex justify-content-end gap-2">
+                    <a href="{% url 'produccion:formula_list' %}" class="btn btn-erp btn-erp-outline">Cancelar</a>
+                    <button type="submit" class="btn btn-erp btn-erp-primary">
+                        <i class="bi bi-save"></i> Guardar Fórmula
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 {% endblock %}

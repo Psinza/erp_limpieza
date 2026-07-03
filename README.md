@@ -23,6 +23,7 @@ proyecto/
 ├── estado_resultados.html        # Reporte de Ingresos y Gastos
 ├── balance_general.html          # Reporte de Activos, Pasivos y Patrimonio
 ├── configuracion_list_form.html  # Panel de configuración del sistema
+├── apps/logistica/transportes/   # Submódulo de transporte
 ├── README.md                     # Este archivo
 └── assets/                       # (Opcional) Recursos adicionales
     ├── css/
@@ -295,6 +296,12 @@ to use, copy, modify, merge, publish, distribute, and/or sublicense...
 
 ---
 
+## 🤝 Comercialización
+
+Este módulo actúa como el eje central de negocio, permitiendo acceso directo y coordinado a:
+- **Gestión de Ventas**: Pedidos, Clientes y Facturación.
+- **Gestión de Compras**: Abastecimiento y relación con Proveedores.
+
 ## 🗺️ Roadmap
 
 ### v1.1 (Próximamente)
@@ -302,6 +309,7 @@ to use, copy, modify, merge, publish, distribute, and/or sublicense...
 - [ ] Exportación a Excel
 - [ ] Generación de PDF automática
 - [ ] Gráficos interactivos
+- [ ] Reportes de Ventas en PDF (Clientes y Productos)
 
 ### v1.2 (Futuro)
 - [ ] API REST

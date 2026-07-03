@@ -39,14 +39,22 @@
     <div class="card-body p-0">
       <table class="table table-hover align-middle mb-0">
         <thead class="table-dark">
-          <tr><th>Código</th><th>Nombre</th><th>Categoría</th><th>Unidad</th>
-              <th class="text-end">Costo Unit.</th><th class="text-end">Stock</th>
-              <th class="text-end">Stock Mín.</th><th>Proveedor Ref.</th><th>Acciones</th></tr>
+          <tr>
+              <th>SKU</th>
+              <th>Nombre</th>
+              <th>Categoría</th>
+              <th>Unidad</th>
+              <th class="text-end">Concentración</th>
+              <th class="text-end">Costo Unit.</th>
+              <th class="text-end">Stock</th>
+              <th class="text-end">Stock Mín.</th>
+              <th>Acciones</th>
+          </tr>
         </thead>
         <tbody>
           {% for m in materias %}
           <tr class="{% if m.stock_bajo %}table-danger{% endif %}">
-            <td><code>{{ m.codigo }}</code></td>
+            <td><code>{{ m.sku }}</code></td>
             <td class="fw-semibold">
               {{ m.nombre }}
               {% if m.stock_bajo %}
@@ -55,12 +63,12 @@
             </td>
             <td>{{ m.categoria|default:"—" }}</td>
             <td>{{ m.get_unidad_medida_display }}</td>
+            <td class="text-end">{{ m.concentracion }}%</td>
             <td class="text-end">${{ m.costo_unitario }}</td>
             <td class="text-end fw-bold {% if m.stock_bajo %}text-danger{% else %}text-success{% endif %}">
               {{ m.stock_actual }}
             </td>
             <td class="text-end text-muted">{{ m.stock_minimo }}</td>
-            <td class="text-muted small">{{ m.proveedor_ref|default:"—"|truncatechars:25 }}</td>
             <td>
               <a href="{% url 'produccion:materia_prima_edit' m.pk %}" class="btn btn-sm btn-outline-primary me-1">
                 <i class="bi bi-pencil"></i>

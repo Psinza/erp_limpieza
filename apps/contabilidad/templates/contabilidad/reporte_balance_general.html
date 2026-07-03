@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @page { size: letter; margin: 2cm; }
+        body { font-family: Helvetica, Arial, sans-serif; font-size: 10pt; color: #333; }
+        #watermark { position: fixed; top: 35%; left: 5%; width: 100%; text-align: center; opacity: 0.15; font-size: 80pt; color: #ffc7ce; z-index: -1000; }
+        .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #4C51BF; padding-bottom: 10px; }
+        .header h1 { margin: 0; color: #4C51BF; font-size: 18pt; }
+        .header p { margin: 2px 0; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+        th { background-color: #f2f2f2; text-align: left; padding: 8px; border-bottom: 1px solid #ddd; }
+        td { padding: 6px 8px; border-bottom: 1px solid #eee; }
+        .amount { text-align: right; }
+        .section-title { background-color: #4C51BF; color: white; padding: 5px 10px; font-weight: bold; margin-top: 15px; }
+        .total-row { font-weight: bold; background-color: #f9f9f9; }
+        .signature-container { margin-top: 50px; width: 100%; }
+        .signature-table { width: 100%; border: none; }
+        .signature-table td { width: 50%; text-align: center; border: none; padding-top: 40px; vertical-align: bottom; }
+        .signature-line { border-top: 1px solid #000; width: 80%; margin: 0 auto; padding-top: 5px; }
+        .signature-role { font-size: 8pt; color: #555; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div id="watermark">CONFIDENCIAL</div>
+
+    <div class="header">
+        <h1>BALANCE GENERAL</h1>
+        <p><strong>{{ empresa.nombre }}</strong></p>
+        <p>RIF: {{ empresa.rif }}</p>
+        <p>Fecha de Corte: {{ fecha_reporte|date:"d/m/Y" }}</p>
+    </div>
+
+    <div class="section-title">ACTIVOS</div>
+    <table>
+        <thead><tr><th>Cuenta</th><th class="amount">Saldo (Bs.)</th></tr></thead>
+        <tbody>
+            {% for cuenta in activos %}
+            <tr><td>{{ cuenta.codigo }} - {{ cuenta.nombre }}</td><td class="amount">{{ cuenta.saldo_actual|floatformat:2 }}</td></tr>
+            {% endfor %}
+            <tr class="total-row"><td>TOTAL ACTIVOS</td><td class="amount">{{ total_activos|floatformat:2 }}</td></tr>
+        </tbody>
+    </table>
+
+    <div class="section-title">PASIVOS</div>
+    <table>
+        <thead><tr><th>Cuenta</th><th class="amount">Saldo (Bs.)</th></tr></thead>
+        <tbody>
+            {% for cuenta in pasivos %}
+            <tr><td>{{ cuenta.codigo }} - {{ cuenta.nombre }}</td><td class="amount">{{ cuenta.saldo_actual|floatformat:2 }}</td></tr>
+            {% endfor %}
+            <tr class="total-row"><td>TOTAL PASIVOS</td><td class="amount">{{ total_pasivos|floatformat:2 }}</td></tr>
+        </tbody>
+    </table>
+
+    <div class="section-title">PATRIMONIO</div>
+    <table>
+        <thead><tr><th>Cuenta</th><th class="amount">Saldo (Bs.)</th></tr></thead>
+        <tbody>
+            {% for cuenta in patrimonio %}
+            <tr><td>{{ cuenta.codigo }} - {{ cuenta.nombre }}</td><td class="amount">{{ cuenta.saldo_actual|floatformat:2 }}</td></tr>
+            {% endfor %}
+            <tr class="total-row"><td>TOTAL PATRIMONIO</td><td class="amount">{{ total_patrimonio|floatformat:2 }}</td></tr>
+        </tbody>
+    </table>
+
+    <div style="margin-top: 10px; padding: 10px; border: 1px solid #4C51BF; background-color: #f0f4ff; font-weight: bold;">
+        <table style="margin-bottom: 0; border: none;">
+            <tr>
+                <td style="border: none;">TOTAL PASIVO + PATRIMONIO</td>
+                <td class="amount" style="border: none;">Bs. {{ total_pasivo_patrimonio|floatformat:2 }}</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="signature-container">
+        <table class="signature-table">
+            <tr>
+                <td>
+                    <div class="signature-line">{{ contador_nombre }}</div>
+                    <div class="signature-role">CONTADOR PÚBLICO COLEGIADO</div>
+                    <div class="signature-role">RIF: {{ contador_rif }} | CPC: {{ contador_cpc }}</div>
+                </td>
+                <td>
+                    <div class="signature-line">{{ gerente_nombre }}</div>
+                    <div class="signature-role">GERENTE GENERAL</div>
+                </td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>

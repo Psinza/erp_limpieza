@@ -1,0 +1,48 @@
+{% extends "core/base.html" %}
+{% block title %}Asignar Roles | ERP{% endblock %}
+{% block page_title %}Roles del Usuario: {{ usuario.username }}{% endblock %}
+{% block breadcrumb %}Administración / Usuarios / Roles{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="erp-card">
+            <div class="erp-card-header">
+                <span class="erp-card-title"><i class="bi bi-shield-lock me-2"></i>Asignar Roles a {{ usuario.get_full_name|default:usuario.username }}</span>
+            </div>
+            <div class="erp-card-body">
+                <form method="POST">
+                    {% csrf_token %}
+                    <p class="text-muted small mb-4">Seleccione los roles (módulos) a los que este usuario debe tener acceso.</p>
+                    
+                    <div class="row">
+                        {% for rol in roles %}
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="roles" value="{{ rol.id }}" id="rol_{{ rol.id }}"
+                                       {% if rol in usuario.groups.all %}checked{% endif %}>
+                                <label class="form-check-label" for="rol_{{ rol.id }}" style="font-weight: 500;">
+                                    {{ rol.name }}
+                                </label>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="col-12 text-center text-muted small py-3">
+                            No hay roles registrados en el sistema. <br>
+                            <a href="{% url 'administracion:rol_list' %}" class="text-primary mt-2 d-inline-block">Crear Roles Aquí</a>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="d-flex justify-content-end mt-4 pt-3 border-top">
+                        <a href="{% url 'administracion:usuario_list' %}" class="btn-erp btn-erp-outline me-2">Cancelar</a>
+                        <button type="submit" class="btn-erp btn-erp-primary">
+                            <i class="bi bi-save me-2"></i>Guardar Roles
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

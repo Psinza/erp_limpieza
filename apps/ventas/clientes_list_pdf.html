@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        @page { size: letter; margin: 1cm; }
+        body { font-family: Helvetica, sans-serif; font-size: 10pt; color: #333; }
+        .header { text-align: center; border-bottom: 2px solid #4a90e2; margin-bottom: 20px; }
+        h1 { color: #2c3e50; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background-color: #4a90e2; color: white; padding: 8px; text-align: left; }
+        td { padding: 8px; border-bottom: 1px solid #eee; }
+        .footer { position: fixed; bottom: 0; text-align: center; font-size: 8pt; width: 100%; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>{{ titulo }}</h1>
+        <p>Generado el: {% now "d/m/Y H:i" %}</p>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Nombre/Razón Social</th>
+                <th>RIF/ID</th>
+                <th>Teléfono</th>
+                <th>Email</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for cliente in clientes %}
+            <tr>
+                <td>{{ cliente.nombre }}</td>
+                <td>{{ cliente.rif }}</td>
+                <td>{{ cliente.telefono }}</td>
+                <td>{{ cliente.email }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <div class="footer">
+        ERP Limpieza - Reporte de Ventas
+    </div>
+</body>
+</html>

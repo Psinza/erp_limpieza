@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}Libro de Ventas IVA{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header d-print-none -->
+    <div class="card border-0 shadow-sm mb-4 d-print-none">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h3 class="mb-0 fw-bold"><i class="bi bi-journal-text text-primary me-2"></i> Libro de Ventas IVA</h3>
+                    <p class="text-muted mb-0">Período: {{ mes }}/{{ anio }}</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <form class="row g-2 justify-content-md-end">
+                        <div class="col-auto">
+                            <select name="mes" class="form-select form-select-sm">
+                                {% for m in meses %}
+                                <option value="{{ m }}" {% if m == mes %}selected{% endif %}>Mes {{ m }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-auto">
+                            <input type="number" name="anio" value="{{ anio }}" class="form-select form-select-sm" style="width: 100px;">
+                        </div>
+                        <div class="col-auto">
+                            <button type="submit" class="btn btn-primary btn-sm">Filtrar</button>
+                        </div>
+                        <div class="col-auto">
+                            <button onclick="window.print();" class="btn btn-dark btn-sm">
+                                <i class="bi bi-printer"></i> Imprimir Reporte
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hoja del Libro (Print Area) -->
+    <div class="card border-0 shadow-lg print-book">
+        <div class="card-body p-4">
+            <!-- Encabezado Fiscal -->
+            <div class="text-center mb-4">
+                <h4 class="fw-bold mb-0">ERP LIMPIEZA C.A.</h4>
+                <p class="small mb-0">RIF: J-12345678-9</p>
+                <h5 class="text-uppercase mt-2 border-bottom border-dark d-inline-block pb-1">Libro de Ventas - Período {{ mes }}/{{ anio }}</h5>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-bordered table-sm align-middle" style="font-size: 0.75rem;">
+                    <thead class="table-light text-center align-middle">
+                        <tr>
+                            <th rowspan="2">Fecha</th>
+                            <th rowspan="2">RIF</th>
+                            <th rowspan="2">Nombre o Razón Social</th>
+                            <th rowspan="2">Nro. Factura</th>
+                            <th rowspan="2">Nro. Control</th>
+                            <th rowspan="2">Total Ventas (Incl. IVA)</th>
+                            <th rowspan="2">Ventas Exentas</th>
+                            <th colspan="2">Ventas Gravadas</th>
+                            <th rowspan="2">IVA Retenido</th>
+                            <th rowspan="2">IGTF (3%)</th>
+                        </tr>
+                        <tr>
+                            <th>Base Imponible</th>
+                            <th>IVA (16%)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for f in facturas %}
+                        <tr>
+                            <td class="text-center">{{ f.fecha_emision|date:"d/m/Y" }}</td>
+                            <td>{{ f.cliente.rif }}</td>
+                            <td>{{ f.cliente.razon_social|truncatechars:30 }}</td>
+                            <td class="text-center">
+                                {% if f.anulada %}***ANULADA***{% else %}{{ f.numero_factura }}{% endif %}
+                            </td>
+                            <td class="text-center">{{ f.numero_control }}</td>
+                            <td class="text-end">{% if f.anulada %}0.00{% else %}{{ f.total|floatformat:2 }}{% endif %}</td>
+                            <td class="text-end">{% if f.anulada %}0.00{% else %}{{ f.exento|floatformat:2 }}{% endif %}</td>
+                            <td class="text-end">{% if f.anulada %}0.00{% else %}{{ f.base_imponible|floatformat:2 }}{% endif %}</td>
+                            <td class="text-end">{% if f.anulada %}0.00{% else %}{{ f.monto_iva_general|floatformat:2 }}{% endif %}</td>
+                            <td class="text-end">0.00</td>
+                            <td class="text-end text-danger">{% if f.anulada %}0.00{% else %}{{ f.monto_igtf|floatformat:2 }}{% endif %}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="11" class="text-center py-4 text-muted">No hay operaciones registradas en este período.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="table-secondary fw-bold">
+                        <tr>
+                            <td colspan="5" class="text-end">TOTALES DEL MES:</td>
+                            <td class="text-end">{{ resumen.total_ventas|default:"0.00"|floatformat:2 }}</td>
+                            <td class="text-end">{{ resumen.total_exento|default:"0.00"|floatformat:2 }}</td>
+                            <td class="text-end">{{ resumen.total_base|default:"0.00"|floatformat:2 }}</td>
+                            <td class="text-end">{{ resumen.total_iva|default:"0.00"|floatformat:2 }}</td>
+                            <td class="text-end">0.00</td>
+                            <td class="text-end">{{ resumen.total_igtf|default:"0.00"|floatformat:2 }}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    @media print {
+        .navbar, .d-print-none, .footer { display: none !important; }
+        .container-fluid { width: 100% !important; max-width: 100% !important; margin: 0; padding: 0; }
+        .card { border: none !important; box-shadow: none !important; }
+        .table { width: 100% !important; border-color: #000 !important; }
+        body { background: white !important; }
+        @page { size: landscape; margin: 1cm; }
+    }
+</style>
+{% endblock %}

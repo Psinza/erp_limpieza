@@ -23,9 +23,9 @@ class ContactoClienteInline(admin.TabularInline):
 
 @admin.register(Cliente)
 class ClienteAdmin(admin.ModelAdmin):
-    list_display    = ["ruc", "razon_social", "categoria", "telefono", "estado", "creado_en"]
+    list_display    = ["rif", "razon_social", "categoria", "telefono", "estado", "creado_en"]
     list_filter     = ["estado", "tipo", "categoria"]
-    search_fields   = ["ruc", "razon_social", "nombre_comercial"]
+    search_fields   = ["rif", "razon_social", "nombre_comercial"]
     readonly_fields = ["creado_en", "modificado_en"]
     inlines         = [ContactoClienteInline]
 

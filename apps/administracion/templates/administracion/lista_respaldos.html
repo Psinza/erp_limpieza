@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 text-primary"><i class="bi bi-cloud-arrow-down-fill me-2"></i>{{ titulo }}</h5>
+            <div>
+                <a href="{% url 'administracion:ejecutar_backup_manual' %}" id="btn-ejecutar-backup"
+                    class="btn btn-primary btn-sm me-2">
+                    <i class="bi bi-play-fill"></i> <span id="btn-text">Iniciar Respaldo Ahora</span>
+                </a>
+                <a href="{% url 'administracion:mantenimiento' %}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left"></i> Volver
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Fecha y Hora</th>
+                            <th>Nombre del Archivo</th>
+                            <th>Tamaño</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for respaldo in respaldos %}
+                        <tr>
+                            <td>{{ respaldo.fecha_creacion|date:"d/m/Y H:i" }}</td>
+                            <td class="text-muted small">{{ respaldo.nombre_original }}</td>
+                            <td>{{ respaldo.tamano_mb }} MB</td>
+                            <td>
+                                {% if respaldo.exitoso %}
+                                <span class="badge rounded-pill bg-success-subtle text-success">
+                                    <i class="bi bi-check-circle-fill me-1"></i> Exitoso
+                                </span>
+                                {% else %}
+                                <span class="badge rounded-pill bg-danger-subtle text-danger"
+                                    title="{{ respaldo.error_log }}">
+                                    <i class="bi bi-exclamation-triangle-fill me-1"></i> Fallido
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if respaldo.archivo %}
+                                <a href="{{ respaldo.archivo.url }}" class="btn btn-sm btn-light border text-primary"
+                                    download>
+                                    <i class="bi bi-download"></i>
+                                </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted">
+                                <i class="bi bi-info-circle fs-2 d-block mb-2"></i>
+                                No se han registrado respaldos aún.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Paginación -->
+            {% if respaldos.has_other_pages %}
+            <nav class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if respaldos.has_previous %}
+                    <li class="page-item"><a class="page-link"
+                            href="?page={{ respaldos.previous_page_number }}">Anterior</a></li>
+                    {% endif %}
+                    <li class="page-item active"><span class="page-link">{{ respaldos.number }}</span></li>
+                    {% if respaldos.has_next %}
+                    <li class="page-item"><a class="page-link"
+                            href="?page={{ respaldos.next_page_number }}">Siguiente</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('btn-ejecutar-backup').addEventListener('click', function (e) {
+        const btn = this;
+        const textSpan = document.getElementById('btn-text');
+        const icon = btn.querySelector('i');
+
+        // Prevenir clics múltiples mientras se procesa la solicitud
+        if (btn.classList.contains('disabled')) {
+            e.preventDefault();
+            return;
+        }
+
+        // Cambiar apariencia a estado de carga usando clases de Bootstrap 5
+        btn.classList.add('disabled');
+        icon.className = 'spinner-border spinner-border-sm me-1';
+        icon.setAttribute('role', 'status');
+        textSpan.innerText = 'Procesando respaldo...';
+    });
+</script>
+{% endblock %}

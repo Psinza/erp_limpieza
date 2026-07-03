@@ -1,93 +1,111 @@
-from django.views.generic import ListView, CreateView, UpdateView, DeleteView
-from .models import ActivoFijo
-from .forms import ActivoFijoForm
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.messages.views import SuccessMessageMixin
-from django.contrib import messages
-from django.http import HttpResponse, HttpResponseRedirect
-from django.urls import reverse_lazy
-from django.shortcuts import render
-from django.db.models import Q # Importar Q para búsquedas complejas
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required
+from django.db.models import Sum
+from django.utils import timezone
+from .models import ActivoFijo, MantenimientoActivo
+from .forms import ActivoFijoForm, AsignacionActivoForm, MantenimientoActivoForm
 
-class ActivoFijoListView(LoginRequiredMixin, ListView):
-    model = ActivoFijo
-    template_name = 'activos_fijos/activo_list.html'
-    context_object_name = 'activos'
-    ordering = ['codigo']
-    paginate_by = 10  # Muestra 10 activos por página
-
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        query = self.request.GET.get('q')
-        if query:
-            queryset = queryset.filter(
-                Q(codigo__icontains=query) | Q(nombre__icontains=query)
-            )
-        return queryset
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['q'] = self.request.GET.get('q', '') # Para mantener el valor de búsqueda en el input
-        return context
-
-class ActivoFijoCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
-    model = ActivoFijo
-    form_class = ActivoFijoForm
-    template_name = 'activos_fijos/activo_form.html'
-    success_url = reverse_lazy('activos_fijos:activo_list')
-    success_message = "¡El activo '%(nombre)s' se ha creado correctamente!"
-
-class ActivoFijoUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
-    model = ActivoFijo
-    form_class = ActivoFijoForm
-    template_name = 'activos_fijos/activo_form.html'
-    success_url = reverse_lazy('activos_fijos:activo_list')
-    success_message = "¡El activo '%(nombre)s' se ha actualizado correctamente!"
-
-class ActivoFijoDeleteView(LoginRequiredMixin, DeleteView):
-    model = ActivoFijo
-    template_name = 'activos_fijos/activo_confirm_delete.html'
-    success_url = reverse_lazy('activos_fijos:activo_list')
+@login_required
+def dashboard(request):
+    """Panel principal del módulo de Activos Fijos."""
+    activos_qs = ActivoFijo.objects.all()
+    total_activos = activos_qs.count()
+    valor_compra = activos_qs.aggregate(t=Sum('valor_compra'))['t'] or 0
     
-    def post(self, request, *args, **kwargs):
-        messages.success(request, "El activo ha sido eliminado correctamente.")
-        return super().post(request, *args, **kwargs)
+    # Cálculo de depreciación para todos los activos
+    depreciacion_total = sum(a.depreciacion_acumulada for a in activos_qs)
+    valor_libro_total = float(valor_compra) - float(depreciacion_total)
+    
+    activos_recientes = activos_qs.order_by('-fecha_adquisicion')[:5]
+    mantenimientos_proximos = MantenimientoActivo.objects.filter(
+        proximo_mantenimiento__gte=timezone.now().date()
+    ).order_by('proximo_mantenimiento')[:5]
 
-def exportar_activos_a_excel(request):
-    try:
-        from openpyxl import Workbook
-    except ModuleNotFoundError:
-        messages.error(request, 'La exportación a Excel requiere el paquete openpyxl. Instálalo con pip install openpyxl.')
-        return HttpResponseRedirect(reverse_lazy('activos_fijos:activo_list'))
+    return render(request, 'activos_fijos/dashboard.html', {
+        'titulo': 'Control de Activos Fijos',
+        'stats': {
+            'total_activos': total_activos,
+            'valor_compra': valor_compra,
+            'depreciacion_total': depreciacion_total,
+            'valor_libro_total': valor_libro_total,
+        },
+        'activos_recientes': activos_recientes,
+        'mantenimientos_proximos': mantenimientos_proximos,
+    })
 
-    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    response['Content-Disposition'] = 'attachment; filename="activos_fijos.xlsx"'
+@login_required
+def activo_list(request):
+    activos = ActivoFijo.objects.all().order_by('codigo')
+    return render(request, 'activos_fijos/activo_list.html', {'titulo': 'Inventario de Activos', 'activos': activos})
 
-    workbook = Workbook()
-    sheet = workbook.active
-    sheet.title = "Activos Fijos"
+@login_required
+def activo_create(request):
+    if request.method == 'POST':
+        form = ActivoFijoForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('activos_fijos:activo_list')
+    else:
+        form = ActivoFijoForm(initial={'fecha_adquisicion': timezone.now().date()})
+    return render(request, 'activos_fijos/activo_form.html', {'form': form, 'titulo': 'Registrar Activo Fijo'})
 
-    # Encabezados
-    headers = ["Código", "Nombre", "Fecha Adquisición", "Valor Compra", "Vida Útil (Meses)"]
-    sheet.append(headers)
+@login_required
+def activo_detail(request, pk):
+    activo = get_object_or_404(ActivoFijo, pk=pk)
+    return render(request, 'activos_fijos/activo_detail.html', {'titulo': 'Detalle de Activo', 'activo': activo})
 
-    # Datos
-    for activo in ActivoFijo.objects.all().order_by('codigo'):
-        sheet.append([activo.codigo, activo.nombre, activo.fecha_adquisicion, activo.valor_compra, activo.vida_util_anios])
+@login_required
+def activo_edit(request, pk):
+    activo = get_object_or_404(ActivoFijo, pk=pk)
+    if request.method == 'POST':
+        form = ActivoFijoForm(request.POST, instance=activo)
+        if form.is_valid():
+            form.save()
+            return redirect('activos_fijos:activo_detail', pk=pk)
+    else:
+        form = ActivoFijoForm(instance=activo)
+    return render(request, 'activos_fijos/activo_form.html', {'form': form, 'titulo': 'Editar Activo Fijo'})
 
-    workbook.save(response)
-    return response
+@login_required
+def activo_delete(request, pk):
+    activo = get_object_or_404(ActivoFijo, pk=pk)
+    if request.method == 'POST':
+        activo.delete()
+        return redirect('activos_fijos:activo_list')
+    return render(request, 'activos_fijos/activo_confirm_delete.html', {'activo': activo, 'titulo': 'Eliminar Activo'})
 
+@login_required
 def reporte_depreciacion(request):
-    activos = ActivoFijo.objects.all()
-    total_valor_compra = sum(activo.valor_compra for activo in activos)
-    total_depreciacion_acumulada = sum(activo.depreciacion_acumulada for activo in activos)
-    total_valor_libro = sum(activo.valor_libro for activo in activos)
-    
-    context = {
+    activos = ActivoFijo.objects.all().order_by('categoria', 'codigo')
+    return render(request, 'activos_fijos/reporte_depreciacion.html', {
+        'titulo': 'Reporte de Depreciación',
         'activos': activos,
-        'total_valor_compra': total_valor_compra,
-        'total_depreciacion_acumulada': total_depreciacion_acumulada,
-        'total_valor_libro': total_valor_libro,
-    }
-    return render(request, 'activos_fijos/reporte_depreciacion.html', context)
+    })
+
+@login_required
+def asignacion_create(request, pk):
+    activo = get_object_or_404(ActivoFijo, pk=pk)
+    if request.method == 'POST':
+        form = AsignacionActivoForm(request.POST)
+        if form.is_valid():
+            asignacion = form.save(commit=False)
+            asignacion.activo = activo
+            asignacion.save()
+            return redirect('activos_fijos:activo_detail', pk=pk)
+    else:
+        form = AsignacionActivoForm(initial={'fecha_asignacion': timezone.now().date()})
+    return render(request, 'activos_fijos/asignacion_form.html', {'form': form, 'activo': activo, 'titulo': 'Asignar Activo'})
+
+@login_required
+def mantenimiento_create(request, pk):
+    activo = get_object_or_404(ActivoFijo, pk=pk)
+    if request.method == 'POST':
+        form = MantenimientoActivoForm(request.POST)
+        if form.is_valid():
+            mantenimiento = form.save(commit=False)
+            mantenimiento.activo = activo
+            mantenimiento.save()
+            return redirect('activos_fijos:activo_detail', pk=pk)
+    else:
+        form = MantenimientoActivoForm(initial={'fecha_mantenimiento': timezone.now().date()})
+    return render(request, 'activos_fijos/mantenimiento_form.html', {'form': form, 'activo': activo, 'titulo': 'Registrar Mantenimiento'})

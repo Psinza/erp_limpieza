@@ -1,88 +1,83 @@
+from django.conf import settings
 from django.db import models
-
-class CategoriaProveedor(models.Model):
-    nombre = models.CharField(max_length=100, unique=True)
-    descripcion = models.TextField(blank=True, null=True)
-    def __str__(self): return self.nombre
-
-class Proveedor(models.Model):
-    ruc = models.CharField(max_length=20, unique=True)
-    razon_social = models.CharField(max_length=200)
-    nombre_comercial = models.CharField(max_length=200, blank=True, null=True)
-    tipo = models.CharField(max_length=20, default='empresa')
-    categoria = models.ForeignKey(CategoriaProveedor, on_delete=models.SET_NULL, null=True)
-    telefono = models.CharField(max_length=30, blank=True, null=True)
-    email = models.EmailField(blank=True, null=True)
-    direccion = models.TextField(blank=True, null=True)
-    estado = models.CharField(max_length=10, default='activo')
-    creado_en = models.DateTimeField(auto_now_add=True)
-    def __str__(self): return self.razon_social
-    def nombre_display(self): return self.nombre_comercial or self.razon_social
-
-class ContactoProveedor(models.Model):
-    proveedor = models.ForeignKey(Proveedor, on_delete=models.CASCADE, related_name="contactos")
-    nombre    = models.CharField(max_length=150)
-    cargo     = models.CharField(max_length=100, blank=True)
-    telefono  = models.CharField(max_length=30, blank=True)
-    email     = models.EmailField(blank=True)
-    principal = models.BooleanField(default=False)
-
-    def __str__(self): return f"{self.nombre} ({self.proveedor})"
-
-class CategoriaProductoCompra(models.Model):
-    nombre = models.CharField(max_length=100)
-    def __str__(self): return self.nombre
+from decimal import Decimal
+from django.utils import timezone
+from apps.facturacion.models import Proveedor
+# Asumiendo que existe un modelo Producto en apps.inventarios o logistica, o usaremos un string por ahora
+# from apps.inventarios.models import Producto
 
 class ProductoCompra(models.Model):
-    nombre = models.CharField(max_length=100)
-    codigo = models.CharField(max_length=50, blank=True)
-    categoria = models.ForeignKey(CategoriaProductoCompra, on_delete=models.SET_NULL, null=True)
-    precio_unitario = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
-    def __str__(self): return self.nombre
-
-class OrdenCompra(models.Model):
-    ESTADO_CHOICES = [
-        ('borrador', 'Borrador'),
-        ('enviada', 'Enviada'),
-        ('confirmada', 'Confirmada'),
-        ('recibida', 'Recibida'),
-        ('completada', 'Completada'),
-        ('anulada', 'Anulada'),
-    ]
-    numero = models.CharField(max_length=20, unique=True, blank=True, null=True)
-    proveedor = models.ForeignKey(Proveedor, related_name='ordenes', on_delete=models.PROTECT)
-    fecha_emision = models.DateField(auto_now_add=True)
-    fecha_entrega = models.DateField(blank=True, null=True)
-    subtotal = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
-    impuesto_total = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
-    total = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
-    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='borrador')
-    observaciones = models.TextField(blank=True)
+    nombre = models.CharField(max_length=200)
+    codigo = models.CharField(max_length=50, unique=True, null=True, blank=True)
+    descripcion = models.TextField(blank=True)
+    precio_referencia = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
 
     def __str__(self):
-        return f"Orden {self.numero or self.id} - {self.proveedor}"
+        return self.nombre
 
-class DetalleOrdenCompra(models.Model):
-    orden = models.ForeignKey(OrdenCompra, related_name='detalles', on_delete=models.CASCADE)
-    producto = models.ForeignKey(ProductoCompra, on_delete=models.PROTECT)
-    cantidad = models.DecimalField(max_digits=10, decimal_places=2)
-    precio_unitario = models.DecimalField(max_digits=10, decimal_places=2)
-    cantidad_recibida = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-
-    @property
-    def subtotal(self): return self.cantidad * self.precio_unitario
-
-    @property
-    def pendiente_recibir(self): return self.cantidad - self.cantidad_recibida
-
-class RecepcionCompra(models.Model):
-    orden = models.ForeignKey(OrdenCompra, related_name='recepciones', on_delete=models.CASCADE)
+class OrdenCompra(models.Model):
     numero = models.CharField(max_length=20, unique=True)
-    fecha_recepcion = models.DateTimeField(auto_now_add=True)
-    estado = models.CharField(max_length=20, default='pendiente')
+    proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT)
+    fecha_emision = models.DateField(default=timezone.now)
+    estado = models.CharField(max_length=20, choices=[('borrador', 'Borrador'), ('aprobada', 'Aprobada'), ('recibida', 'Recibida')], default='borrador')
+    total = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal("0.00"))
 
-class DetalleRecepcion(models.Model):
-    recepcion = models.ForeignKey(RecepcionCompra, related_name='detalles', on_delete=models.CASCADE)
-    detalle_orden = models.ForeignKey(DetalleOrdenCompra, on_delete=models.CASCADE)
-    cantidad_aceptada = models.DecimalField(max_digits=10, decimal_places=2)
-    observaciones = models.CharField(max_length=200, blank=True)
+    def __str__(self):
+        return f"OC-{self.numero}"
+
+class FacturaCompra(models.Model):
+    proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, related_name='facturas_compra')
+    orden_compra = models.ForeignKey(OrdenCompra, on_delete=models.SET_NULL, null=True, blank=True, related_name='facturas')
+    
+    numero_factura = models.CharField(max_length=50)
+    numero_control = models.CharField(max_length=50, help_text="Número de control fiscal")
+    fecha_emision = models.DateField()
+    fecha_recepcion = models.DateField(default=timezone.now)
+    
+    # Desglose de impuestos
+    exento = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal("0.00"))
+    base_imponible = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal("0.00"))
+    base_imponible_reducida = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal("0.00"))
+    base_imponible_suntuaria = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal("0.00"))
+    
+    monto_iva_general = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal("0.00"))
+    monto_iva_reducida = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal("0.00"))
+    monto_iva_suntuaria = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal("0.00"))
+    
+    igtf = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal("0.00"))
+    
+    total = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal("0.00"))
+    
+    estado = models.CharField(max_length=20, choices=[('registrada', 'Registrada'), ('pagada', 'Pagada'), ('anulada', 'Anulada')], default='registrada')
+    registrada_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
+
+    class Meta:
+        verbose_name = "Factura de Compra"
+        verbose_name_plural = "Facturas de Compra"
+        unique_together = ('proveedor', 'numero_factura')
+
+    def __str__(self):
+        return f"Factura {self.numero_factura} - {self.proveedor.razon_social}"
+
+class DetalleFacturaCompra(models.Model):
+    factura = models.ForeignKey(FacturaCompra, on_delete=models.CASCADE, related_name='detalles')
+    descripcion = models.CharField(max_length=255)
+    cantidad = models.DecimalField(max_digits=15, decimal_places=2)
+    precio_unitario = models.DecimalField(max_digits=15, decimal_places=2)
+    tipo_impuesto = models.CharField(max_length=20, choices=[('exento', 'Exento'), ('general', 'General (16%)'), ('reducida', 'Reducida (8%)'), ('suntuaria', 'Suntuaria (31%)')], default='general')
+    monto_impuesto = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal("0.00"))
+    subtotal = models.DecimalField(max_digits=15, decimal_places=2)
+
+    def save(self, *args, **kwargs):
+        base = self.cantidad * self.precio_unitario
+        if self.tipo_impuesto == 'general':
+            self.monto_impuesto = base * Decimal('0.16')
+        elif self.tipo_impuesto == 'reducida':
+            self.monto_impuesto = base * Decimal('0.08')
+        elif self.tipo_impuesto == 'suntuaria':
+            self.monto_impuesto = base * Decimal('0.31')
+        else:
+            self.monto_impuesto = Decimal('0.00')
+            
+        self.subtotal = base + self.monto_impuesto
+        super().save(*args, **kwargs)

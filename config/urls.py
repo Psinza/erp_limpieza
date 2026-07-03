@@ -12,8 +12,8 @@ urlpatterns = [
     path('accounts/logout/', LogoutView.as_view(), name='logout'),
     
     # Módulos del Sistema
-    path('', include('apps.core.urls')),
-    path('administracion/', include('apps.administracion.urls')),
+    path('', include('apps.core.urls', namespace='core')),
+    path('administracion/', include('apps.administracion.urls', namespace='administracion')),
     path('rrhh/', include('apps.rrhh.urls', namespace='rrhh')),
     path('contabilidad/', include('apps.contabilidad.urls', namespace='contabilidad')),
     path('vendedores/', include('apps.vendedores.urls', namespace='vendedores')),
@@ -26,6 +26,9 @@ urlpatterns = [
     path('logistica/', include('apps.logistica.urls', namespace='logistica')),
     path('facturacion/', include('apps.facturacion.urls', namespace='facturacion')),
     path('viaticos/', include('apps.viaticos.urls', namespace='viaticos')),
+    path('transportes/', include('apps.logistica.transportes.urls', namespace='transportes')),
+    path('tesoreria/', include('apps.tesoreria.urls', namespace='tesoreria')),
+    path('inventarios/', include('apps.inventarios.urls', namespace='inventarios')),
 ]
 
 if settings.DEBUG:

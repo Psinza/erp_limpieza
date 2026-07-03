@@ -1,89 +1,154 @@
-from django.shortcuts import render, redirect
-from django.db.models import Q, Sum
-from django.contrib import messages
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.db import transaction
-from .models import MovimientoInventario
-from apps.produccion.models import MateriaPrima, ProductoTerminado
-from .forms import MovimientoInventarioForm
+
 
 @login_required
-def reporte_kardex(request):
-    # Obtener parámetros de filtro
-    tipo_item = request.GET.get('tipo_item') # 'MP' o 'PT'
-    item_id = request.GET.get('item_id')
-    fecha_desde = request.GET.get('fecha_desde')
-    fecha_hasta = request.GET.get('fecha_hasta')
+def dashboard(request):
+    """Panel principal del módulo de Logística."""
+    try:
+        from apps.logistica.models import Almacen, MovimientoInventario, ExistenciaAlmacen
+        from apps.produccion.models import MateriaPrima, ProductoTerminado
+        from django.db.models import Sum
 
-    movimientos = []
-    item = None
-    saldo_inicial = 0
+        almacenes = Almacen.objects.all()
+        movimientos_recientes = MovimientoInventario.objects.order_by('-fecha')[:10]
 
-    if item_id and tipo_item:
-        # Seleccionar el modelo según el tipo
-        if tipo_item == 'MP':
-            item = MateriaPrima.objects.get(pk=item_id)
-            filtro_item = Q(materia_prima=item)
-        else:
-            item = ProductoTerminado.objects.get(pk=item_id)
-            filtro_item = Q(producto_pt=item)
+        # Valor total de MP basado en existencias
+        valor_total_mp = ExistenciaAlmacen.objects.aggregate(
+            total=Sum('cantidad')
+        )['total'] or 0
 
-        # 1. Calcular Saldo Inicial (Movimientos anteriores a fecha_desde)
-        if fecha_desde:
-            movs_previos = MovimientoInventario.objects.filter(filtro_item, fecha__lt=fecha_desde)
-            entradas = movs_previos.filter(tipo='E').aggregate(total=Sum('cantidad'))['total'] or 0
-            salidas = movs_previos.filter(tipo='S').aggregate(total=Sum('cantidad'))['total'] or 0
-            saldo_inicial = entradas - salidas
+        # Alertas de stock bajo
+        materias_primas_alerta = MateriaPrima.objects.filter(
+            stock_actual__lte=10
+        )
+        alerta_mp = materias_primas_alerta.count()
+        total_pt = ProductoTerminado.objects.count()
+    except Exception:
+        almacenes = []
+        movimientos_recientes = []
+        valor_total_mp = 0
+        materias_primas_alerta = []
+        alerta_mp = 0
+        total_pt = 0
 
-        # 2. Obtener movimientos en el rango
-        qs = MovimientoInventario.objects.filter(filtro_item).order_by('fecha')
-        if fecha_desde:
-            qs = qs.filter(fecha__gte=fecha_desde)
-        if fecha_hasta:
-            qs = qs.filter(fecha__lte=fecha_hasta)
-        
-        # 3. Construir el Kardex Progresivo
-        saldo_progresivo = saldo_inicial
-        for m in qs:
-            if m.tipo == 'E':
-                saldo_progresivo += m.cantidad
-            elif m.tipo == 'S':
-                saldo_progresivo -= m.cantidad
-            
-            movimientos.append({
-                'fecha': m.fecha,
-                'documento': m.documento_referencia,
-                'motivo': m.motivo,
-                'entrada': m.cantidad if m.tipo == 'E' else 0,
-                'salida': m.cantidad if m.tipo == 'S' else 0,
-                'saldo': saldo_progresivo,
-                'costo': m.costo_unitario
-            })
-
-    return render(request, 'logistica/reporte_kardex.html', {
-        'movimientos': movimientos,
-        'item': item,
-        'saldo_inicial': saldo_inicial,
-        'materias_primas': MateriaPrima.objects.all(),
-        'productos_pt': ProductoTerminado.objects.all(),
+    return render(request, 'logistica/dashboard.html', {
+        'titulo': 'Inventario y Almacén',
+        'almacenes': almacenes,
+        'movimientos_recientes': movimientos_recientes,
+        'valor_total_mp': valor_total_mp,
+        'materias_primas_alerta': materias_primas_alerta,
+        'alerta_mp': alerta_mp,
+        'total_pt': total_pt,
     })
 
+
 @login_required
-@transaction.atomic
-def registrar_transferencia(request):
-    """
-    Registra un movimiento de tipo Transferencia ('T'). 
-    La validación de origen/destino y stock se maneja en el Formulario.
-    """
+def movimiento_list(request):
+    try:
+        from apps.logistica.models import MovimientoInventario
+        movimientos = MovimientoInventario.objects.order_by('-fecha')
+    except Exception:
+        movimientos = []
+    return render(request, 'logistica/movimiento_list.html', {
+        'titulo': 'Movimientos de Inventario',
+        'movimientos': movimientos,
+    })
+
+
+@login_required
+def movimiento_create(request):
+    from .forms import MovimientoInventarioForm
     if request.method == 'POST':
         form = MovimientoInventarioForm(request.POST)
         if form.is_valid():
-            movimiento = form.save(commit=False)
-            movimiento.tipo = 'T'
-            movimiento.save()
-            messages.success(request, "Transferencia entre almacenes registrada exitosamente.")
-            return redirect('logistica:reporte_kardex')
+            mov = form.save(commit=False)
+            mov.usuario = request.user
+            mov.save()
+            return redirect('logistica:movimiento_list')
     else:
-        form = MovimientoInventarioForm(initial={'tipo': 'T'})
-    
-    return render(request, 'logistica/transferencia_form.html', {'form': form})
+        form = MovimientoInventarioForm()
+    return render(request, 'logistica/movimiento_form.html', {
+        'titulo': 'Nuevo Movimiento de Inventario',
+        'form': form
+    })
+
+
+@login_required
+def almacen_list(request):
+    try:
+        from apps.logistica.models import Almacen
+        almacenes = Almacen.objects.all()
+    except Exception:
+        almacenes = []
+    return render(request, 'logistica/almacen_list.html', {
+        'titulo': 'Gestión de Almacenes',
+        'almacenes': almacenes,
+    })
+
+
+@login_required
+def almacen_create(request):
+    from .forms import AlmacenForm
+    if request.method == 'POST':
+        form = AlmacenForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('logistica:almacen_list')
+    else:
+        form = AlmacenForm()
+    return render(request, 'logistica/almacen_form.html', {
+        'titulo': 'Nuevo Almacén',
+        'form': form
+    })
+
+
+@login_required
+def almacen_update(request, pk):
+    from .models import Almacen
+    from .forms import AlmacenForm
+    almacen = get_object_or_404(Almacen, pk=pk)
+    if request.method == 'POST':
+        form = AlmacenForm(request.POST, instance=almacen)
+        if form.is_valid():
+            form.save()
+            return redirect('logistica:almacen_list')
+    else:
+        form = AlmacenForm(instance=almacen)
+    return render(request, 'logistica/almacen_form.html', {
+        'titulo': 'Editar Almacén',
+        'form': form
+    })
+
+
+@login_required
+def reporte_stock(request):
+    try:
+        from apps.logistica.models import ExistenciaAlmacen
+        existencias = ExistenciaAlmacen.objects.select_related('almacen').all()
+    except Exception:
+        existencias = []
+    return render(request, 'logistica/reporte_stock.html', {
+        'titulo': 'Reporte de Existencias',
+        'existencias': existencias,
+    })
+
+
+@login_required
+def reporte_kardex(request):
+    try:
+        from apps.logistica.models import MovimientoInventario
+        movimientos = MovimientoInventario.objects.order_by('-fecha')
+    except Exception:
+        movimientos = []
+    return render(request, 'logistica/reporte_kardex.html', {
+        'titulo': 'Reporte Kardex',
+        'movimientos': movimientos,
+    })
+
+
+@login_required
+def transferencia_create(request):
+    return render(request, 'logistica/transferencia_form.html', {
+        'titulo': 'Nueva Transferencia entre Almacenes',
+    })

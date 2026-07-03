@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+{% block title %}{{ activo.nombre }}{% endblock %}
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 d-print-none">
+        <a href="{% url 'activos_fijos:activo_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Volver al Inventario
+        </a>
+        <div class="d-flex gap-2">
+            <a href="{% url 'activos_fijos:activo_update' activo.pk %}" class="btn btn-dark">
+                <i class="bi bi-pencil me-1"></i> Editar
+            </a>
+            <button onclick="window.print()" class="btn btn-primary">
+                <i class="bi bi-printer me-1"></i> Imprimir Ficha
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Ficha Técnica -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body text-center py-4">
+                    <div class="bg-light p-4 rounded mb-3">
+                        <i class="bi bi-building-gear display-1 text-primary"></i>
+                    </div>
+                    <h4 class="fw-bold mb-0">{{ activo.nombre }}</h4>
+                    <p class="text-muted">{{ activo.codigo }}</p>
+                    <span class="badge bg-success px-4 py-2">{{ activo.estado }}</span>
+                </div>
+                <div class="card-footer bg-white p-0">
+                    <div class="list-group list-group-flush small">
+                        <div class="list-group-item d-flex justify-content-between">
+                            <span class="text-muted">Categoría:</span>
+                            <span class="fw-bold">{{ activo.categoria.nombre }}</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between">
+                            <span class="text-muted">Serial:</span>
+                            <span class="fw-bold">{{ activo.serial|default:"N/A" }}</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between">
+                            <span class="text-muted">Ubicación:</span>
+                            <span class="fw-bold">{{ activo.ubicacion }}</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between">
+                            <span class="text-muted">Responsable:</span>
+                            <span class="fw-bold text-primary">{{ activo.responsable|default:"Sin asignar" }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Datos Financieros -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-dark text-white">
+                    <h6 class="mb-0">Valuación y Depreciación</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="small text-muted d-block">Valor de Compra:</label>
+                        <h4 class="fw-bold text-dark">${{ activo.valor_compra|floatformat:2 }}</h4>
+                    </div>
+                    <div class="mb-3">
+                        <label class="small text-muted d-block">Depreciación Acumulada:</label>
+                        <h4 class="fw-bold text-danger">-${{ activo.depreciacion_acumulada|floatformat:2 }}</h4>
+                    </div>
+                    <hr>
+                    <div class="mb-0">
+                        <label class="small text-muted d-block">Valor Actual en Libros:</label>
+                        <h3 class="fw-bold text-success">${{ activo.valor_libro|floatformat:2 }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Historial y Acciones -->
+        <div class="col-lg-8">
+            <!-- Tabs -->
+            <ul class="nav nav-tabs border-0 bg-white p-2 rounded shadow-sm mb-4" role="tablist">
+                <li class="nav-item">
+                    <button class="nav-link active border-0 fw-bold" data-bs-toggle="tab" data-bs-target="#mantenimientos">Mantenimientos</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link border-0 fw-bold" data-bs-toggle="tab" data-bs-target="#asignaciones">Asignaciones</button>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+                <!-- Mantenimientos -->
+                <div class="tab-pane fade show active" id="mantenimientos">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0 fw-bold text-dark">Historial de Mantenimiento</h5>
+                            <a href="{% url 'activos_fijos:mantenimiento_create' activo.pk %}" class="btn btn-sm btn-primary">Registrar</a>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="bg-light small text-muted">
+                                        <tr>
+                                            <th class="ps-3">Fecha</th>
+                                            <th>Tipo</th>
+                                            <th>Descripción</th>
+                                            <th class="text-end pe-3">Costo</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for m in mantenimientos %}
+                                        <tr>
+                                            <td class="ps-3 small">{{ m.fecha_mantenimiento|date:"d/m/Y" }}</td>
+                                            <td><span class="badge bg-info text-dark">{{ m.get_tipo_display }}</span></td>
+                                            <td class="small">{{ m.descripcion }}</td>
+                                            <td class="text-end pe-3 fw-bold">${{ m.costo }}</td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr><td colspan="4" class="text-center py-4 text-muted">No hay registros de mantenimiento.</td></tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Asignaciones -->
+                <div class="tab-pane fade" id="asignaciones">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0 fw-bold text-dark">Historial de Asignaciones</h5>
+                            <a href="{% url 'activos_fijos:asignacion_create' activo.pk %}" class="btn btn-sm btn-primary">Nueva Asignación</a>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="bg-light small text-muted">
+                                        <tr>
+                                            <th class="ps-3">Responsable</th>
+                                            <th>Departamento</th>
+                                            <th>Desde</th>
+                                            <th>Hasta</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for a in asignaciones %}
+                                        <tr>
+                                            <td class="ps-3 fw-bold">{{ a.empleado }}</td>
+                                            <td>{{ a.departamento }}</td>
+                                            <td class="small">{{ a.fecha_asignacion|date:"d/m/Y" }}</td>
+                                            <td class="small text-muted">{{ a.fecha_devolucion|date:"d/m/Y"|default:"Vigente" }}</td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr><td colspan="4" class="text-center py-4 text-muted">No hay historial de asignaciones.</td></tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
